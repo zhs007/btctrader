@@ -36,6 +36,7 @@ class HuoBiDataStream {
         this.asks = data.asks;
         this.bids = data.bids;
 
+        this.cfg.funcOnDepth();
         // console.log('asks' + JSON.stringify(this.asks));
         // console.log('bids' + JSON.stringify(this.bids));
     }
@@ -76,7 +77,7 @@ class HuoBiDataStream {
                     curts = new Date().getTime();
                     if (msg.ts) {
                         let off = curts - msg.ts;
-                        console.log('msg1 ' + off);
+                        // console.log('huobi msgoff ' + off);
                     }
                 }
                 // console.log();

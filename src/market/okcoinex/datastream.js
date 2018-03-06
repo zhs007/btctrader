@@ -36,7 +36,7 @@ class OKCoinEXDataStream {
         if (data.asks) {
             if (this.asks.length == 0) {
                 for (let i = 0; i < data.asks.length; ++i) {
-                    let cn = data.asks[i];
+                    let cn = data.asks[data.asks.length - 1 - i];
                     let p = parseFloat(cn[0]);
                     let v = parseFloat(cn[1]);
 
@@ -46,7 +46,7 @@ class OKCoinEXDataStream {
             else {
                 let mi = 0;
                 for (let i = 0; i < data.asks.length; ++i) {
-                    let cn = data.asks[i];
+                    let cn = data.asks[data.asks.length - 1 - i];
                     let p = parseFloat(cn[0]);
                     let v = parseFloat(cn[1]);
 
@@ -136,6 +136,8 @@ class OKCoinEXDataStream {
 
             // console.log('msg ' + text + curts);
 
+            let hasDepth = false;
+
             let arr = JSON.parse(text);
             if (Array.isArray(arr)) {
                 for (let i = 0; i < arr.length; ++i) {
@@ -144,6 +146,7 @@ class OKCoinEXDataStream {
                     if (msg.channel) {
                         if (msg.channel == this.channel) {
 
+                            hasDepth = true;
                             // curts = new Date().getTime();
                             // if (msg.data.timestamp) {
                             //     let off = curts - msg.data.timestamp;
@@ -155,11 +158,15 @@ class OKCoinEXDataStream {
                             // curts = new Date().getTime();
                             if (msg.data.timestamp) {
                                 let off = curts - msg.data.timestamp;
-                                console.log('msg1 ' + off);
+                                // console.log('okcoinex msgoff ' + off);
                             }
                         }
                     }
                 }
+            }
+
+            if (hasDepth && this.cfg.funcOnDepth) {
+                this.cfg.funcOnDepth();
             }
         });
 
