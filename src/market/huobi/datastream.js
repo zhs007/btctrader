@@ -31,11 +31,17 @@ class HuoBiDataStream {
         this.ws = new WebSocket(this.cfg.addr);
 
         this.ws.on('open', () => {
+            console.log('open ');
+
             this._subscribe(this.cfg.symbol);
         });
 
         this.ws.on('message', (data) => {
+
             let text = pako.inflate(data, {to: 'string'});
+
+            console.log('msg ' + text);
+
             let msg = JSON.parse(text);
             if (msg.ping) {
                 this._send({
@@ -43,16 +49,16 @@ class HuoBiDataStream {
                 });
             }
             else if (msg.tick) {
-
+                console.log();
             }
         });
 
         this.ws.on('close', () => {
-
+            console.log('close ');
         });
 
         this.ws.on('error', (err) => {
-
+            console.log('error ' + JSON.stringify(err));
         });
     }
 };
