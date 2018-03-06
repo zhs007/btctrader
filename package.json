@@ -1,0 +1,8 @@
+{
+  "name": "btctrader",
+  "version": "0.0.1",
+  "dependencies": {
+    "pako": "^1.0.6",
+    "ws": "^4.1.0"
+  }
+}
