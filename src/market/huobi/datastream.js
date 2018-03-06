@@ -9,22 +9,35 @@ class HuoBiDataStream {
     constructor(cfg) {
         this.cfg = cfg;
         this.ws = undefined;
+
+        this.asks = [];
+        this.bids = [];
+
+        this.channelDepth = 'market.' + this.cfg.symbol + '.depth.step0';
     }
 
     _send(msg) {
         this.ws.send(JSON.stringify(msg));
     }
 
-    _subscribe(symbol) {
+    _subscribe() {
         this._send({
-            "sub": 'market.' + symbol + '.depth.step0',
-            "id": symbol + 'depth'
+            "sub": this.channelDepth,
+            "id": this.cfg.symbol + 'depth'
         });
 
-        this._send({
-            "sub": 'market.' + symbol + '.kline.1min',
-            "id": symbol + 'kline'
-        });
+        // this._send({
+        //     "sub": 'market.' + symbol + '.kline.1min',
+        //     "id": symbol + 'kline'
+        // });
+    }
+
+    _onChannelDepth(data) {
+        this.asks = data.asks;
+        this.bids = data.bids;
+
+        // console.log('asks' + JSON.stringify(this.asks));
+        // console.log('bids' + JSON.stringify(this.bids));
     }
 
     init() {
@@ -33,14 +46,15 @@ class HuoBiDataStream {
         this.ws.on('open', () => {
             console.log('open ');
 
-            this._subscribe(this.cfg.symbol);
+            this._subscribe();
         });
 
         this.ws.on('message', (data) => {
 
             let text = pako.inflate(data, {to: 'string'});
+            let curts = new Date().getTime();
 
-            console.log('msg ' + text);
+            // console.log('msg ' + text);
 
             let msg = JSON.parse(text);
             if (msg.ping) {
@@ -49,7 +63,23 @@ class HuoBiDataStream {
                 });
             }
             else if (msg.tick) {
-                console.log();
+                if (msg.ch == this.channelDepth) {
+
+                    // curts = new Date().getTime();
+                    // if (msg.ts) {
+                    //     let off = curts - msg.ts;
+                    //     console.log('msg0 ' + off);
+                    // }
+
+                    this._onChannelDepth(msg.tick);
+
+                    curts = new Date().getTime();
+                    if (msg.ts) {
+                        let off = curts - msg.ts;
+                        console.log('msg1 ' + off);
+                    }
+                }
+                // console.log();
             }
         });
 
