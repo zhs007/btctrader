@@ -10,6 +10,8 @@ class OKCoinEXDataStream extends WSDataStream {
 
         this.channelDepth = 'ok_sub_spot_' + this.cfg.symbol + '_depth';
         this.channelDeals = 'ok_sub_spot_' + this.cfg.symbol + '_deals';
+
+        // this.lastdealtime = undefined;
     }
 
     _addChannel() {
@@ -30,7 +32,7 @@ class OKCoinEXDataStream extends WSDataStream {
                 data[i][0],
                 parseFloat(data[i][1]),
                 parseFloat(data[i][2]),
-                new Date(data[i][3]).getTime(),
+                new Date().getTime(),//new Date(data[i][3]).getTime(),
                 data[i][4] == 'ask' ? DEALTYPE.BUY : DEALTYPE.SELL
             ]);
         }
