@@ -1,29 +1,26 @@
 "use strict";
 
-const WebSocket = require('ws');
+const { WSDataStream, DEALTYPE } = require('../../wsdatastream');
 const pako = require('pako');
 
-class HuoBiDataStream {
-    // cfg.addr - like wss://api.huobi.pro/ws
+class HuoBiDataStream extends WSDataStream {
     // cfg.symbol - btcusdt
     constructor(cfg) {
-        this.cfg = cfg;
-        this.ws = undefined;
-
-        this.asks = [];
-        this.bids = [];
+        super(cfg);
 
         this.channelDepth = 'market.' + this.cfg.symbol + '.depth.step0';
-    }
-
-    _send(msg) {
-        this.ws.send(JSON.stringify(msg));
+        this.channelDetail = 'market.' + this.cfg.symbol + '.trade.detail';
     }
 
     _subscribe() {
-        this._send({
+        this.sendMsg({
             "sub": this.channelDepth,
             "id": this.cfg.symbol + 'depth'
+        });
+
+        this.sendMsg({
+            "sub": this.channelDetail,
+            "id": this.cfg.symbol + 'detail'
         });
 
         // this._send({
@@ -36,64 +33,105 @@ class HuoBiDataStream {
         this.asks = data.asks;
         this.bids = data.bids;
 
-        if (this.cfg.funcOnDepth) {
-            this.cfg.funcOnDepth();
-        }
+        this._onDepth();
+        // if (this.cfg.funcOnDepth) {
+        //     this.cfg.funcOnDepth();
+        // }
 
         // console.log('asks' + JSON.stringify(this.asks));
         // console.log('bids' + JSON.stringify(this.bids));
     }
 
-    init() {
-        this.ws = new WebSocket(this.cfg.addr);
+    _onChannelDetail(data) {
+        for (let i = 0; i < data.data.length; ++i) {
 
-        this.ws.on('open', () => {
-            console.log('huobi open ');
+            this.deals.push([
+                data.data[i].id,
+                parseFloat(data.data[i].price),
+                parseFloat(data.data[i].amount),
+                data.data[i].ts,
+                data.data[i].direction == 'buy' ? DEALTYPE.BUY : DEALTYPE.SELL
+            ]);
 
-            this._subscribe();
-        });
+            // console.log('asks' + JSON.stringify(this.asks));
+        }
+        // this.asks = data.asks;
+        // this.bids = data.bids;
 
-        this.ws.on('message', (data) => {
+        this._onDeals();
+        // if (this.cfg.funcOnDepth) {
+        //     this.cfg.funcOnDepth();
+        // }
 
-            let text = pako.inflate(data, {to: 'string'});
-            let curts = new Date().getTime();
+        // console.log('asks' + JSON.stringify(this.asks));
+        // console.log('bids' + JSON.stringify(this.bids));
+    }
 
-            // console.log('msg ' + text);
+    //------------------------------------------------------------------------------
+    // WSDataStream
 
-            let msg = JSON.parse(text);
-            if (msg.ping) {
-                this._send({
-                    pong: msg.ping
-                });
-            }
-            else if (msg.tick) {
-                if (msg.ch == this.channelDepth) {
+    sendMsg(msg) {
+        this._send(JSON.stringify(msg));
+    }
 
-                    // curts = new Date().getTime();
-                    // if (msg.ts) {
-                    //     let off = curts - msg.ts;
-                    //     console.log('msg0 ' + off);
-                    // }
+    _onOpen() {
+        super._onOpen();
 
-                    this._onChannelDepth(msg.tick);
+        console.log('huobi open ');
 
-                    curts = new Date().getTime();
-                    if (msg.ts) {
-                        let off = curts - msg.ts;
-                        // console.log('huobi msgoff ' + off);
-                    }
+        this._subscribe();
+    }
+
+    _onMsg(data) {
+        super._onMsg(data);
+
+        let text = pako.inflate(data, {to: 'string'});
+
+        if (this.cfg.output_message) {
+            console.log(text);
+        }
+
+        let curts = new Date().getTime();
+
+        let msg = JSON.parse(text);
+        if (msg.ping) {
+            this.sendMsg({pong: msg.ping});
+        }
+        else if (msg.tick) {
+            if (msg.ch == this.channelDepth) {
+                this._onChannelDepth(msg.tick);
+
+                curts = new Date().getTime();
+                if (msg.ts) {
+                    let off = curts - msg.ts;
+                    // console.log('huobi msgoff ' + off);
                 }
-                // console.log();
             }
-        });
+            else if (msg.ch == this.channelDetail) {
+                this._onChannelDetail(msg.tick);
 
-        this.ws.on('close', () => {
-            console.log('close ');
-        });
+                curts = new Date().getTime();
+                if (msg.ts) {
+                    let off = curts - msg.ts;
+                    // console.log('huobi msgoff ' + off);
+                }
+            }
+        }
+    }
 
-        this.ws.on('error', (err) => {
-            console.log('error ' + JSON.stringify(err));
-        });
+    _onClose() {
+        console.log('huobi close ');
+
+        super._onClose();
+    }
+
+    _onError(err) {
+        console.log('huobi error ' + JSON.stringify(err));
+
+        super._onError(err);
+    }
+
+    _onKeepalive() {
     }
 };
 

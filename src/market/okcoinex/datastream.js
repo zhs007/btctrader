@@ -1,38 +1,42 @@
 "use strict";
 
-const WebSocket = require('ws');
-// const pako = require('pako');
+const { WSDataStream, DEALTYPE } = require('../../wsdatastream');
 
-class OKCoinEXDataStream {
+class OKCoinEXDataStream extends WSDataStream {
     // cfg.addr - like wss://real.okex.com:10441/websocket
     // cfg.symbol - btc_usdt
     constructor(cfg) {
-        this.cfg = cfg;
-        this.ws = undefined;
+        super(cfg);
 
-        this.asks = [];
-        this.bids = [];
-
-        this.channel = 'ok_sub_spot_' + this.cfg.symbol + '_depth';
+        this.channelDepth = 'ok_sub_spot_' + this.cfg.symbol + '_depth';
+        this.channelDeals = 'ok_sub_spot_' + this.cfg.symbol + '_deals';
     }
 
-    _send(msg) {
-        this.ws.send(JSON.stringify(msg));
-    }
-
-    _addChannel(symbol) {
-        this._send({
+    _addChannel() {
+        this.sendMsg({
             event: 'addChannel',
-            channel: 'ok_sub_spot_' + symbol + '_depth'
+            channel: this.channelDepth
         });
 
-        // this._send({
-        //     "sub": 'market.' + symbol + '.kline.1min',
-        //     "id": symbol + 'kline'
-        // });
+        this.sendMsg({
+            event: 'addChannel',
+            channel: this.channelDeals
+        });
     }
 
-    _onChannel(data) {
+    _onChannel_Deals(data) {
+        for (let i = 0; i < data.length; ++i) {
+            this.deals.push([
+                data[i][0],
+                parseFloat(data[i][1]),
+                parseFloat(data[i][2]),
+                new Date(data[i][3]).getTime(),
+                data[i][4] == 'ask' ? DEALTYPE.BUY : DEALTYPE.SELL
+            ]);
+        }
+    }
+
+    _onChannel_Depth(data) {
         if (data.asks) {
             if (this.asks.length == 0) {
                 for (let i = 0; i < data.asks.length; ++i) {
@@ -120,63 +124,104 @@ class OKCoinEXDataStream {
         }
     }
 
-    init() {
-        this.ws = new WebSocket(this.cfg.addr);
+    //------------------------------------------------------------------------------
+    // WSDataStream
 
-        this.ws.on('open', () => {
-            console.log('okcoinex open ');
+    sendMsg(msg) {
+        this._send(JSON.stringify(msg));
+    }
 
-            this._addChannel(this.cfg.symbol);
-        });
+    _onOpen() {
+        super._onOpen();
 
-        this.ws.on('message', (data) => {
+        console.log('okcoinex open ');
 
-            let text = data;
-            let curts = new Date().getTime();
+        this._addChannel();
+    }
 
-            // console.log('msg ' + text + curts);
+    _onMsg(data) {
+        super._onMsg(data);
 
-            let hasDepth = false;
+        if (this.cfg.output_message) {
+            console.log(data);
+        }
 
-            let arr = JSON.parse(text);
-            if (Array.isArray(arr)) {
-                for (let i = 0; i < arr.length; ++i) {
-                    let msg = arr[i];
+        let text = data;
+        let curts = new Date().getTime();
 
-                    if (msg.channel) {
-                        if (msg.channel == this.channel) {
+        let hasDepth = false;
+        let hasDeals = false;
 
-                            hasDepth = true;
-                            // curts = new Date().getTime();
-                            // if (msg.data.timestamp) {
-                            //     let off = curts - msg.data.timestamp;
-                            //     console.log('msg0 ' + off);
-                            // }
+        let arr = JSON.parse(text);
+        if (Array.isArray(arr)) {
+            for (let i = 0; i < arr.length; ++i) {
+                let msg = arr[i];
 
-                            this._onChannel(msg.data);
+                if (msg.channel) {
+                    if (msg.channel == this.channelDepth) {
 
-                            // curts = new Date().getTime();
-                            if (msg.data.timestamp) {
-                                let off = curts - msg.data.timestamp;
-                                // console.log('okcoinex msgoff ' + off);
-                            }
+                        hasDepth = true;
+                        // curts = new Date().getTime();
+                        // if (msg.data.timestamp) {
+                        //     let off = curts - msg.data.timestamp;
+                        //     console.log('msg0 ' + off);
+                        // }
+
+                        this._onChannel_Depth(msg.data);
+
+                        // curts = new Date().getTime();
+                        if (msg.data.timestamp) {
+                            let off = curts - msg.data.timestamp;
+                            // console.log('okcoinex msgoff ' + off);
+                        }
+                    }
+                    else if (msg.channel == this.channelDeals) {
+
+                        hasDeals = true;
+                        // hasDepth = true;
+                        // curts = new Date().getTime();
+                        // if (msg.data.timestamp) {
+                        //     let off = curts - msg.data.timestamp;
+                        //     console.log('msg0 ' + off);
+                        // }
+
+                        this._onChannel_Deals(msg.data);
+
+                        // curts = new Date().getTime();
+                        if (msg.data.timestamp) {
+                            let off = curts - msg.data.timestamp;
+                            // console.log('okcoinex msgoff ' + off);
                         }
                     }
                 }
             }
+        }
 
-            if (hasDepth && this.cfg.funcOnDepth) {
-                this.cfg.funcOnDepth();
-            }
-        });
+        if (hasDepth) {
+            this._onDepth();
+        }
 
-        this.ws.on('close', () => {
-            console.log('close ');
-        });
+        if (hasDeals) {
+            this._onDeals();
+        }
+    }
 
-        this.ws.on('error', (err) => {
-            console.log('error ' + JSON.stringify(err));
-        });
+    _onClose() {
+        console.log('okcoinex close ');
+
+        super._onClose();
+    }
+
+    _onError(err) {
+        console.log('okcoinex error ' + JSON.stringify(err));
+
+        super._onError(err);
+    }
+
+    _onKeepalive() {
+        this.sendMsg({event: 'ping'});
+
+        super._onKeepalive();
     }
 };
 

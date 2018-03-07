@@ -56,6 +56,62 @@ function _matchmaking_bid(bid_p, bid_v, asks) {
     return arr;
 }
 
+function matchmakingSell(p, v, asks) {
+    let arr = [];
+    for (let i = 0; i < asks.length; ) {
+        if (p > asks[i][0]) {
+            break;
+        }
+
+        if (v > asks[i][1]) {
+            arr.push([asks[i][0], asks[i][1]]);
+
+            v -= asks[i][1];
+            asks.splice(i, 1);
+        }
+        else {
+            arr.push([asks[i][0], v]);
+            // asks[i][1] -= v;
+
+            break;
+        }
+    }
+
+    if (arr.length == 0) {
+        return undefined;
+    }
+
+    return arr;
+}
+
+function matchmakingBuy(p, v, bids) {
+    let arr = [];
+    for (let i = 0; i < bids.length; ) {
+        if (p < bids[i][0]) {
+            break;
+        }
+
+        if (v > bids[i][1]) {
+            arr.push([bids[i][0], bids[i][1]]);
+
+            v -= bids[i][1];
+            bids.splice(i, 1);
+        }
+        else {
+            arr.push([bids[i][0], v]);
+            // bids[i][1] -= v;
+
+            break;
+        }
+    }
+
+    if (arr.length == 0) {
+        return undefined;
+    }
+
+    return arr;
+}
+
 function matchmakingAsk(asks, bids) {
     if (asks[0][0] < bids[0][0]) {
         let depth = analyzeDepth(asks, bids);
@@ -140,3 +196,5 @@ function analyzeDepth(asks, bids) {
 exports.matchmakingAsk = matchmakingAsk;
 exports.matchmakingBid = matchmakingBid;
 exports.analyzeDepth = analyzeDepth;
+exports.matchmakingBuy = matchmakingBuy;
+exports.matchmakingSell = matchmakingSell;
