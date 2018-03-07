@@ -36,7 +36,10 @@ class HuoBiDataStream {
         this.asks = data.asks;
         this.bids = data.bids;
 
-        this.cfg.funcOnDepth();
+        if (this.cfg.funcOnDepth) {
+            this.cfg.funcOnDepth();
+        }
+
         // console.log('asks' + JSON.stringify(this.asks));
         // console.log('bids' + JSON.stringify(this.bids));
     }
@@ -45,7 +48,7 @@ class HuoBiDataStream {
         this.ws = new WebSocket(this.cfg.addr);
 
         this.ws.on('open', () => {
-            console.log('open ');
+            console.log('huobi open ');
 
             this._subscribe();
         });

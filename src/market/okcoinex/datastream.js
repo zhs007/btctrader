@@ -124,7 +124,7 @@ class OKCoinEXDataStream {
         this.ws = new WebSocket(this.cfg.addr);
 
         this.ws.on('open', () => {
-            console.log('open ');
+            console.log('okcoinex open ');
 
             this._addChannel(this.cfg.symbol);
         });
