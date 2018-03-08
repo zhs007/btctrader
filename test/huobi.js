@@ -8,7 +8,8 @@ var ds = new huobi.DataStream({
     timeout_keepalive: 30 * 1000,
     timeout_connect: 30 * 1000,
     timeout_message: 30 * 1000,
-    output_message: true
+    output_message: true,
+    simtrade: true
 });
 
 ds.init();

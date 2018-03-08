@@ -1,5 +1,7 @@
 "use strict";
 
+const { DEPTHINDEX } = require('./wsdatastream');
+
 function _matchmaking_ask(ask_p, ask_v, bids) {
     let arr = [];
     for (let i = 0; i < bids.length; ) {
@@ -158,6 +160,106 @@ function matchmakingBid(asks, bids) {
     return undefined;
 }
 
+function _matchmaking_ask_depth2(ask_p, ask_v, bi, bids) {
+    let arr = [];
+    for (; bi < bids.length; ) {
+        if (ask_p > bids[bi][DEPTHINDEX.PRICE]) {
+            break;
+        }
+
+        if (ask_v > bids[bi][DEPTHINDEX.LASTVOLUME]) {
+            arr.push([bids[bi][DEPTHINDEX.PRICE], bids[bi][DEPTHINDEX.LASTVOLUME]]);
+
+            ask_v -= bids[bi][DEPTHINDEX.LASTVOLUME];
+            bids[bi][DEPTHINDEX.LASTVOLUME] = 0;
+
+            ++bi;
+        }
+        else {
+            arr.push([bids[bi][DEPTHINDEX.PRICE], ask_v]);
+            bids[bi][DEPTHINDEX.LASTVOLUME] -= ask_v;
+
+            break;
+        }
+    }
+
+    return {bi: bi, arr: arr};
+}
+
+function matchmakingAsk_depth2(asks, bids) {
+    if (asks[0][0] < bids[0][0]) {
+        let arr = [];
+        let bi = 0;
+
+        for (let i = 0; i < asks.length; ++i) {
+            let cret = _matchmaking_ask_depth2(asks[i][0], asks[i][1], bi, bids);
+            if (cret.arr.length == 0) {
+                break;
+            }
+
+            bi = cret.bi;
+
+            for (let j = 0; j < cret.arr.length; ++j) {
+                arr.push(cret.arr[j]);
+            }
+        }
+
+        return arr;
+    }
+
+    return undefined;
+}
+
+function _matchmaking_bid_depth2(bid_p, bid_v, bi, asks) {
+    let arr = [];
+    for (; bi < asks.length; ) {
+        if (bid_p < asks[bi][DEPTHINDEX.PRICE]) {
+            break;
+        }
+
+        if (bid_v > asks[bi][DEPTHINDEX.LASTVOLUME]) {
+            arr.push([asks[bi][DEPTHINDEX.PRICE], asks[bi][DEPTHINDEX.LASTVOLUME]]);
+
+            bid_v -= asks[bi][DEPTHINDEX.LASTVOLUME];
+            asks[bi][DEPTHINDEX.LASTVOLUME] = 0;
+
+            ++bi;
+        }
+        else {
+            arr.push([asks[bi][DEPTHINDEX.PRICE], bid_v]);
+            asks[bi][DEPTHINDEX.LASTVOLUME] -= bid_v;
+
+            break;
+        }
+    }
+
+    return {bi: bi, arr: arr};
+}
+
+function matchmakingBid_depth2(asks, bids) {
+    if (asks[0][0] < bids[0][0]) {
+        let arr = [];
+        let bi = 0;
+
+        for (let i = 0; i < bids.length; ++i) {
+            let cret = _matchmaking_bid_depth2(bids[i][0], bids[i][1], bi, asks);
+            if (cret.arr.length == 0) {
+                break;
+            }
+
+            bi = cret.bi;
+
+            for (let j = 0; j < cret.arr.length; ++j) {
+                arr.push(cret.arr[j]);
+            }
+        }
+
+        return arr;
+    }
+
+    return undefined;
+}
+
 function _cloneDepthArr(arr, len) {
     let narr = [];
     if (len == undefined || len < 0) {
@@ -195,6 +297,8 @@ function analyzeDepth(asks, bids) {
 
 exports.matchmakingAsk = matchmakingAsk;
 exports.matchmakingBid = matchmakingBid;
+exports.matchmakingAsk_depth2 = matchmakingAsk_depth2;
+exports.matchmakingBid_depth2 = matchmakingBid_depth2;
 exports.analyzeDepth = analyzeDepth;
 exports.matchmakingBuy = matchmakingBuy;
 exports.matchmakingSell = matchmakingSell;

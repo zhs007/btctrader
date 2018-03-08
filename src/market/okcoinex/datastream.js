@@ -1,6 +1,6 @@
 "use strict";
 
-const { WSDataStream, DEALTYPE } = require('../../wsdatastream');
+const { WSDataStream, DEPTHINDEX, DEALTYPE } = require('../../wsdatastream');
 
 class OKCoinEXDataStream extends WSDataStream {
     // cfg.addr - like wss://real.okex.com:10441/websocket
@@ -11,6 +11,8 @@ class OKCoinEXDataStream extends WSDataStream {
         this.channelDepth = 'ok_sub_spot_' + this.cfg.symbol + '_depth';
         this.channelDeals = 'ok_sub_spot_' + this.cfg.symbol + '_deals';
 
+        this.depthIndexAsk = 0;
+        this.depthIndexBid = 0;
         // this.lastdealtime = undefined;
     }
 
@@ -46,7 +48,12 @@ class OKCoinEXDataStream extends WSDataStream {
                     let p = parseFloat(cn[0]);
                     let v = parseFloat(cn[1]);
 
-                    this.asks.push([p, v]);
+                    if (this.cfg.simtrade) {
+                        this.asks.push([p, v, ++this.depthIndexAsk, v]);
+                    }
+                    else {
+                        this.asks.push([p, v]);
+                    }
                 }
             }
             else {
@@ -63,17 +70,34 @@ class OKCoinEXDataStream extends WSDataStream {
                     }
 
                     if (mi == this.asks.length) {
-                        this.asks.push([p, v]);
+                        if (this.cfg.simtrade) {
+                            this.asks.push([p, v, ++this.depthIndexAsk, v]);
+                        }
+                        else {
+                            this.asks.push([p, v]);
+                        }
                     }
                     else if (this.asks[mi][0] != p) {
-                        this.asks.splice(mi, [p, v]);
+
+                        if (this.cfg.simtrade) {
+                            this.asks.splice(mi, [p, v, ++this.depthIndexAsk, v]);
+                        }
+                        else {
+                            this.asks.splice(mi, [p, v]);
+                        }
                     }
                     else {
                         if (v == 0) {
                             this.asks.splice(mi, 1);
                         }
                         else {
-                            this.asks[mi][1] = v;
+                            if (this.cfg.simtrade) {
+                                this.asks[mi][DEPTHINDEX.LASTVOLUME] += v - this.asks[mi][DEPTHINDEX.VOLUME];
+                                this.asks[mi][1] = v;
+                            }
+                            else {
+                                this.asks[mi][1] = v;
+                            }
                         }
                     }
                 }
@@ -89,7 +113,12 @@ class OKCoinEXDataStream extends WSDataStream {
                     let p = parseFloat(cn[0]);
                     let v = parseFloat(cn[1]);
 
-                    this.bids.push([p, v]);
+                    if (this.cfg.simtrade) {
+                        this.bids.push([p, v, ++this.depthIndexBid, v]);
+                    }
+                    else {
+                        this.bids.push([p, v]);
+                    }
                 }
             }
             else {
@@ -106,17 +135,33 @@ class OKCoinEXDataStream extends WSDataStream {
                     }
 
                     if (mi == this.bids.length) {
-                        this.bids.push([p, v]);
+                        if (this.cfg.simtrade) {
+                            this.bids.push([p, v, ++this.depthIndexBid, v]);
+                        }
+                        else {
+                            this.bids.push([p, v]);
+                        }
                     }
                     else if (this.bids[mi][0] != p) {
-                        this.bids.splice(mi, [p, v]);
+                        if (this.cfg.simtrade) {
+                            this.bids.splice(mi, [p, v, ++this.depthIndexBid, v]);
+                        }
+                        else {
+                            this.bids.splice(mi, [p, v]);
+                        }
                     }
                     else {
                         if (v == 0) {
                             this.bids.splice(mi, 1);
                         }
                         else {
-                            this.bids[mi][1] = v;
+                            if (this.cfg.simtrade) {
+                                this.bids[mi][DEPTHINDEX.LASTVOLUME] += v - this.bids[mi][DEPTHINDEX.VOLUME];
+                                this.bids[mi][1] = v;
+                            }
+                            else {
+                                this.bids[mi][1] = v;
+                            }
                         }
                     }
                 }

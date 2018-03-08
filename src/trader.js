@@ -1,5 +1,7 @@
 "use strict";
 
+const { DEPTHINDEX } = require('./wsdatastream');
+
 const TRADETYPE_BUY     = 1;
 const TRADETYPE_NORMAL  = 0;
 const TRADETYPE_SELL    = -1;
@@ -28,7 +30,7 @@ class Trade {
 };
 
 class Market {
-    constructor(name, p, v, m) {
+    constructor(name, p, v, m, ds) {
         this.name = name;
 
         this.lstTrade = [];
@@ -37,6 +39,8 @@ class Market {
         this.price = p;
 
         this.money = m;
+
+        this.ds = ds;
     }
 
     setMoney(m) {
@@ -91,12 +95,26 @@ class Market {
 
 class Trader {
     constructor() {
+        this.strategy = undefined;
         this.lstMarket = [];
     }
 
-    addMarket(name, p, v, m) {
-        let cm = new Market(name, p, v, m);
+    addMarket(name, p, v, m, ds) {
+        let cm = new Market(name, p, v, m, ds);
+        if (this.strategy != undefined) {
+            ds.strategy = this.strategy;
+        }
+
         this.lstMarket.push(cm);
+    }
+
+    setStrategy(strategy) {
+        this.strategy = strategy;
+        this.strategy.trader = this;
+
+        for (let i = 0; i < this.lstMarket.length; ++i) {
+            this.lstMarket.ds.strategy = strategy;
+        }
     }
 
     buy(marketindex, p, v, ts) {
@@ -105,6 +123,28 @@ class Trader {
 
     sell(marketindex, p, v, ts) {
         return this.lstMarket[marketindex].sell(p, v, ts);
+    }
+
+    buyDepthArr(marketindex, arr, ts) {
+        for (let i = 0; i < arr.length; ++i) {
+            this.buy(marketindex, arr[i][DEPTHINDEX.PRICE], arr[i][DEPTHINDEX.VOLUME], ts);
+        }
+    }
+
+    sellDepthArr(marketindex, arr, ts) {
+        for (let i = 0; i < arr.length; ++i) {
+            this.sell(marketindex, arr[i][DEPTHINDEX.PRICE], arr[i][DEPTHINDEX.VOLUME], ts);
+        }
+    }
+
+    hasAllDepth() {
+        for (let i = 0; i < this.lstMarket.length; ++i) {
+            if (!this.lstMarket[i].ds.hasDepth()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 };
 

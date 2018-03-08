@@ -47,6 +47,8 @@ class WSDataStream {
 
         this.lastts = new Date().getTime();
 
+        this.strategy = undefined;
+
         this._procConfig();
     }
 
@@ -164,6 +166,10 @@ class WSDataStream {
         return true;
     }
 
+    hasDepth() {
+        return this.asks.length > 0 && this.bids.length;
+    }
+
     //------------------------------------------------------------------------------
     // 需要重载的接口
 
@@ -191,6 +197,15 @@ class WSDataStream {
         if (this.cfg.funcOnDepth) {
             this.cfg.funcOnDepth();
         }
+
+        if (this.strategy != undefined) {
+            if (this.cfg.simtrade) {
+                this.strategy.onSimDepth();
+            }
+            else {
+                this.strategy.onDepth();
+            }
+        }
     }
 
     _onDeals() {
@@ -204,6 +219,15 @@ class WSDataStream {
 
         if (this.cfg.funcOnDeals) {
             this.cfg.funcOnDeals();
+        }
+
+        if (this.strategy != undefined) {
+            if (this.cfg.simtrade) {
+                this.strategy.onSimDeals();
+            }
+            else {
+                this.strategy.onDeals();
+            }
         }
     }
 };
