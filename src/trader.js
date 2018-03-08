@@ -1,6 +1,7 @@
 "use strict";
 
 const { DEPTHINDEX } = require('./wsdatastream');
+const BTCTraderMgr = require('./btctradermgr');
 
 const TRADETYPE_BUY     = 1;
 const TRADETYPE_NORMAL  = 0;
@@ -37,8 +38,11 @@ class Market {
 
         this.volume = v;
         this.price = p;
-
         this.money = m;
+
+        this.bv = v;
+        this.bp = p;
+        this.bm = m;
 
         this.ds = ds;
     }
@@ -69,6 +73,8 @@ class Market {
 
         this.money -= cm;
 
+        BTCTraderMgr.singleton.insertTrade(TRADETYPE_BUY, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
+
         return true;
     }
 
@@ -88,6 +94,8 @@ class Market {
 
         this.volume -= v;
         this.money += cm;
+
+        BTCTraderMgr.singleton.insertTrade(TRADETYPE_SELL, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
 
         return true;
     }

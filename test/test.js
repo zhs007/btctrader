@@ -6,6 +6,8 @@ const okcoinex = require('../src/market/okcoinex/index');
 const { matchmakingBid, matchmakingAsk, matchmakingSell, matchmakingBuy, matchmakingAsk_depth2, matchmakingBid_depth2 } = require('../src/util');
 const { Trader } = require('../src/trader');
 const { Strategy } = require('../src/strategy');
+const BTCTraderMgr = require('../src/btctradermgr');
+const fs = require('fs');
 
 const ISSIMTRADE = true;
 
@@ -64,28 +66,31 @@ class TestStrategy extends Strategy {
 //     [0.002, 0.002]
 // ];
 
-var ds0 = new okcoinex.DataStream({
-    addr: 'wss://real.okex.com:10441/websocket',
-    symbol: 'btc_usdt',
-    simtrade: ISSIMTRADE
-});
-
-var ds1 = new huobi.DataStream({
-    addr: 'wss://api.huobi.pro/ws',
-    symbol: 'btcusdt',
-    simtrade: ISSIMTRADE
-});
-
 // dsarr.push(ds0);
 // dsarr.push(ds1);
 
-var trader = new Trader();
-trader.setStrategy(new TestStrategy());
-trader.addMarket('okcoinex', 0, 0, 10000, ds0);
-trader.addMarket('huobi', 0, 0, 10000, ds1);
+const cfg = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
+BTCTraderMgr.singleton.init(cfg).then(() => {
+    var ds0 = new okcoinex.DataStream({
+        addr: 'wss://real.okex.com:10441/websocket',
+        symbol: 'btc_usdt',
+        simtrade: ISSIMTRADE
+    });
 
-ds0.init();
-ds1.init();
+    var ds1 = new huobi.DataStream({
+        addr: 'wss://api.huobi.pro/ws',
+        symbol: 'btcusdt',
+        simtrade: ISSIMTRADE
+    });
+
+    var trader = new Trader();
+    trader.setStrategy(new TestStrategy());
+    trader.addMarket('okcoinex', 0, 0, 10000, ds0);
+    trader.addMarket('huobi', 0, 0, 10000, ds1);
+
+    ds0.init();
+    ds1.init();
+});
 
 // var historyAsk = [];
 // var historyBid = [];
