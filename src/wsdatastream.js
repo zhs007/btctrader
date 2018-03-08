@@ -4,7 +4,9 @@ const WebSocket = require('ws');
 
 const DEPTHINDEX = {
     PRICE:      0,
-    VOLUME:     1
+    VOLUME:     1,
+    ID:         2,  // only simtrade use
+    LASTVOLUME: 3   // only simtrade use
 };
 
 const DEALSINDEX = {
@@ -28,6 +30,7 @@ class WSDataStream {
     // cfg.timeout_message
     // cfg.output_message
     // cfg.maxdeals
+    // cfg.simtrade
     constructor(cfg) {
         this.cfg = cfg;
         this.ws = undefined;
@@ -48,6 +51,10 @@ class WSDataStream {
     }
 
     _procConfig() {
+        if (!this.cfg.hasOwnProperty('simtrade')) {
+            this.cfg.simtrade = false;
+        }
+
         if (!this.cfg.hasOwnProperty('maxdeals')) {
             this.cfg.maxdeals = 500;
         }

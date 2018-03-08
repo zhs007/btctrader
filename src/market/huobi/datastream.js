@@ -1,6 +1,6 @@
 "use strict";
 
-const { WSDataStream, DEALTYPE } = require('../../wsdatastream');
+const { WSDataStream, DEPTHINDEX, DEALTYPE } = require('../../wsdatastream');
 const pako = require('pako');
 
 class HuoBiDataStream extends WSDataStream {
@@ -10,6 +10,9 @@ class HuoBiDataStream extends WSDataStream {
 
         this.channelDepth = 'market.' + this.cfg.symbol + '.depth.step0';
         this.channelDetail = 'market.' + this.cfg.symbol + '.trade.detail';
+
+        this.depthIndexAsk = 0;
+        this.depthIndexBid = 0;
     }
 
     _subscribe() {
@@ -22,24 +25,121 @@ class HuoBiDataStream extends WSDataStream {
             "sub": this.channelDetail,
             "id": this.cfg.symbol + 'detail'
         });
-
-        // this._send({
-        //     "sub": 'market.' + symbol + '.kline.1min',
-        //     "id": symbol + 'kline'
-        // });
     }
 
     _onChannelDepth(data) {
-        this.asks = data.asks;
-        this.bids = data.bids;
+        if (this.cfg.simtrade) {
+            if (this.asks.length > 0) {
+                let oi = 0;
+                for (let ci = 0; ci < data.asks.length; ++ci) {
+                    for (; oi < this.asks.length; ++oi) {
+                        if (data.asks[ci][DEPTHINDEX.PRICE] == this.asks[oi][DEPTHINDEX.PRICE]) {
+
+                            if (data.asks[ci].length == 2) {
+                                data.asks[ci].push(this.asks[oi][DEPTHINDEX.ID]);
+                                data.asks[ci].push(data.asks[ci][DEPTHINDEX.VOLUME] - this.asks[oi][DEPTHINDEX.VOLUME] + this.asks[oi][DEPTHINDEX.LASTVOLUME]);
+                            }
+                            else {
+                                // data.asks[ci][DEPTHINDEX.ID] = this.asks[oi][DEPTHINDEX.ID];
+                                data.asks[ci][DEPTHINDEX.LASTVOLUME] = data.asks[ci][DEPTHINDEX.VOLUME] - this.asks[oi][DEPTHINDEX.VOLUME] + this.asks[oi][DEPTHINDEX.LASTVOLUME];
+                            }
+
+                            break;
+                        }
+                        else if (data.asks[ci][DEPTHINDEX.PRICE] < this.asks[oi][DEPTHINDEX.PRICE]) {
+
+                            if (data.asks[ci].length == 2) {
+                                data.asks[ci].push(++this.depthIndexAsk);
+                                data.asks[ci].push(data.asks[ci][DEPTHINDEX.VOLUME]);
+                            }
+
+                            break;
+
+                            // else {
+                                // data.asks[ci][DEPTHINDEX.ID] = this.asks[oi][DEPTHINDEX.ID];
+                                // data.asks[ci][DEPTHINDEX.LASTVOLUME] = data.asks[ci][DEPTHINDEX.VOLUME];
+                            // }
+                        }
+                        else {
+                            ++oi;
+                        }
+                    }
+
+                    if (data.asks[ci].length == 2) {
+                        data.asks[ci].push(++this.depthIndexAsk);
+                        data.asks[ci].push(data.asks[ci][DEPTHINDEX.VOLUME]);
+                    }
+                }
+            }
+            else {
+                for (let ci = 0; ci < data.asks.length; ++ci) {
+                    if (data.asks[ci].length == 2) {
+                        data.asks[ci].push(++this.depthIndexAsk);
+                        data.asks[ci].push(data.asks[ci][DEPTHINDEX.VOLUME]);
+                    }
+                }
+            }
+
+            if (this.bids.length > 0) {
+                let oi = 0;
+                for (let ci = 0; ci < data.bids.length; ++ci) {
+                    for (; oi < this.bids.length; ++oi) {
+                        if (data.bids[ci][DEPTHINDEX.PRICE] == this.bids[oi][DEPTHINDEX.PRICE]) {
+
+                            if (data.bids[ci].length == 2) {
+                                data.bids[ci].push(this.bids[oi][DEPTHINDEX.ID]);
+                                data.bids[ci].push(data.bids[ci][DEPTHINDEX.VOLUME] - this.bids[oi][DEPTHINDEX.VOLUME] + this.bids[oi][DEPTHINDEX.LASTVOLUME]);
+                            }
+                            else {
+                                // data.asks[ci][DEPTHINDEX.ID] = this.asks[oi][DEPTHINDEX.ID];
+                                data.bids[ci][DEPTHINDEX.LASTVOLUME] = data.bids[ci][DEPTHINDEX.VOLUME] - this.bids[oi][DEPTHINDEX.VOLUME] + this.bids[oi][DEPTHINDEX.LASTVOLUME];
+                            }
+
+                            break;
+                        }
+                        else if (data.bids[ci][DEPTHINDEX.PRICE] > this.bids[oi][DEPTHINDEX.PRICE]) {
+
+                            if (data.bids[ci].length == 2) {
+                                data.bids[ci].push(++this.depthIndexBid);
+                                data.bids[ci].push(data.bids[ci][DEPTHINDEX.VOLUME]);
+                            }
+
+                            break;
+
+                            // else {
+                            // data.asks[ci][DEPTHINDEX.ID] = this.asks[oi][DEPTHINDEX.ID];
+                            // data.asks[ci][DEPTHINDEX.LASTVOLUME] = data.asks[ci][DEPTHINDEX.VOLUME];
+                            // }
+                        }
+                        else {
+                            ++oi;
+                        }
+                    }
+
+                    if (data.bids[ci].length == 2) {
+                        data.bids[ci].push(++this.depthIndexAsk);
+                        data.bids[ci].push(data.bids[ci][DEPTHINDEX.VOLUME]);
+                    }
+                }
+            }
+            else {
+                for (let ci = 0; ci < data.bids.length; ++ci) {
+                    if (data.bids[ci].length == 2) {
+                        data.bids[ci].push(++this.depthIndexBid);
+                        data.bids[ci].push(data.bids[ci][DEPTHINDEX.VOLUME]);
+                    }
+                }
+            }
+
+            this.asks = data.asks;
+            this.bids = data.bids;
+        }
+        else {
+            this.asks = data.asks;
+            this.bids = data.bids;
+        }
 
         this._onDepth();
-        // if (this.cfg.funcOnDepth) {
-        //     this.cfg.funcOnDepth();
-        // }
-
-        // console.log('asks' + JSON.stringify(this.asks));
-        // console.log('bids' + JSON.stringify(this.bids));
     }
 
     _onChannelDetail(data) {
@@ -52,19 +152,9 @@ class HuoBiDataStream extends WSDataStream {
                 data.data[i].ts,
                 data.data[i].direction == 'buy' ? DEALTYPE.BUY : DEALTYPE.SELL
             ]);
-
-            // console.log('asks' + JSON.stringify(this.asks));
         }
-        // this.asks = data.asks;
-        // this.bids = data.bids;
 
         this._onDeals();
-        // if (this.cfg.funcOnDepth) {
-        //     this.cfg.funcOnDepth();
-        // }
-
-        // console.log('asks' + JSON.stringify(this.asks));
-        // console.log('bids' + JSON.stringify(this.bids));
     }
 
     //------------------------------------------------------------------------------
