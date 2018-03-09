@@ -1,0 +1,200 @@
+"use strict";
+
+const { DataStream, DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./datastream');
+const WebSocket = require('ws');
+var SocksProxyAgent = require('socks-proxy-agent');
+
+class MulWSDataStream extends DataStream {
+    // cfg.lstaddr
+    // cfg.timeout_keepalive
+    // cfg.timeout_connect
+    // cfg.timeout_message
+    // cfg.proxysocks
+    constructor(cfg) {
+        super(cfg);
+
+
+        this.lstws = [];
+
+        this.timerKeepalive = undefined;
+        this.timerConnect = undefined;
+
+        this.lastts = new Date().getTime();
+    }
+
+    _procConfig() {
+        super._procConfig();
+
+        if (!this.cfg.hasOwnProperty('timeout_keepalive')) {
+            this.cfg.timeout_keepalive = 30 * 1000;
+        }
+
+        if (!this.cfg.hasOwnProperty('timeout_connect')) {
+            this.cfg.timeout_connect = 30 * 1000;
+        }
+
+        if (!this.cfg.hasOwnProperty('timeout_message')) {
+            this.cfg.timeout_message = 30 * 1000;
+        }
+    }
+
+    _startTimer_Keepalive() {
+        if (this.timerKeepalive != undefined) {
+            clearInterval(this.timerKeepalive);
+
+            this.timerKeepalive = undefined;
+        }
+
+        setInterval(() => {
+            if (!this.isConnected()) {
+                this.init();
+
+                return ;
+            }
+
+            this._onKeepalive();
+
+            let ts = new Date().getTime();
+            if (ts - this.lastts > this.cfg.timeout_message) {
+                this.ws.close();
+
+                return ;
+            }
+
+        }, this.cfg.timeout_keepalive);
+    }
+
+    _startTimer_Connect() {
+        if (this.timerConnect != undefined) {
+            clearTimeout(this.timerConnect);
+
+            this.timerConnect = undefined;
+        }
+
+        setTimeout(() => {
+            if (this.isConnected()) {
+                return ;
+            }
+
+            this.init();
+
+        }, this.cfg.timeout_connect);
+    }
+
+    init() {
+        this.ws = undefined;
+
+        this._startTimer_Keepalive();
+        this._startTimer_Connect();
+
+        if (this.cfg.proxysocks) {
+            this.ws = new WebSocket(this.cfg.addr, {agent: new SocksProxyAgent(this.cfg.proxysocks)});
+        }
+        else {
+            this.ws = new WebSocket(this.cfg.addr);
+        }
+
+        this.ws.on('open', () => {
+            this._onOpen();
+        });
+
+        this.ws.on('message', (data) => {
+            this._onMsg(data);
+        });
+
+        this.ws.on('close', () => {
+            this._onClose();
+        });
+
+        this.ws.on('error', (err) => {
+            this._onError(err);
+        });
+    }
+
+    _send(buff) {
+        if (!this.isConnected()) {
+            return ;
+        }
+
+        this.ws.send(buff);
+    }
+
+    isConnected() {
+        if (this.ws == undefined) {
+            return false;
+        }
+
+        if (this.ws.readyState !== WebSocket.OPEN) {
+            return false;
+        }
+
+        return true;
+    }
+
+    //------------------------------------------------------------------------------
+    // 需要重载的接口
+
+    sendMsg(msg) {
+    }
+
+    _onOpen() {
+    }
+
+    _onMsg(data) {
+        this.lastts = new Date().getTime();
+    }
+
+    _onClose() {
+        this.init();
+    }
+
+    _onError(err) {
+    }
+
+    _onKeepalive() {
+    }
+
+    // _onDepth() {
+    //     if (this.cfg.funcOnDepth) {
+    //         this.cfg.funcOnDepth();
+    //     }
+    //
+    //     if (this.strategy != undefined) {
+    //         if (this.cfg.simtrade) {
+    //             this.strategy.onSimDepth();
+    //         }
+    //         else {
+    //             this.strategy.onDepth();
+    //         }
+    //     }
+    // }
+    //
+    // _onDeals() {
+    //     if (this.deals.length > this.cfg.maxdeals) {
+    //         this.deals.splice(0, Math.floor(this.cfg.maxdeals / 2));
+    //     }
+    //
+    //     if (this.deals.length > 0) {
+    //         this.lastPrice = this.deals[this.deals.length - 1][DEALSINDEX.PRICE];
+    //     }
+    //
+    //     if (this.cfg.funcOnDeals) {
+    //         this.cfg.funcOnDeals();
+    //     }
+    //
+    //     if (this.strategy != undefined) {
+    //         if (this.cfg.simtrade) {
+    //             this.strategy.onSimDeals();
+    //         }
+    //         else {
+    //             this.strategy.onDeals();
+    //         }
+    //     }
+    // }
+};
+
+exports.MulWSDataStream = MulWSDataStream;
+
+exports.DEPTHINDEX      = DEPTHINDEX;
+exports.DEALSINDEX      = DEALSINDEX;
+exports.DEALTYPE        = DEALTYPE;
