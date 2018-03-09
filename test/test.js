@@ -32,8 +32,8 @@ class TestStrategy extends Strategy {
         this.trader.buyDepthArr(bidi, arrbid, new Date().getTime());
         // tradeBid(bidi, arrbid);
 
-        console.log(' market0 ' + trader.lstMarket[0].price + ' ' + trader.lstMarket[0].volume + ' ' + trader.lstMarket[0].money);
-        console.log(' market1 ' + trader.lstMarket[1].price + ' ' + trader.lstMarket[1].volume + ' ' + trader.lstMarket[1].money);
+        // console.log(' market0 ' + trader.lstMarket[0].price + ' ' + trader.lstMarket[0].volume + ' ' + trader.lstMarket[0].money);
+        // console.log(' market1 ' + trader.lstMarket[1].price + ' ' + trader.lstMarket[1].volume + ' ' + trader.lstMarket[1].money);
     }
 
     onSimDepth() {
@@ -70,8 +70,10 @@ class TestStrategy extends Strategy {
 // dsarr.push(ds1);
 
 const cfg = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-BTCTraderMgr.singleton.init(cfg).then(() => {
+// BTCTraderMgr.singleton.init(cfg).then(() => {
     var ds0 = new okcoinex.DataStream({
+        // addr: 'wss://real.okcoin.com:10440/websocket',
+        // symbol: 'btc_usd',
         addr: 'wss://real.okex.com:10441/websocket',
         symbol: 'btc_usdt',
         simtrade: ISSIMTRADE
@@ -90,7 +92,7 @@ BTCTraderMgr.singleton.init(cfg).then(() => {
 
     ds0.init();
     ds1.init();
-});
+// });
 
 // var historyAsk = [];
 // var historyBid = [];

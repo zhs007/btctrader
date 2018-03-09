@@ -73,7 +73,7 @@ class Market {
 
         this.money -= cm;
 
-        BTCTraderMgr.singleton.insertTrade(TRADETYPE_BUY, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
+        // BTCTraderMgr.singleton.insertTrade(TRADETYPE_BUY, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
 
         return true;
     }
@@ -95,7 +95,7 @@ class Market {
         this.volume -= v;
         this.money += cm;
 
-        BTCTraderMgr.singleton.insertTrade(TRADETYPE_SELL, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
+        // BTCTraderMgr.singleton.insertTrade(TRADETYPE_SELL, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
 
         return true;
     }

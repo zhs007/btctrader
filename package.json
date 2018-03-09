@@ -2,9 +2,11 @@
   "name": "btctrader",
   "version": "0.0.1",
   "dependencies": {
+    "binance-api-node": "^0.7.1",
     "ioredis": "^3.2.2",
     "mysql2": "^1.5.2",
     "pako": "^1.0.6",
+    "socks-proxy-agent": "^3.0.1",
     "ws": "^4.1.0"
   }
 }
