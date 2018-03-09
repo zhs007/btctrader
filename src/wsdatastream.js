@@ -43,9 +43,9 @@ class WSDataStream extends DataStream {
         this.client._send(buff);
     }
 
-    isConnected() {
-        return this.client.isConnected();
-    }
+    // isConnected() {
+    //     return this.client.isConnected();
+    // }
 
     //------------------------------------------------------------------------------
     // 需要重载的接口

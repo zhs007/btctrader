@@ -166,6 +166,8 @@ class WebSocketClient {
         if (this.cfg.funcOnError) {
             this.cfg.funcOnError(err);
         }
+
+        this.ws.close();
     }
 
     _onKeepalive() {

@@ -1,5 +1,5 @@
 "use strict";
 
-const { HuoBiDataStream } = require('./datastream');
+const { BinanceDataStream } = require('./datastream');
 
-exports.DataStream = HuoBiDataStream;
+exports.DataStream = BinanceDataStream;

@@ -1,8 +1,40 @@
 "use strict";
 
 const { DataStream, DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./datastream');
-const WebSocket = require('ws');
-var SocksProxyAgent = require('socks-proxy-agent');
+const { WebSocketClient } = require('./websocket');
+
+class __MulWSDataStreamConfig {
+    constructor(ds, cfg, i) {
+        this.addr = cfg.lstaddr[i];
+        this.timeout_keepalive = cfg.timeout_keepalive;
+        this.timeout_connect = cfg.timeout_connect;
+        this.timeout_message = cfg.timeout_message;
+        this.proxysocks = cfg.proxysocks;
+
+        this.curIndex = i;
+        this.ds = ds;
+    }
+
+    funcOnOpen() {
+        this.ds._onOpen(this.curIndex);
+    }
+
+    funcOnMsg(data) {
+        this.ds._onMsg(this.curIndex, data);
+    }
+
+    funcOnClose(i) {
+        this.ds._onClose(this.curIndex);
+    }
+
+    funcOnError(i, err) {
+        this.ds._onError(this.curIndex, err);
+    }
+
+    funcOnKeepalive(i) {
+        this.ds._onKeepalive(this.curIndex);
+    }
+};
 
 class MulWSDataStream extends DataStream {
     // cfg.lstaddr
@@ -13,184 +45,47 @@ class MulWSDataStream extends DataStream {
     constructor(cfg) {
         super(cfg);
 
-
-        this.lstws = [];
-
-        this.timerKeepalive = undefined;
-        this.timerConnect = undefined;
-
-        this.lastts = new Date().getTime();
-    }
-
-    _procConfig() {
-        super._procConfig();
-
-        if (!this.cfg.hasOwnProperty('timeout_keepalive')) {
-            this.cfg.timeout_keepalive = 30 * 1000;
+        this.lstClient = [];
+        for (let i = 0; i < cfg.lstaddr.length; ++i) {
+            let curcfg = new __MulWSDataStreamConfig(this, cfg, i);
+            this.lstClient.push(new WebSocketClient(curcfg));
         }
-
-        if (!this.cfg.hasOwnProperty('timeout_connect')) {
-            this.cfg.timeout_connect = 30 * 1000;
-        }
-
-        if (!this.cfg.hasOwnProperty('timeout_message')) {
-            this.cfg.timeout_message = 30 * 1000;
-        }
-    }
-
-    _startTimer_Keepalive() {
-        if (this.timerKeepalive != undefined) {
-            clearInterval(this.timerKeepalive);
-
-            this.timerKeepalive = undefined;
-        }
-
-        setInterval(() => {
-            if (!this.isConnected()) {
-                this.init();
-
-                return ;
-            }
-
-            this._onKeepalive();
-
-            let ts = new Date().getTime();
-            if (ts - this.lastts > this.cfg.timeout_message) {
-                this.ws.close();
-
-                return ;
-            }
-
-        }, this.cfg.timeout_keepalive);
-    }
-
-    _startTimer_Connect() {
-        if (this.timerConnect != undefined) {
-            clearTimeout(this.timerConnect);
-
-            this.timerConnect = undefined;
-        }
-
-        setTimeout(() => {
-            if (this.isConnected()) {
-                return ;
-            }
-
-            this.init();
-
-        }, this.cfg.timeout_connect);
     }
 
     init() {
-        this.ws = undefined;
-
-        this._startTimer_Keepalive();
-        this._startTimer_Connect();
-
-        if (this.cfg.proxysocks) {
-            this.ws = new WebSocket(this.cfg.addr, {agent: new SocksProxyAgent(this.cfg.proxysocks)});
+        for (let i = 0; i < this.lstClient.length; ++i) {
+            if (!this.lstClient[i].isConnected()) {
+                this.lstClient[i].init();
+            }
         }
-        else {
-            this.ws = new WebSocket(this.cfg.addr);
-        }
-
-        this.ws.on('open', () => {
-            this._onOpen();
-        });
-
-        this.ws.on('message', (data) => {
-            this._onMsg(data);
-        });
-
-        this.ws.on('close', () => {
-            this._onClose();
-        });
-
-        this.ws.on('error', (err) => {
-            this._onError(err);
-        });
     }
 
-    _send(buff) {
-        if (!this.isConnected()) {
-            return ;
-        }
-
-        this.ws.send(buff);
-    }
-
-    isConnected() {
-        if (this.ws == undefined) {
-            return false;
-        }
-
-        if (this.ws.readyState !== WebSocket.OPEN) {
-            return false;
-        }
-
-        return true;
+    _send(i, buff) {
+        this.lstClient[i]._send(buff);
     }
 
     //------------------------------------------------------------------------------
     // 需要重载的接口
 
-    sendMsg(msg) {
+    sendMsg(i, msg) {
     }
 
-    _onOpen() {
+    _onOpen(i) {
     }
 
-    _onMsg(data) {
+    _onMsg(i, data) {
         this.lastts = new Date().getTime();
     }
 
-    _onClose() {
+    _onClose(i) {
         this.init();
     }
 
-    _onError(err) {
+    _onError(i, err) {
     }
 
-    _onKeepalive() {
+    _onKeepalive(i) {
     }
-
-    // _onDepth() {
-    //     if (this.cfg.funcOnDepth) {
-    //         this.cfg.funcOnDepth();
-    //     }
-    //
-    //     if (this.strategy != undefined) {
-    //         if (this.cfg.simtrade) {
-    //             this.strategy.onSimDepth();
-    //         }
-    //         else {
-    //             this.strategy.onDepth();
-    //         }
-    //     }
-    // }
-    //
-    // _onDeals() {
-    //     if (this.deals.length > this.cfg.maxdeals) {
-    //         this.deals.splice(0, Math.floor(this.cfg.maxdeals / 2));
-    //     }
-    //
-    //     if (this.deals.length > 0) {
-    //         this.lastPrice = this.deals[this.deals.length - 1][DEALSINDEX.PRICE];
-    //     }
-    //
-    //     if (this.cfg.funcOnDeals) {
-    //         this.cfg.funcOnDeals();
-    //     }
-    //
-    //     if (this.strategy != undefined) {
-    //         if (this.cfg.simtrade) {
-    //             this.strategy.onSimDeals();
-    //         }
-    //         else {
-    //             this.strategy.onDeals();
-    //         }
-    //     }
-    // }
 };
 
 exports.MulWSDataStream = MulWSDataStream;

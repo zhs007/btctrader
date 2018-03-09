@@ -58,6 +58,10 @@ class DataStream {
         return this.asks.length > 0 && this.bids.length;
     }
 
+    hasDeals() {
+        return this.deals.length > 0;
+    }
+
     //------------------------------------------------------------------------------
     // 需要重载的接口
 
