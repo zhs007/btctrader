@@ -5,19 +5,19 @@ class Strategy {
         this.trader = undefined;
     }
 
-    onDepth() {
+    onDepth(market) {
 
     }
 
-    onDeals() {
+    onDeals(market) {
 
     }
 
-    onSimDepth() {
+    onSimDepth(market) {
 
     }
 
-    onSimDeals() {
+    onSimDeals(market) {
 
     }
 };

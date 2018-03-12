@@ -1,5 +1,8 @@
 "use strict";
 
+// asks sort asc
+// bids sort desc
+
 const DEPTHINDEX = {
     PRICE:      0,
     VOLUME:     1,
@@ -36,6 +39,7 @@ class DataStream {
         this.lastPrice = 0;
 
         this.strategy = undefined;
+        this.market = undefined;
 
         this._procConfig();
     }
@@ -72,10 +76,10 @@ class DataStream {
 
         if (this.strategy != undefined) {
             if (this.cfg.simtrade) {
-                this.strategy.onSimDepth();
+                this.strategy.onSimDepth(this.market);
             }
             else {
-                this.strategy.onDepth();
+                this.strategy.onDepth(this.market);
             }
         }
     }
@@ -95,10 +99,10 @@ class DataStream {
 
         if (this.strategy != undefined) {
             if (this.cfg.simtrade) {
-                this.strategy.onSimDeals();
+                this.strategy.onSimDeals(this.market);
             }
             else {
-                this.strategy.onDeals();
+                this.strategy.onDeals(this.market);
             }
         }
     }

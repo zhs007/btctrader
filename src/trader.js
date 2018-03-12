@@ -31,7 +31,8 @@ class Trade {
 };
 
 class Market {
-    constructor(name, p, v, m, ds) {
+    constructor(marketindex, name, p, v, m, ds) {
+        this.marketindex = marketindex;
         this.name = name;
 
         this.lstTrade = [];
@@ -45,6 +46,8 @@ class Market {
         this.bm = m;
 
         this.ds = ds;
+
+        this.ds.market = this;
     }
 
     setMoney(m) {
@@ -108,7 +111,7 @@ class Trader {
     }
 
     addMarket(name, p, v, m, ds) {
-        let cm = new Market(name, p, v, m, ds);
+        let cm = new Market(this.lstMarket.length, name, p, v, m, ds);
         if (this.strategy != undefined) {
             ds.strategy = this.strategy;
         }

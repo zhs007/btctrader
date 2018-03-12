@@ -295,6 +295,72 @@ function analyzeDepth(asks, bids) {
     return depth;
 }
 
+function countPriceWithDepth_asks_depth2(asks, volume) {
+    let ret = {avg: 0, max: 0, nums: 0, vol: 0, cp: 0};
+    for (let i = 0; i < asks.length; ++i) {
+        let nv = volume - ret.vol;
+        if (nv <= 0) {
+            break;
+        }
+
+        if (nv <= asks[i][DEPTHINDEX.LASTVOLUME]) {
+            let tv = ret.vol + nv;
+
+            ret.avg = ret.avg * ret.vol / tv + asks[i][DEPTHINDEX.PRICE] * nv / tv;
+            ret.vol = ret.vol + nv;
+
+            ret.max = asks[i][DEPTHINDEX.PRICE];
+
+            break;
+        }
+        else {
+            nv = asks[i][DEPTHINDEX.LASTVOLUME];
+
+            let tv = ret.vol + nv;
+
+            ret.avg = ret.avg * ret.vol / tv + asks[i][DEPTHINDEX.PRICE] * nv / tv;
+            ret.vol = ret.vol + nv;
+
+            ret.max = asks[i][DEPTHINDEX.PRICE];
+        }
+    }
+
+    return ret;
+}
+
+function countPriceWithDepth_bids_depth2(bids, volume) {
+    let ret = {avg: 0, min: 0, nums: 0, vol: 0, cp: 0};
+    for (let i = 0; i < bids.length; ++i) {
+        let nv = volume - ret.vol;
+        if (nv <= 0) {
+            break;
+        }
+
+        if (nv <= bids[i][DEPTHINDEX.LASTVOLUME]) {
+            let tv = ret.vol + nv;
+
+            ret.avg = ret.avg * ret.vol / tv + bids[i][DEPTHINDEX.PRICE] * nv / tv;
+            ret.vol = ret.vol + nv;
+
+            ret.min = bids[i][DEPTHINDEX.PRICE];
+
+            break;
+        }
+        else {
+            nv = bids[i][DEPTHINDEX.LASTVOLUME];
+
+            let tv = ret.vol + nv;
+
+            ret.avg = ret.avg * ret.vol / tv + bids[i][DEPTHINDEX.PRICE] * nv / tv;
+            ret.vol = ret.vol + nv;
+
+            ret.min = bids[i][DEPTHINDEX.PRICE];
+        }
+    }
+
+    return ret;
+}
+
 exports.matchmakingAsk = matchmakingAsk;
 exports.matchmakingBid = matchmakingBid;
 exports.matchmakingAsk_depth2 = matchmakingAsk_depth2;
@@ -302,3 +368,6 @@ exports.matchmakingBid_depth2 = matchmakingBid_depth2;
 exports.analyzeDepth = analyzeDepth;
 exports.matchmakingBuy = matchmakingBuy;
 exports.matchmakingSell = matchmakingSell;
+
+exports.countPriceWithDepth_asks_depth2 = countPriceWithDepth_asks_depth2;
+exports.countPriceWithDepth_bids_depth2 = countPriceWithDepth_bids_depth2;

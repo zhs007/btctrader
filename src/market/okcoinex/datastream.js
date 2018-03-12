@@ -57,6 +57,10 @@ class OKCoinEXDataStream extends WSDataStream {
                 }
             }
             else {
+                let rmvnums = 0;
+                let insnums = 0;
+                let updnums = 0;
+
                 let mi = 0;
                 for (let i = 0; i < data.asks.length; ++i) {
                     let cn = data.asks[data.asks.length - 1 - i];
@@ -64,42 +68,60 @@ class OKCoinEXDataStream extends WSDataStream {
                     let v = parseFloat(cn[1]);
 
                     for (; mi < this.asks.length; ++mi) {
-                        if (this.asks[mi][0] <= p) {
+                        if (this.asks[mi][0] >= p) {
                             break ;
                         }
                     }
 
                     if (mi == this.asks.length) {
                         if (this.cfg.simtrade) {
+                            insnums++;
+
                             this.asks.push([p, v, ++this.depthIndexAsk, v]);
                         }
                         else {
+                            insnums++;
+
                             this.asks.push([p, v]);
                         }
                     }
                     else if (this.asks[mi][0] != p) {
 
                         if (this.cfg.simtrade) {
-                            this.asks.splice(mi, [p, v, ++this.depthIndexAsk, v]);
+                            insnums++;
+
+                            this.asks.splice(mi, 0, [p, v, ++this.depthIndexAsk, v]);
                         }
                         else {
-                            this.asks.splice(mi, [p, v]);
+                            insnums++;
+
+                            this.asks.splice(mi, 0, [p, v]);
                         }
                     }
                     else {
                         if (v == 0) {
+                            rmvnums++;
+
                             this.asks.splice(mi, 1);
                         }
                         else {
                             if (this.cfg.simtrade) {
+                                updnums++;
+
                                 this.asks[mi][DEPTHINDEX.LASTVOLUME] += v - this.asks[mi][DEPTHINDEX.VOLUME];
                                 this.asks[mi][1] = v;
                             }
                             else {
+                                updnums++;
+
                                 this.asks[mi][1] = v;
                             }
                         }
                     }
+                }
+
+                if (this.cfg.output_message) {
+                    console.log('okcoinex depth ask ins:' + insnums + ' upd:' + updnums + ' rmv:' + rmvnums);
                 }
             }
 
@@ -122,6 +144,10 @@ class OKCoinEXDataStream extends WSDataStream {
                 }
             }
             else {
+                let rmvnums = 0;
+                let insnums = 0;
+                let updnums = 0;
+
                 let mi = 0;
                 for (let i = 0; i < data.bids.length; ++i) {
                     let cn = data.bids[i];
@@ -129,41 +155,59 @@ class OKCoinEXDataStream extends WSDataStream {
                     let v = parseFloat(cn[1]);
 
                     for (; mi < this.bids.length; ++mi) {
-                        if (this.bids[mi][0] >= p) {
+                        if (this.bids[mi][0] <= p) {
                             break ;
                         }
                     }
 
                     if (mi == this.bids.length) {
                         if (this.cfg.simtrade) {
+                            insnums++;
+
                             this.bids.push([p, v, ++this.depthIndexBid, v]);
                         }
                         else {
+                            insnums++;
+
                             this.bids.push([p, v]);
                         }
                     }
                     else if (this.bids[mi][0] != p) {
                         if (this.cfg.simtrade) {
-                            this.bids.splice(mi, [p, v, ++this.depthIndexBid, v]);
+                            insnums++;
+
+                            this.bids.splice(mi, 0, [p, v, ++this.depthIndexBid, v]);
                         }
                         else {
-                            this.bids.splice(mi, [p, v]);
+                            insnums++;
+
+                            this.bids.splice(mi, 0, [p, v]);
                         }
                     }
                     else {
                         if (v == 0) {
+                            rmvnums++;
+
                             this.bids.splice(mi, 1);
                         }
                         else {
                             if (this.cfg.simtrade) {
+                                updnums++;
+
                                 this.bids[mi][DEPTHINDEX.LASTVOLUME] += v - this.bids[mi][DEPTHINDEX.VOLUME];
                                 this.bids[mi][1] = v;
                             }
                             else {
+                                updnums++;
+
                                 this.bids[mi][1] = v;
                             }
                         }
                     }
+                }
+
+                if (this.cfg.output_message) {
+                    console.log('okcoinex depth bid ins:' + insnums + ' upd:' + updnums + ' rmv:' + rmvnums);
                 }
             }
 
