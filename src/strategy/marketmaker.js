@@ -98,12 +98,12 @@ class Strategy_MarketMaker extends Strategy {
         let off = askret.avg - bidret.avg;
         console.log(util.format('off %d offper', off, off / askret.avg));
         //
-        if (off / askret.avg > 0.004) {
+        // if (off / askret.avg > 0.004) {
             console.log(util.format('totalvolume %j maxprice %j minprice %j', totalvolume, maxprice, minprice));
             console.log(util.format('amountDepth %d', this.amountDepth));
 
             console.log(util.format('proc asks %j bids %j', askret, bidret));
-        }
+        // }
     }
 };
 
