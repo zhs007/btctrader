@@ -2,16 +2,16 @@
 
 const { HTTPDataStream, DEPTHINDEX, DEALTYPE, DEALSINDEX } = require('../../httpdatastream');
 
-class BithumbDataStream extends HTTPDataStream {
+class BCEXDataStream extends HTTPDataStream {
     // cfg.baseurl - like https://api.bithumb.com/public/
     // cfg.symbol - btc
     constructor(cfg) {
         if (!cfg.hasOwnProperty('baseurl')) {
-            cfg.baseurl = 'https://api.bithumb.com/public/';
+            cfg.baseurl = 'https://www.bcex.ca/';
         }
 
         if (!cfg.hasOwnProperty('symbol')) {
-            cfg.symbol = 'btc';
+            cfg.symbol = 'btc2ckusd';
         }
 
         super(cfg);
@@ -19,7 +19,8 @@ class BithumbDataStream extends HTTPDataStream {
         this.depthIndexAsk = 0;
         this.depthIndexBid = 0;
 
-        this.urlDepth = cfg.baseurl + 'orderbook/' + cfg.symbol;
+        // this.urlDepth = cfg.baseurl + 'Api_Order/tradeList';
+        this.urlDepth = cfg.baseurl + 'Api_Order/depth';
         this.urlTrade = cfg.baseurl + 'recent_transactions/' + cfg.symbol;
     }
 
@@ -184,15 +185,15 @@ class BithumbDataStream extends HTTPDataStream {
     // HTTPDataStream
 
     _onTick() {
-        this.startRequest(this.urlDepth, (err, data) => {
+        this.startPost(this.urlDepth, { symbol: this.cfg.symbol }, (err, data) => {
             if (err) {
-                console.log('bithumb depth err ' + err);
+                console.log('bcex depth err ' + err);
 
                 return ;
             }
 
             if (this.cfg.output_message) {
-                console.log('bithumb depth + ' + data);
+                console.log('bcex depth + ' + data);
             }
 
             let msg = JSON.parse(data);
@@ -200,22 +201,22 @@ class BithumbDataStream extends HTTPDataStream {
             this._onChannel_Depth(msg.data);
         });
 
-        this.startRequest(this.urlTrade, (err, data) => {
-            if (err) {
-                console.log('bithumb trade err ' + err);
-
-                return ;
-            }
-
-            if (this.cfg.output_message) {
-                console.log('bithumb trade + ' + data);
-            }
-
-            let msg = JSON.parse(data);
-
-            this._onChannel_Deals(msg.data);
-        });
+        // this.startRequest(this.urlTrade, (err, data) => {
+        //     if (err) {
+        //         console.log('bcex trade err ' + err);
+        //
+        //         return ;
+        //     }
+        //
+        //     if (this.cfg.output_message) {
+        //         console.log('bcex trade + ' + data);
+        //     }
+        //
+        //     let msg = JSON.parse(data);
+        //
+        //     this._onChannel_Deals(msg.data);
+        // });
     }
 };
 
-exports.BithumbDataStream = BithumbDataStream;
+exports.BCEXDataStream = BCEXDataStream;

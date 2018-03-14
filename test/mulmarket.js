@@ -4,6 +4,8 @@ const binance = require('../src/market/binance/index');
 const huobi = require('../src/market/huobi/index');
 const okcoinex = require('../src/market/okcoinex/index');
 const bitfinex = require('../src/market/bitfinex/index');
+const bithumb = require('../src/market/bithumb/index');
+const coincheck = require('../src/market/coincheck/index');
 
 const { Trader } = require('../src/trader');
 const { Strategy_MulMarket } = require('../src/strategy/mulmarket');
@@ -19,7 +21,7 @@ BTCTraderMgr.singleton.init(cfg).then(() => {
         // addr: 'wss://real.okcoin.com:10440/websocket',
         // symbol: 'btc_usd',
         // addr: 'wss://real.okex.com:10441/websocket',
-        symbol: 'EOSUSD',
+        symbol: 'BTCUSD',
         output_message: false,
         simtrade: SIMTRADE
     });
@@ -49,11 +51,29 @@ BTCTraderMgr.singleton.init(cfg).then(() => {
     //     simtrade: SIMTRADE,
     // });
 
-    var ds1 = new okcoinex.DataStream({
+    // var ds1 = new okcoinex.DataStream({
+    //     // addr: 'wss://real.okcoin.com:10440/websocket',
+    //     // symbol: 'btc_usd',
+    //     addr: 'wss://real.okex.com:10441/websocket',
+    //     symbol: 'eos_usdt',
+    //     output_message: false,
+    //     simtrade: SIMTRADE
+    // });
+
+    // var ds1 = new bithumb.DataStream({
+    //     // addr: 'wss://real.okcoin.com:10440/websocket',
+    //     // symbol: 'btc_usd',
+    //     // addr: 'wss://real.okex.com:10441/websocket',
+    //     // symbol: 'btc_usdt',
+    //     output_message: false,
+    //     simtrade: SIMTRADE
+    // });
+
+    var ds1 = new coincheck.DataStream({
         // addr: 'wss://real.okcoin.com:10440/websocket',
         // symbol: 'btc_usd',
-        addr: 'wss://real.okex.com:10441/websocket',
-        symbol: 'eos_usdt',
+        // addr: 'wss://real.okex.com:10441/websocket',
+        // symbol: 'btc_usdt',
         output_message: false,
         simtrade: SIMTRADE
     });

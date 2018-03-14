@@ -19,7 +19,7 @@ class HTTPDataStream extends DataStream {
         super._procConfig();
 
         if (!this.cfg.hasOwnProperty('time_tick')) {
-            this.cfg.time_tick = 30 * 1000;
+            this.cfg.time_tick = 1000;
         }
     }
 
@@ -33,6 +33,16 @@ class HTTPDataStream extends DataStream {
         setInterval(() => {
             this._onTick();
         }, this.cfg.time_tick);
+    }
+
+    startPost(url, form, callback) {
+        rp({method: 'POST', uri: url, form: form}).then((str) => {
+
+            callback(undefined, str);
+        }).catch((err) => {
+
+            callback(err);
+        });
     }
 
     // callback(err, data)

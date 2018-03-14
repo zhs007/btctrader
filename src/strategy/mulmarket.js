@@ -35,14 +35,14 @@ class Strategy_MulMarket extends Strategy {
 
     onSimDepth(market) {
         if (this.trader.hasAllDepth()) {
-            let off0 = this.trader.lstMarket[0].ds.bids[0][DEPTHINDEX.PRICE] - this.trader.lstMarket[1].ds.asks[0][DEPTHINDEX.PRICE];
-            let off1 = this.trader.lstMarket[1].ds.bids[0][DEPTHINDEX.PRICE] - this.trader.lstMarket[0].ds.asks[0][DEPTHINDEX.PRICE];
+            let off0 = this.trader.lstMarket[0].ds.bids[0][DEPTHINDEX.PRICE] * 106.85 - this.trader.lstMarket[1].ds.asks[0][DEPTHINDEX.PRICE];
+            let off1 = this.trader.lstMarket[1].ds.bids[0][DEPTHINDEX.PRICE] - this.trader.lstMarket[0].ds.asks[0][DEPTHINDEX.PRICE] * 106.85;
 
             // console.log('market0 ' + this.trader.lstMarket[0].ds.asks[0][DEPTHINDEX.PRICE] + ' ' + this.trader.lstMarket[0].ds.bids[0][DEPTHINDEX.PRICE]);
             // console.log('market1 ' + this.trader.lstMarket[1].ds.asks[0][DEPTHINDEX.PRICE] + ' ' + this.trader.lstMarket[1].ds.bids[0][DEPTHINDEX.PRICE]);
 
             if (off0 > 0) {
-                console.log('off0-' + off0 + 'offper-' + off0 / this.trader.lstMarket[0].ds.asks[0][DEPTHINDEX.PRICE]);
+                console.log('off0-' + off0 + 'offper-' + off0 / this.trader.lstMarket[0].ds.asks[0][DEPTHINDEX.PRICE] / 106.85);
             }
 
             if (off1 > 0) {

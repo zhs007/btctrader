@@ -2,12 +2,12 @@
 
 const { HTTPDataStream, DEPTHINDEX, DEALTYPE, DEALSINDEX } = require('../../httpdatastream');
 
-class BithumbDataStream extends HTTPDataStream {
+class CoinCheckDataStream extends HTTPDataStream {
     // cfg.baseurl - like https://api.bithumb.com/public/
     // cfg.symbol - btc
     constructor(cfg) {
         if (!cfg.hasOwnProperty('baseurl')) {
-            cfg.baseurl = 'https://api.bithumb.com/public/';
+            cfg.baseurl = 'https://coincheck.com';
         }
 
         if (!cfg.hasOwnProperty('symbol')) {
@@ -19,8 +19,8 @@ class BithumbDataStream extends HTTPDataStream {
         this.depthIndexAsk = 0;
         this.depthIndexBid = 0;
 
-        this.urlDepth = cfg.baseurl + 'orderbook/' + cfg.symbol;
-        this.urlTrade = cfg.baseurl + 'recent_transactions/' + cfg.symbol;
+        this.urlDepth = cfg.baseurl + '/api/order_books';
+        this.urlTrade = cfg.baseurl + '/api/trades?pair=btc_jpy';
     }
 
     _onChannel_Deals(data) {
@@ -29,7 +29,7 @@ class BithumbDataStream extends HTTPDataStream {
 
             let hascurnode = false;
             for (let j = 0; j < this.deals.length; ++j) {
-                if (this.deals[DEALSINDEX.ID] == cn.cont_no) {
+                if (this.deals[DEALSINDEX.ID] == cn.id) {
                     hascurnode = true;
                     break;
                 }
@@ -37,11 +37,11 @@ class BithumbDataStream extends HTTPDataStream {
 
             if (!hascurnode) {
                 this.deals.push([
-                    cn.cont_no,
-                    parseFloat(cn.price),
-                    parseFloat(cn.units_traded),
-                    new Date(cn.transaction_date).getTime(),
-                    cn.type == 'ask' ? DEALTYPE.BUY : DEALTYPE.SELL
+                    cn.id,
+                    parseFloat(cn.rate),
+                    parseFloat(cn.amount),
+                    new Date(cn.created_at).getTime(),
+                    cn.order_type == 'buy' ? DEALTYPE.BUY : DEALTYPE.SELL
                 ]);
             }
         }
@@ -55,7 +55,7 @@ class BithumbDataStream extends HTTPDataStream {
                 let asks = [];
                 let oi = 0;
                 for (let ci = 0; ci < data.asks.length; ++ci) {
-                    asks.push([parseFloat(data.asks[ci].price), parseFloat(data.asks[ci].quantity)]);
+                    asks.push([parseFloat(data.asks[ci][0]), parseFloat(data.asks[ci][1])]);
 
                     for (; oi < this.asks.length; ++oi) {
                         if (asks[ci][DEPTHINDEX.PRICE] == this.asks[oi][DEPTHINDEX.PRICE]) {
@@ -95,7 +95,7 @@ class BithumbDataStream extends HTTPDataStream {
             else {
                 let asks = [];
                 for (let ci = 0; ci < data.asks.length; ++ci) {
-                    asks.push([parseFloat(data.asks[ci].price), parseFloat(data.asks[ci].quantity)]);
+                    asks.push([parseFloat(data.asks[ci][0]), parseFloat(data.asks[ci][1])]);
 
                     if (asks[ci].length == 2) {
                         asks[ci].push(++this.depthIndexAsk);
@@ -110,7 +110,7 @@ class BithumbDataStream extends HTTPDataStream {
                 let bids = [];
                 let oi = 0;
                 for (let ci = 0; ci < data.bids.length; ++ci) {
-                    bids.push([parseFloat(data.bids[ci].price), parseFloat(data.bids[ci].quantity)]);
+                    bids.push([parseFloat(data.bids[ci][0]), parseFloat(data.bids[ci][1])]);
 
                     for (; oi < this.bids.length; ++oi) {
                         if (bids[ci][DEPTHINDEX.PRICE] == this.bids[oi][DEPTHINDEX.PRICE]) {
@@ -150,7 +150,7 @@ class BithumbDataStream extends HTTPDataStream {
             else {
                 let bids = [];
                 for (let ci = 0; ci < data.bids.length; ++ci) {
-                    bids.push([parseFloat(data.bids[ci].price), parseFloat(data.bids[ci].quantity)]);
+                    bids.push([parseFloat(data.bids[ci][0]), parseFloat(data.bids[ci][1])]);
 
                     if (bids[ci].length == 2) {
                         bids[ci].push(++this.depthIndexBid);
@@ -164,14 +164,14 @@ class BithumbDataStream extends HTTPDataStream {
         else {
             let asks = [];
             for (let ci = 0; ci < data.asks.length; ++ci) {
-                asks.push([parseFloat(data.asks[ci].price), parseFloat(data.asks[ci].quantity)]);
+                asks.push([parseFloat(data.asks[ci][0]), parseFloat(data.asks[ci][1])]);
             }
 
             this.asks = asks;
 
             let bids = [];
             for (let ci = 0; ci < data.bids.length; ++ci) {
-                bids.push([parseFloat(data.bids[ci].price), parseFloat(data.bids[ci].quantity)]);
+                bids.push([parseFloat(data.bids[ci][0]), parseFloat(data.bids[ci][1])]);
             }
 
             this.bids = bids;
@@ -186,29 +186,29 @@ class BithumbDataStream extends HTTPDataStream {
     _onTick() {
         this.startRequest(this.urlDepth, (err, data) => {
             if (err) {
-                console.log('bithumb depth err ' + err);
+                console.log('coincheck depth err ' + err);
 
                 return ;
             }
 
             if (this.cfg.output_message) {
-                console.log('bithumb depth + ' + data);
+                console.log('coincheck depth + ' + data);
             }
 
             let msg = JSON.parse(data);
 
-            this._onChannel_Depth(msg.data);
+            this._onChannel_Depth(msg);
         });
 
         this.startRequest(this.urlTrade, (err, data) => {
             if (err) {
-                console.log('bithumb trade err ' + err);
+                console.log('coincheck trade err ' + err);
 
                 return ;
             }
 
             if (this.cfg.output_message) {
-                console.log('bithumb trade + ' + data);
+                console.log('coincheck trade + ' + data);
             }
 
             let msg = JSON.parse(data);
@@ -218,4 +218,4 @@ class BithumbDataStream extends HTTPDataStream {
     }
 };
 
-exports.BithumbDataStream = BithumbDataStream;
+exports.CoinCheckDataStream = CoinCheckDataStream;
