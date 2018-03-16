@@ -352,6 +352,8 @@ class BitFlyerDataStream extends PubNubDataStream {
             }
         }
 
+        this._onDeals(newnums);
+
         if (this.asks.length > 0 && this.bids.length > 0) {
             let curdeal = this.deals[this.deals.length - 1];
             let askoff = this.asks[0][DEPTHINDEX.PRICE] - curdeal[DEALSINDEX.PRICE];
@@ -363,8 +365,6 @@ class BitFlyerDataStream extends PubNubDataStream {
                 this.bids.splice(0, 1);
             }
         }
-
-        this._onDeals(newnums);
     }
 
     //------------------------------------------------------------------------------
