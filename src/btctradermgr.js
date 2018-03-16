@@ -23,7 +23,7 @@ class BTCTraderMgr {
         }
 
         try {
-            const [results, fields] = await this.mysql.run('select max(tid) as tid from btctrader_trade');
+            const [err, results, fields] = await this.mysql.run('select max(tid) as tid from btctrader_trade');
             if (results.length > 0) {
                 return results.tid;
             }

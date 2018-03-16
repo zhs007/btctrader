@@ -25,7 +25,7 @@ BTCTraderMgr.singleton.init(cfg).then(() => {
         // symbol: 'btc_usd',
         // addr: 'wss://real.okex.com:10441/websocket',
         // symbol: 'btc_usdt',
-        output_message: false,
+        output_message: true,
         simtrade: SIMTRADE
     });
 
@@ -91,7 +91,7 @@ BTCTraderMgr.singleton.init(cfg).then(() => {
     // });
 
     var trader = new Trader();
-    trader.setStrategy(new Strategy_MarketMaker());
+    trader.setStrategy(new Strategy_MarketMaker2());
     trader.addMarket('binance', 0, 0, 10000, ds);
 
     ds.init();

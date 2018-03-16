@@ -140,6 +140,10 @@ class BitFlyerDataStream extends PubNubDataStream {
                     let p = parseFloat(cn.price);
                     let v = parseFloat(cn.size);
 
+                    if (v == 0) {
+                        continue;
+                    }
+
                     if (this.cfg.simtrade) {
                         this.asks.push([p, v, ++this.depthIndexAsk, v]);
                     }
@@ -231,6 +235,10 @@ class BitFlyerDataStream extends PubNubDataStream {
                     let cn = bids[i];
                     let p = parseFloat(cn.price);
                     let v = parseFloat(cn.size);
+
+                    if (v == 0) {
+                        continue;
+                    }
 
                     if (this.cfg.simtrade) {
                         this.bids.push([p, v, ++this.depthIndexBid, v]);
