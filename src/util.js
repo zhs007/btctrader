@@ -296,7 +296,7 @@ function analyzeDepth(asks, bids) {
 }
 
 function countPriceWithDepth_asks_depth2(asks, volume) {
-    let ret = {avg: 0, max: 0, nums: 0, vol: 0, cp: 0};
+    let ret = {avg: 0, max: 0, nums: 0, vol: 0, cp: 0, arr: []};
     for (let i = 0; i < asks.length; ++i) {
         let nv = volume - ret.vol;
         if (nv <= 0) {
@@ -311,6 +311,8 @@ function countPriceWithDepth_asks_depth2(asks, volume) {
 
             ret.max = asks[i][DEPTHINDEX.PRICE];
 
+            ret.arr.push([asks[i][DEPTHINDEX.PRICE], nv]);
+
             break;
         }
         else {
@@ -322,6 +324,8 @@ function countPriceWithDepth_asks_depth2(asks, volume) {
             ret.vol = ret.vol + nv;
 
             ret.max = asks[i][DEPTHINDEX.PRICE];
+
+            ret.arr.push([asks[i][DEPTHINDEX.PRICE], nv]);
         }
     }
 
@@ -329,7 +333,7 @@ function countPriceWithDepth_asks_depth2(asks, volume) {
 }
 
 function countPriceWithDepth_bids_depth2(bids, volume) {
-    let ret = {avg: 0, min: 0, nums: 0, vol: 0, cp: 0};
+    let ret = {avg: 0, min: 0, nums: 0, vol: 0, cp: 0, arr: []};
     for (let i = 0; i < bids.length; ++i) {
         let nv = volume - ret.vol;
         if (nv <= 0) {
@@ -344,6 +348,8 @@ function countPriceWithDepth_bids_depth2(bids, volume) {
 
             ret.min = bids[i][DEPTHINDEX.PRICE];
 
+            ret.arr.push([bids[i][DEPTHINDEX.PRICE], nv]);
+
             break;
         }
         else {
@@ -355,6 +361,8 @@ function countPriceWithDepth_bids_depth2(bids, volume) {
             ret.vol = ret.vol + nv;
 
             ret.min = bids[i][DEPTHINDEX.PRICE];
+
+            ret.arr.push([bids[i][DEPTHINDEX.PRICE], nv]);
         }
     }
 

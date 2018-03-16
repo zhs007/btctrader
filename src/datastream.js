@@ -41,6 +41,8 @@ class DataStream {
         this.strategy = undefined;
         this.market = undefined;
 
+        this.currencyExchg = 1;
+
         this._procConfig();
     }
 

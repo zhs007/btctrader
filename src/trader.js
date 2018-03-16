@@ -48,6 +48,9 @@ class Market {
         this.ds = ds;
 
         this.ds.market = this;
+
+        this.feeBuy = 0;
+        this.feeSell = 0;
     }
 
     setMoney(m) {
