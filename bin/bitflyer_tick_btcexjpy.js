@@ -10,7 +10,7 @@ const cfg = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 
 bitflyer.DataMgr.singleton.init(cfg).then(() => {
     var ds = new bitflyer.DataStream({
-        output_message: true,
+        output_message: false,
         simtrade: SIMTRADE,
         tickdatatname: 'bitflyer_btcexjpy'
     });

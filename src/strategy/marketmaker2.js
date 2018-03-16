@@ -93,8 +93,8 @@ class Strategy_MarketMaker2 extends Strategy {
         let bidret = countPriceWithDepth_bids_depth2(market.ds.bids, this.amountDepth);
 
         let str0 = util.format('curexe: ' + market.ds.deals[market.ds.deals.length - 1][DEALSINDEX.PRICE] + ' ask: ' + market.ds.asks[0][DEPTHINDEX.PRICE] + ' bid: ' + market.ds.bids[0][DEPTHINDEX.PRICE]);
-        let str1 = util.format(' mid: ' + (market.ds.asks[0][DEPTHINDEX.PRICE] + market.ds.bids[0][DEPTHINDEX.PRICE]) / 2 + ' off: ' + (market.ds.bids[0][DEPTHINDEX.PRICE] - market.ds.asks[0][DEPTHINDEX.PRICE]));
-        let str2 = util.format(' asko: ' + (market.ds.deals[market.ds.deals.length - 1][DEALSINDEX.PRICE] - market.ds.asks[0][DEPTHINDEX.PRICE]) + ' bido: ' + (market.ds.bids[0][DEPTHINDEX.PRICE] - market.ds.deals[market.ds.deals.length - 1][DEALSINDEX.PRICE]));
+        let str1 = util.format(' mid: ' + (market.ds.asks[0][DEPTHINDEX.PRICE] + market.ds.bids[0][DEPTHINDEX.PRICE]) / 2 + ' off: ' + (market.ds.asks[0][DEPTHINDEX.PRICE] - market.ds.bids[0][DEPTHINDEX.PRICE]));
+        let str2 = util.format(' asko: ' + (market.ds.asks[0][DEPTHINDEX.PRICE] - market.ds.deals[market.ds.deals.length - 1][DEALSINDEX.PRICE]) + ' bido: ' + (market.ds.deals[market.ds.deals.length - 1][DEALSINDEX.PRICE] - market.ds.bids[0][DEPTHINDEX.PRICE]));
         console.log(str0 + str1 + str2);
 
         //

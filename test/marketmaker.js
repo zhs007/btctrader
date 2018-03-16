@@ -25,7 +25,7 @@ BTCTraderMgr.singleton.init(cfg).then(() => {
         // symbol: 'btc_usd',
         // addr: 'wss://real.okex.com:10441/websocket',
         // symbol: 'btc_usdt',
-        output_message: true,
+        output_message: false,
         simtrade: SIMTRADE
     });
 
