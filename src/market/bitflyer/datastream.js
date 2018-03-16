@@ -317,41 +317,34 @@ class BitFlyerDataStream extends PubNubDataStream {
 
     // data asc
     _onChannelDetail(data) {
-        // if (this.deals.length == 0) {
-            for (let i = 0; i < data.length; ++i) {
-                let cn = data[i];
+        let newnums = 0;
 
-                let hascn = false;
-                for (let j = 0; j < this.deals.length; ++j) {
-                    if (this.deals[j][DEALSINDEX.ID] == cn.id) {
-                        hascn = true;
+        for (let i = 0; i < data.length; ++i) {
+            let cn = data[i];
 
-                        break;
-                    }
-                }
+            let hascn = false;
+            for (let j = 0; j < this.deals.length; ++j) {
+                if (this.deals[j][DEALSINDEX.ID] == cn.id) {
+                    hascn = true;
 
-                if (!hascn) {
-                    this.deals.push([
-                        data[i].id,
-                        data[i].price,
-                        data[i].size,
-                        new Date(data[i].exec_date).getTime(),
-                        data[i].side == 'BUY' ? DEALTYPE.BUY : DEALTYPE.SELL
-                    ]);
+                    break;
                 }
             }
-        // }
-        // else {
-        //     this.deals.push([
-        //         data[0],
-        //         data[3],
-        //         Math.abs(data[2]),
-        //         data[1],
-        //         data[2] > 0 ? DEALTYPE.BUY : DEALTYPE.SELL
-        //     ]);
-        // }
 
-        this._onDeals();
+            if (!hascn) {
+                this.deals.push([
+                    data[i].id,
+                    data[i].price,
+                    data[i].size,
+                    new Date(data[i].exec_date).getTime(),
+                    data[i].side == 'BUY' ? DEALTYPE.BUY : DEALTYPE.SELL
+                ]);
+
+                ++newnums;
+            }
+        }
+
+        this._onDeals(newnums);
     }
 
     //------------------------------------------------------------------------------

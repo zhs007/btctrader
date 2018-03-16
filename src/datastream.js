@@ -28,6 +28,7 @@ class DataStream {
     // cfg.output_message
     // cfg.maxdeals
     // cfg.simtrade
+    // cfg.tickdatatname
     constructor(cfg) {
         this.cfg = cfg;
 
@@ -42,6 +43,8 @@ class DataStream {
         this.market = undefined;
 
         this.currencyExchg = 1;
+
+        this.mgrData = undefined;
 
         this._procConfig();
     }
@@ -86,7 +89,7 @@ class DataStream {
         }
     }
 
-    _onDeals() {
+    _onDeals(newnums) {
         if (this.deals.length > this.cfg.maxdeals) {
             this.deals.splice(0, Math.floor(this.cfg.maxdeals / 2));
         }
@@ -105,6 +108,18 @@ class DataStream {
             }
             else {
                 this.strategy.onDeals(this.market);
+            }
+        }
+
+        if (this.cfg.tickdatatname && this.mgrData && this.asks.length > 0 && this.bids.length > 0) {
+            for (let i = this.deals.length - newnums; i < this.deals.length; ++i) {
+                let cn = this.deals[i];
+                let cask = this.asks[0];
+                let cbid = this.bids[0];
+
+                this.mgrData.insertTick(this.cfg.tickdatatname, cn[DEALSINDEX.TYPE], cn[DEALSINDEX.PRICE], cn[DEALSINDEX.VOLUME],
+                    cask[DEPTHINDEX.PRICE], cask[DEPTHINDEX.VOLUME], cbid[DEPTHINDEX.PRICE], cbid[DEPTHINDEX.VOLUME],
+                    cn[DEALSINDEX.TS]);
             }
         }
     }
