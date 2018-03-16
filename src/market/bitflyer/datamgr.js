@@ -21,8 +21,8 @@ class BitflyerDataMgr {
 
         let sql = '';
         try {
-            sql = util.format("insert into %s(type, price, volume, askprice, askvolume, bidprice, bidvolume, ts) values(" +
-                "%d, %f, %f, %f, %f, %f, %f, '%s')", tname, type, p, v, askp, askv, bidp, bidv, new Date(ts).toISOString());
+            sql = util.format("insert into %s(type, price, volume, askprice, askvolume, bidprice, bidvolume, ts, tsms) values(" +
+                "%d, %f, %f, %f, %f, %f, %f, '%s', %d)", tname, type, p, v, askp, askv, bidp, bidv, new Date(ts).toISOString(), ts);
             await this.mysql.run(sql);
         }
         catch (err) {
