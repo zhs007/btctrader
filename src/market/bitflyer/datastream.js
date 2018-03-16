@@ -134,25 +134,25 @@ class BitFlyerDataStream extends PubNubDataStream {
                 return a.price - b.price;
             });
 
-            if (this.asks.length == 0) {
-                for (let i = 0; i < asks.length; ++i) {
-                    let cn = asks[i];
-                    let p = parseFloat(cn.price);
-                    let v = parseFloat(cn.size);
-
-                    if (v == 0) {
-                        continue;
-                    }
-
-                    if (this.cfg.simtrade) {
-                        this.asks.push([p, v, ++this.depthIndexAsk, v]);
-                    }
-                    else {
-                        this.asks.push([p, v]);
-                    }
-                }
-            }
-            else {
+            // if (this.asks.length == 0) {
+            //     for (let i = 0; i < asks.length; ++i) {
+            //         let cn = asks[i];
+            //         let p = parseFloat(cn.price);
+            //         let v = parseFloat(cn.size);
+            //
+            //         if (v == 0) {
+            //             continue;
+            //         }
+            //
+            //         if (this.cfg.simtrade) {
+            //             this.asks.push([p, v, ++this.depthIndexAsk, v]);
+            //         }
+            //         else {
+            //             this.asks.push([p, v]);
+            //         }
+            //     }
+            // }
+            // else {
                 let rmvnums = 0;
                 let insnums = 0;
                 let updnums = 0;
@@ -222,7 +222,7 @@ class BitFlyerDataStream extends PubNubDataStream {
                 if (this.cfg.output_message) {
                     console.log('bitflyer depth ask ins:' + insnums + ' upd:' + updnums + ' rmv:' + rmvnums);
                 }
-            }
+            // }
         }
 
         if (bids) {
@@ -230,25 +230,25 @@ class BitFlyerDataStream extends PubNubDataStream {
                 return b.price - a.price;
             });
 
-            if (this.bids.length == 0) {
-                for (let i = 0; i < bids.length; ++i) {
-                    let cn = bids[i];
-                    let p = parseFloat(cn.price);
-                    let v = parseFloat(cn.size);
-
-                    if (v == 0) {
-                        continue;
-                    }
-
-                    if (this.cfg.simtrade) {
-                        this.bids.push([p, v, ++this.depthIndexBid, v]);
-                    }
-                    else {
-                        this.bids.push([p, v]);
-                    }
-                }
-            }
-            else {
+            // if (this.bids.length == 0) {
+            //     for (let i = 0; i < bids.length; ++i) {
+            //         let cn = bids[i];
+            //         let p = parseFloat(cn.price);
+            //         let v = parseFloat(cn.size);
+            //
+            //         if (v == 0) {
+            //             continue;
+            //         }
+            //
+            //         if (this.cfg.simtrade) {
+            //             this.bids.push([p, v, ++this.depthIndexBid, v]);
+            //         }
+            //         else {
+            //             this.bids.push([p, v]);
+            //         }
+            //     }
+            // }
+            // else {
                 let rmvnums = 0;
                 let insnums = 0;
                 let updnums = 0;
@@ -317,7 +317,7 @@ class BitFlyerDataStream extends PubNubDataStream {
                 if (this.cfg.output_message) {
                     console.log('bitflyer depth bid ins:' + insnums + ' upd:' + updnums + ' rmv:' + rmvnums);
                 }
-            }
+            // }
 
             // console.log('bids' + JSON.stringify(this.bids));
         }
