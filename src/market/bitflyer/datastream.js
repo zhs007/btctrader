@@ -354,6 +354,7 @@ class BitFlyerDataStream extends PubNubDataStream {
 
         this._onDeals(newnums);
 
+        // orderbook的数据有bug，偶尔会有一些数据没有被置0，应该是接口的问题，这里特殊处理一下
         if (this.asks.length > 0 && this.bids.length > 0) {
             let curdeal = this.deals[this.deals.length - 1];
             let askoff = this.asks[0][DEPTHINDEX.PRICE] - curdeal[DEALSINDEX.PRICE];

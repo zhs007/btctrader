@@ -29,6 +29,25 @@ class BitflyerDataMgr {
             console.log('BitflyerDataMgr.insertTick(' + sql + ') err ' + err);
         }
     }
+
+    async getTick(tname) {
+        if (this.mysql == undefined) {
+            return undefined;
+        }
+
+        let sql = '';
+        try {
+            sql = util.format("select * from %s limit 0, 100000", tname);
+            let [err, results, fields] = await this.mysql.run(sql);
+
+            return results;
+        }
+        catch (err) {
+            console.log('BitflyerDataMgr.getTick(' + sql + ') err ' + err);
+        }
+
+        return undefined;
+    }
 };
 
 exports.singleton = new BitflyerDataMgr();
