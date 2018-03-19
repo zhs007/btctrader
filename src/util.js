@@ -1,6 +1,7 @@
 "use strict";
 
 const { DEPTHINDEX } = require('./wsdatastream');
+const util = require('util');
 
 function _matchmaking_ask(ask_p, ask_v, bids) {
     let arr = [];
@@ -369,6 +370,96 @@ function countPriceWithDepth_bids_depth2(bids, volume) {
     return ret;
 }
 
+async function __runsql(mysql, fullsql) {
+    try {
+        await mysql.run(fullsql);
+    }
+    catch (err) {
+        console.log('__runsql(' + fullsql + ') err ' + err);
+
+        return err;
+    }
+
+    return undefined;
+}
+
+async function insertList(mysql, tablename, lst, batchnums, funcOnFilter) {
+    let fullsql = '';
+    let sqlnums = 0;
+
+    for (let i = 0; i < lst.length; ++i) {
+        let cf = lst[i];
+        let str0 = '';
+        let str1 = '';
+
+        let j = 0;
+        for (let key in cf) {
+            if (funcOnFilter == undefined || funcOnFilter(key)) {
+                if (j != 0) {
+                    str0 += ', ';
+                    str1 += ', ';
+                }
+
+                str0 += '`' + key + '`';
+                str1 += "'" + cf[key] + "'";
+
+                ++j;
+            }
+        }
+
+        let sql = util.format("insert into %s(%s) values(%s);", tablename, str0, str1);
+        fullsql += sql;
+        ++sqlnums;
+
+        if (sqlnums >= batchnums) {
+            let err = await __runsql(mysql, fullsql);
+            if (err != undefined) {
+                return err;
+            }
+
+            fullsql = '';
+            sqlnums = 0;
+        }
+    }
+
+    if (sqlnums > 0) {
+        let err = await __runsql(mysql, fullsql);
+        if (err != undefined) {
+            return err;
+        }
+    }
+}
+
+async function removeList(mysql, tablename, lst, batchnums, funcBuildSql) {
+    let fullsql = '';
+    let sqlnums = 0;
+
+    for (let i = 0; i < lst.length; ++i) {
+        let cf = lst[i];
+
+        let sql = funcBuildSql(tablename, cf);
+        fullsql += sql;
+        ++sqlnums;
+
+        if (sqlnums >= batchnums) {
+            let err = await __runsql(mysql, fullsql);
+            if (err != undefined) {
+                return err;
+            }
+
+            fullsql = '';
+            sqlnums = 0;
+        }
+    }
+
+    if (sqlnums > 0) {
+        let err = await __runsql(mysql, fullsql);
+        if (err != undefined) {
+            return err;
+        }
+    }
+}
+
 exports.matchmakingAsk = matchmakingAsk;
 exports.matchmakingBid = matchmakingBid;
 exports.matchmakingAsk_depth2 = matchmakingAsk_depth2;
@@ -379,3 +470,6 @@ exports.matchmakingSell = matchmakingSell;
 
 exports.countPriceWithDepth_asks_depth2 = countPriceWithDepth_asks_depth2;
 exports.countPriceWithDepth_bids_depth2 = countPriceWithDepth_bids_depth2;
+
+exports.insertList = insertList;
+exports.removeList = removeList;

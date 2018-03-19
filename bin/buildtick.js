@@ -4,7 +4,7 @@ const bitflyer = require('../src/market/bitflyer/index');
 const { HTMLOutput_ECharts } = require('../src/htmloutput_echarts');
 
 const fs = require('fs');
-const process = require('process')
+const process = require('process');
 
 const SIMTRADE = true;
 const TNAME = 'bitflyer_btcjpy';

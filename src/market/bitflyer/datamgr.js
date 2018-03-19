@@ -1,7 +1,10 @@
 "use strict";
 
 const { Mysql } = require('../../mysql');
+const { insertList, removeList } = require('../../util');
 const util = require('util');
+
+const BATCH_MUL_LINE = 1024;
 
 class BitflyerDataMgr {
     constructor() {
@@ -30,14 +33,14 @@ class BitflyerDataMgr {
         }
     }
 
-    async getTick(tname) {
+    async getTick(tname, bt, et) {
         if (this.mysql == undefined) {
             return undefined;
         }
 
         let sql = '';
         try {
-            sql = util.format("select * from %s limit 0, 100000", tname);
+            sql = util.format("select * from %s where tsms >= %d and tsms <= %d", tname, new Date(bt).getTime(), new Date(et).getTime());
             let [err, results, fields] = await this.mysql.run(sql);
 
             return results;
@@ -47,6 +50,29 @@ class BitflyerDataMgr {
         }
 
         return undefined;
+    }
+
+    async removeCandles(tname, lst) {
+        if (this.mysql == undefined) {
+            return undefined;
+        }
+
+        return removeList(this.mysql, tname, lst, BATCH_MUL_LINE, (tablename, curnode) => {
+            return util.format("delete from %s where UNIX_TIMESTAMP(ts) = %d", tablename, Math.floor(new Date(curnode.ts).getTime() / 1000));
+        });
+    }
+
+    async saveCandles(tname, lst) {
+        if (this.mysql == undefined) {
+            return ;
+        }
+
+        let err = await this.removeCandles(tname, lst);
+        if (err != undefined) {
+            return err;
+        }
+
+        return insertList(this.mysql, tname, lst, BATCH_MUL_LINE);
     }
 };
 

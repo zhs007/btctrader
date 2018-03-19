@@ -4,6 +4,7 @@
   "dependencies": {
     "binance-api-node": "^0.7.1",
     "ioredis": "^3.2.2",
+    "libtrader": "^1.0.10",
     "mysql2": "^1.5.2",
     "pako": "^1.0.6",
     "pubnub": "^4.20.2",
