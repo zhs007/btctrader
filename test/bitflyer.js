@@ -5,7 +5,7 @@ const bitflyer = require('../src/market/bitflyer/index');
 
 var ds = new bitflyer.DataStream({
     // addr: 'wss://api.bitfinex.com/ws/2',
-    // symbol: 'BTCUSD',
+    symbol: 'BTCJPY23MAR2018',
     // timeout_keepalive: 30 * 1000,
     // timeout_connect: 30 * 1000,
     // timeout_message: 30 * 1000,
