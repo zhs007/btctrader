@@ -56,7 +56,7 @@ async function runDNDLink(dsmain, dslink) {
                 for (let i = 0; i < lst1.length; ++i) {
                     let cn = lst1[i];
                     cn.ds = dslink;
-                    cd.dsi = 1;
+                    cn.dsi = 1;
                     lst.push(cn);
                 }
 

@@ -20,6 +20,10 @@ class Strategy {
     onSimDeals(market) {
 
     }
+
+    onTrade(trade) {
+
+    }
 };
 
 exports.Strategy = Strategy;

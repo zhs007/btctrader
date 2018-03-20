@@ -1,6 +1,6 @@
 "use strict";
 
-const { DEPTHINDEX } = require('./wsdatastream');
+const { DEPTHINDEX } = require('./basedef');
 const BTCTraderMgr = require('./btctradermgr');
 
 const TRADETYPE_BUY     = 1;
@@ -8,25 +8,39 @@ const TRADETYPE_NORMAL  = 0;
 const TRADETYPE_SELL    = -1;
 
 class Trade {
-    constructor() {
-        this.ts = new Date().getTime();
-        this.price = 0;
-        this.volume = 0;
+    constructor(tid) {
+        this.tid = tid;
+
+        this.bts = new Date().getTime();
+        this.bp = 0;
+        this.bv = 0;
         this.type = TRADETYPE_NORMAL;
+        this.ep = 0;
+        this.ev = 0;
+
+        this.isend = false;
     }
 
     buy(p, v, ts) {
-        this.ts = ts;
-        this.price = p;
-        this.volume = v;
+        this.bts = ts;
+        this.bp = p;
+        this.bv = v;
         this.type = TRADETYPE_BUY;
     }
 
     sell(p, v, ts) {
-        this.ts = ts;
-        this.price = p;
-        this.volume = v;
+        this.bts = ts;
+        this.bp = p;
+        this.bv = v;
         this.type = TRADETYPE_SELL;
+    }
+
+    end(p, v, ts) {
+        this.ets = ts;
+        this.ep = p;
+        this.ev = v;
+
+        this.isend = true;
     }
 };
 
@@ -51,6 +65,8 @@ class Market {
 
         this.feeBuy = 0;
         this.feeSell = 0;
+
+        this.tiStart = 0;
     }
 
     setMoney(m) {
@@ -69,7 +85,7 @@ class Market {
 
         cm = p * v;
 
-        let ct = new Trade();
+        let ct = new Trade(this.lstTrade.length);
         ct.buy(p, v, ts);
         this.lstTrade.push(ct);
 
@@ -94,7 +110,7 @@ class Market {
         }
 
         let cm = p * v;
-        let ct = new Trade();
+        let ct = new Trade(this.lstTrade.length);
         ct.sell(p, v, ts);
         this.lstTrade.push(ct);
 
@@ -104,6 +120,23 @@ class Market {
         // BTCTraderMgr.singleton.insertTrade(TRADETYPE_SELL, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
 
         return true;
+    }
+
+    foreachTrade(strategy) {
+        let isend = true;
+        for (let i = this.tiStart; i < this.lstTrade.length; ++i) {
+            let cn = this.lstTrade[i];//this.lstTrade[this.lstTrade.length - i - 1];
+
+            if (!this.isend) {
+                isend = false;
+                strategy.onTrade(cn);
+            }
+            else {
+                if (isend) {
+                    this.tiStart = i;
+                }
+            }
+        }
     }
 };
 
