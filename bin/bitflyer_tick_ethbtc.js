@@ -12,7 +12,8 @@ bitflyer.DataMgr.singleton.init(cfg).then(() => {
     var ds = new bitflyer.DataStream({
         output_message: false,
         simtrade: SIMTRADE,
-        tickdatatname: 'bitflyer_ethbtc2',
+        tickdatatname: 'bitflyer_ethbtc_3',
+        candledatatname: 'bitflyer_kl_ethbtc_3',
         symbol: 'ETH_BTC'
     });
 

@@ -12,7 +12,8 @@ bitflyer.DataMgr.singleton.init(cfg).then(() => {
     var ds = new bitflyer.DataStream({
         output_message: false,
         simtrade: SIMTRADE,
-        tickdatatname: 'bitflyer_btcjpy2',
+        tickdatatname: 'bitflyer_btcjpy_3',
+        candledatatname: 'bitflyer_kl_btcjpy_3',
         symbol: 'BTC_JPY'
     });
 

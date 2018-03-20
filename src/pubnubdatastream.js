@@ -1,6 +1,7 @@
 "use strict";
 
-const { DataStream, DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./datastream');
+const { DataStream } = require('./datastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./basedef');
 const PubNub = require('pubnub');
 
 class PubNubDataStream extends DataStream {
@@ -37,7 +38,3 @@ class PubNubDataStream extends DataStream {
 };
 
 exports.PubNubDataStream = PubNubDataStream;
-
-exports.DEPTHINDEX      = DEPTHINDEX;
-exports.DEALSINDEX      = DEALSINDEX;
-exports.DEALTYPE        = DEALTYPE;

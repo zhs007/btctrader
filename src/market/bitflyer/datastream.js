@@ -1,6 +1,7 @@
 "use strict";
 
-const { PubNubDataStream, DEPTHINDEX, DEALTYPE, DEALSINDEX } = require('../../pubnubdatastream');
+const { PubNubDataStream } = require('../../pubnubdatastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
 const rp = require('request-promise-native');
 
 class BitFlyerDataStream extends PubNubDataStream {

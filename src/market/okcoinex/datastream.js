@@ -1,6 +1,7 @@
 "use strict";
 
-const { WSDataStream, DEPTHINDEX, DEALTYPE } = require('../../wsdatastream');
+const { WSDataStream } = require('../../wsdatastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
 
 class OKCoinEXDataStream extends WSDataStream {
     // cfg.addr - like wss://real.okex.com:10441/websocket

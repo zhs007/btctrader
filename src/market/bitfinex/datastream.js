@@ -1,7 +1,7 @@
 "use strict";
 
-const { WSDataStream, DEPTHINDEX, DEALTYPE } = require('../../wsdatastream');
-// const pako = require('pako');
+const { WSDataStream } = require('../../wsdatastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
 
 class BitfinexDataStream extends WSDataStream {
     // cfg.symbol - btcusdt

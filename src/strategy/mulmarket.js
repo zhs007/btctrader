@@ -2,7 +2,8 @@
 
 const util = require('util');
 const { Strategy } = require('../strategy');
-const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../datastream');
+// const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../datastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
 const { countPriceWithDepth_asks_depth2, countPriceWithDepth_bids_depth2 } = require('../util');
 
 class Strategy_MulMarket extends Strategy {

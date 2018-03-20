@@ -383,31 +383,56 @@ async function __runsql(mysql, fullsql) {
     return undefined;
 }
 
+function makeInsertSql(tname, obj, funcOnFilter) {
+    let str0 = '';
+    let str1 = '';
+
+    let j = 0;
+    for (let key in obj) {
+        if (funcOnFilter == undefined || funcOnFilter(key)) {
+            if (j != 0) {
+                str0 += ', ';
+                str1 += ', ';
+            }
+
+            str0 += '`' + key + '`';
+            str1 += "'" + obj[key] + "'";
+
+            ++j;
+        }
+    }
+
+    let sql = util.format("insert into %s(%s) values(%s);", tname, str0, str1);
+    return sql;
+}
+
 async function insertList(mysql, tablename, lst, batchnums, funcOnFilter) {
     let fullsql = '';
     let sqlnums = 0;
 
     for (let i = 0; i < lst.length; ++i) {
-        let cf = lst[i];
-        let str0 = '';
-        let str1 = '';
+        let sql = makeInsertSql(tablename, lst[i], funcOnFilter);
 
-        let j = 0;
-        for (let key in cf) {
-            if (funcOnFilter == undefined || funcOnFilter(key)) {
-                if (j != 0) {
-                    str0 += ', ';
-                    str1 += ', ';
-                }
-
-                str0 += '`' + key + '`';
-                str1 += "'" + cf[key] + "'";
-
-                ++j;
-            }
-        }
-
-        let sql = util.format("insert into %s(%s) values(%s);", tablename, str0, str1);
+        // let cf = lst[i];
+        // let str0 = '';
+        // let str1 = '';
+        //
+        // let j = 0;
+        // for (let key in cf) {
+        //     if (funcOnFilter == undefined || funcOnFilter(key)) {
+        //         if (j != 0) {
+        //             str0 += ', ';
+        //             str1 += ', ';
+        //         }
+        //
+        //         str0 += '`' + key + '`';
+        //         str1 += "'" + cf[key] + "'";
+        //
+        //         ++j;
+        //     }
+        // }
+        //
+        // let sql = util.format("insert into %s(%s) values(%s);", tablename, str0, str1);
         fullsql += sql;
         ++sqlnums;
 
@@ -473,3 +498,4 @@ exports.countPriceWithDepth_bids_depth2 = countPriceWithDepth_bids_depth2;
 
 exports.insertList = insertList;
 exports.removeList = removeList;
+exports.makeInsertSql = makeInsertSql;

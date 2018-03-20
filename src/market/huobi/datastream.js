@@ -1,6 +1,7 @@
 "use strict";
 
-const { WSDataStream, DEPTHINDEX, DEALTYPE } = require('../../wsdatastream');
+const { WSDataStream } = require('../../wsdatastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
 const pako = require('pako');
 
 class HuoBiDataStream extends WSDataStream {

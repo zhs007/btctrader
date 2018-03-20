@@ -1,34 +1,38 @@
 "use strict";
 
+const { Candles } = require('./data/candles');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./basedef');
+
 // asks sort asc
 // bids sort desc
 
-const DEPTHINDEX = {
-    PRICE:      0,
-    VOLUME:     1,
-    ID:         2,  // only simtrade use
-    LASTVOLUME: 3   // only simtrade use
-};
-
-const DEALSINDEX = {
-    ID:         0,
-    PRICE:      1,
-    VOLUME:     2,
-    TS:         3,
-    TYPE:       4
-};
-
-const DEALTYPE = {
-    NULL:       0,
-    BUY:        1,
-    SELL:       2
-};
+// const DEPTHINDEX = {
+//     PRICE:      0,
+//     VOLUME:     1,
+//     ID:         2,  // only simtrade use
+//     LASTVOLUME: 3   // only simtrade use
+// };
+//
+// const DEALSINDEX = {
+//     ID:         0,
+//     PRICE:      1,
+//     VOLUME:     2,
+//     TMS:        3,
+//     TYPE:       4
+// };
+//
+// const DEALTYPE = {
+//     NULL:       0,
+//     BUY:        1,
+//     SELL:       2
+// };
 
 class DataStream {
     // cfg.output_message
     // cfg.maxdeals
     // cfg.simtrade
     // cfg.tickdatatname
+    // cfg.candledatatname
     constructor(cfg) {
         this.cfg = cfg;
 
@@ -45,6 +49,7 @@ class DataStream {
         this.currencyExchg = 1;
 
         this.mgrData = undefined;
+        this.dataCandles = undefined;
 
         this._procConfig();
     }
@@ -119,7 +124,21 @@ class DataStream {
 
                 this.mgrData.insertTick(this.cfg.tickdatatname, cn[DEALSINDEX.TYPE], cn[DEALSINDEX.PRICE], cn[DEALSINDEX.VOLUME],
                     cask[DEPTHINDEX.PRICE], cask[DEPTHINDEX.VOLUME], cbid[DEPTHINDEX.PRICE], cbid[DEPTHINDEX.VOLUME],
-                    cn[DEALSINDEX.TS]);
+                    cn[DEALSINDEX.TMS]);
+            }
+        }
+
+        if (this.cfg.candledatatname && this.mgrData && this.asks.length > 0 && this.bids.length > 0) {
+            if (this.dataCandles == undefined) {
+                this.dataCandles = new Candles();
+            }
+
+            for (let i = this.deals.length - newnums; i < this.deals.length; ++i) {
+                let cn = this.deals[i];
+                let cask = this.asks[0];
+                let cbid = this.bids[0];
+
+                this.dataCandles.onDeals(this.mgrData, this.cfg.candledatatname, cn, cask, cbid);
             }
         }
     }
@@ -127,6 +146,6 @@ class DataStream {
 
 exports.DataStream = DataStream;
 
-exports.DEPTHINDEX      = DEPTHINDEX;
-exports.DEALSINDEX      = DEALSINDEX;
-exports.DEALTYPE        = DEALTYPE;
+// exports.DEPTHINDEX      = DEPTHINDEX;
+// exports.DEALSINDEX      = DEALSINDEX;
+// exports.DEALTYPE        = DEALTYPE;

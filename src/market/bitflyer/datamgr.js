@@ -1,7 +1,7 @@
 "use strict";
 
 const { Mysql } = require('../../mysql');
-const { insertList, removeList } = require('../../util');
+const { insertList, removeList, makeInsertSql } = require('../../util');
 const util = require('util');
 
 const BATCH_MUL_LINE = 1024;
@@ -92,6 +92,20 @@ class BitflyerDataMgr {
         }
 
         return undefined;
+    }
+
+    async insertCandle(tname, candle) {
+        if (this.mysql == undefined) {
+            return ;
+        }
+
+        let sql = makeInsertSql(tname, candle);
+        try {
+            await this.mysql.run(sql);
+        }
+        catch (err) {
+            console.log('BitflyerDataMgr.insertCandle(' + sql + ') err ' + err);
+        }
     }
 };
 

@@ -1,6 +1,7 @@
 "use strict";
 
-const { DataStream, DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./datastream');
+const { DataStream } = require('./datastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./basedef');
 const { WebSocketClient } = require('./websocket');
 
 class __MulWSDataStreamConfig {
@@ -89,7 +90,3 @@ class MulWSDataStream extends DataStream {
 };
 
 exports.MulWSDataStream = MulWSDataStream;
-
-exports.DEPTHINDEX      = DEPTHINDEX;
-exports.DEALSINDEX      = DEALSINDEX;
-exports.DEALTYPE        = DEALTYPE;

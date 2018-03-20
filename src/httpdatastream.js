@@ -1,6 +1,7 @@
 "use strict";
 
-const { DataStream, DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./datastream');
+const { DataStream } = require('./datastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./basedef');
 const rp = require('request-promise-native');
 
 class HTTPDataStream extends DataStream {
@@ -78,7 +79,3 @@ class HTTPDataStream extends DataStream {
 };
 
 exports.HTTPDataStream = HTTPDataStream;
-
-exports.DEPTHINDEX      = DEPTHINDEX;
-exports.DEALSINDEX      = DEALSINDEX;
-exports.DEALTYPE        = DEALTYPE;

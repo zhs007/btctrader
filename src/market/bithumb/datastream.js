@@ -1,6 +1,7 @@
 "use strict";
 
-const { HTTPDataStream, DEPTHINDEX, DEALTYPE, DEALSINDEX } = require('../../httpdatastream');
+const { HTTPDataStream } = require('../../httpdatastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
 
 class BithumbDataStream extends HTTPDataStream {
     // cfg.baseurl - like https://api.bithumb.com/public/

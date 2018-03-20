@@ -1,6 +1,7 @@
 "use strict";
 
-const { MulWSDataStream, DEPTHINDEX, DEALTYPE } = require('../../mulwsdatastream');
+const { MulWSDataStream } = require('../../mulwsdatastream');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
 const rp = require('request-promise-native');
 
 const BINANCECHANNEL = {

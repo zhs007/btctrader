@@ -78,10 +78,10 @@ class Strategy_MarketMaker extends Strategy {
         for (let i = 0; i < market.ds.deals.length; ++i) {
             let cd = market.ds.deals[market.ds.deals.length - i - 1];
             if (ct == 0) {
-                ct = cd[DEALSINDEX.TS];
+                ct = cd[DEALSINDEX.TMS];
             }
 
-            if (ct <= cd[DEALSINDEX.TS] + this.amountDepthTime) {
+            if (ct <= cd[DEALSINDEX.TMS] + this.amountDepthTime) {
                 let ci = cd[DEALSINDEX.TYPE] - 1;
 
                 totalvolume[ci] += cd[DEALSINDEX.VOLUME];
