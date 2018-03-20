@@ -2,7 +2,7 @@
 
 const util = require('util');
 const { Strategy } = require('../strategy');
-const { DEALSINDEX, DEALTYPE, DEPTHINDEX } = require('../datastream');
+const { DEALSINDEX, DEALTYPE, DEPTHINDEX } = require('../basedef');
 const { countPriceWithDepth_asks_depth2, countPriceWithDepth_bids_depth2 } = require('../util');
 
 class Strategy_MarketMaker2 extends Strategy {
