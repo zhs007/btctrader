@@ -25,7 +25,7 @@ class BitflyerDataMgr {
         let sql = '';
         try {
             sql = util.format("insert into %s(type, price, volume, askprice, askvolume, bidprice, bidvolume, ts, tsms) values(" +
-                "%d, %f, %f, %f, %f, %f, %f, '%s', %d)", tname, type, p, v, askp, askv, bidp, bidv, new Date(ts).toISOString(), ts);
+                "%d, %f, %f, %f, %f, %f, %f, '%s', %d);", tname, type, p, v, askp, askv, bidp, bidv, new Date(ts).toISOString(), ts);
             await this.mysql.run(sql);
         }
         catch (err) {
@@ -40,7 +40,7 @@ class BitflyerDataMgr {
 
         let sql = '';
         try {
-            sql = util.format("select * from %s where tsms >= %d and tsms <= %d", tname, new Date(bt).getTime(), new Date(et).getTime());
+            sql = util.format("select * from %s where tsms >= %d and tsms <= %d order by tsms;", tname, new Date(bt).getTime(), new Date(et).getTime());
             let [err, results, fields] = await this.mysql.run(sql);
 
             return results;
@@ -58,7 +58,7 @@ class BitflyerDataMgr {
         }
 
         return removeList(this.mysql, tname, lst, BATCH_MUL_LINE, (tablename, curnode) => {
-            return util.format("delete from %s where UNIX_TIMESTAMP(ts) = %d", tablename, Math.floor(new Date(curnode.ts).getTime() / 1000));
+            return util.format("delete from %s where UNIX_TIMESTAMP(ts) = %d;", tablename, Math.floor(new Date(curnode.ts).getTime() / 1000));
         });
     }
 
@@ -73,6 +73,25 @@ class BitflyerDataMgr {
         }
 
         return insertList(this.mysql, tname, lst, BATCH_MUL_LINE);
+    }
+
+    async getCandles(tname, bt, et) {
+        if (this.mysql == undefined) {
+            return ;
+        }
+
+        let sql = '';
+        try {
+            sql = util.format("select * from %s where UNIX_TIMESTAMP(ts) >= %d and UNIX_TIMESTAMP(ts) <= %d order by ts;", tname, Math.floor(new Date(bt).getTime() / 1000), Math.floor(new Date(et).getTime() / 1000));
+            let [err, results, fields] = await this.mysql.run(sql);
+
+            return results;
+        }
+        catch (err) {
+            console.log('BitflyerDataMgr.getCandles(' + sql + ') err ' + err);
+        }
+
+        return undefined;
     }
 };
 

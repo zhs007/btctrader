@@ -306,6 +306,79 @@ const HTML_LINE4_OPTION = '    option = {\n' +
     '        ]\n' +
     '    };';
 
+const HTML_KLINE_OPTION = '' +
+    'var upColor = \'#ec0000\';\n' +
+    'var upBorderColor = \'#8A0000\';\n' +
+    'var downColor = \'#00da3c\';\n' +
+    'var downBorderColor = \'#008F28\';' +
+    '' +
+    'option = {\n' +
+    '    title: {\n' +
+    '        text: \'上证指数\',\n' +
+    '        left: 0\n' +
+    '    },\n' +
+    '    tooltip: {\n' +
+    '        trigger: \'axis\',\n' +
+    '        axisPointer: {\n' +
+    '            type: \'cross\'\n' +
+    '        }\n' +
+    '    },\n' +
+    '    legend: {\n' +
+    '        data: [\'日K\']\n' +
+    '    },\n' +
+    '    grid: {\n' +
+    '        left: \'10%\',\n' +
+    '        right: \'10%\',\n' +
+    '        bottom: \'15%\'\n' +
+    '    },\n' +
+    '    xAxis: {\n' +
+    '        type: \'category\',\n' +
+    '        data: date,\n' +
+    '        scale: true,\n' +
+    '        boundaryGap : false,\n' +
+    '        axisLine: {onZero: false},\n' +
+    '        splitLine: {show: false},\n' +
+    '        splitNumber: 20,\n' +
+    '        min: \'dataMin\',\n' +
+    '        max: \'dataMax\'\n' +
+    '    },\n' +
+    '    yAxis: {\n' +
+    '        scale: true,\n' +
+    '        splitArea: {\n' +
+    '            show: true\n' +
+    '        }\n' +
+    '    },\n' +
+    '    dataZoom: [\n' +
+    '        {\n' +
+    '            type: \'inside\',\n' +
+    '            start: 50,\n' +
+    '            end: 100\n' +
+    '        },\n' +
+    '        {\n' +
+    '            show: true,\n' +
+    '            type: \'slider\',\n' +
+    '            y: \'90%\',\n' +
+    '            start: 50,\n' +
+    '            end: 100\n' +
+    '        }\n' +
+    '    ],\n' +
+    '    series: [\n' +
+    '        {\n' +
+    '            name: \'日K\',\n' +
+    '            type: \'candlestick\',\n' +
+    '            data: data,\n' +
+    '            itemStyle: {\n' +
+    '                normal: {\n' +
+    '                    color: upColor,\n' +
+    '                    color0: downColor,\n' +
+    '                    borderColor: upBorderColor,\n' +
+    '                    borderColor0: downBorderColor\n' +
+    '                }\n' +
+    '            },\n' +
+    '        },\n' +
+    '    ]\n' +
+    '};';
+
 
 class HTMLOutput_ECharts extends HTMLOutput {
     constructor() {
@@ -380,6 +453,159 @@ class HTMLOutput_ECharts extends HTMLOutput {
         }
 
         fs.writeFileSync(htmlname, HTML_START + strdate + strdata + strdata1 + strdata2 + strdata3 + HTML_LINE4_OPTION + HTML_END, 'utf-8');
+    }
+
+    outputKLine(arr, htmlname) {
+        let strdate = 'var date = [';
+        let strdata = 'var data = [';
+        // let strdata1 = 'var data1 = [';
+        // let strdata2 = 'var data2 = [';
+        // let strdata3 = 'var data3 = [';
+
+        // let bp = arr[0].price;
+        // let lp = arr[0].price;
+        // let maxv = 0;
+        //
+        // for (let i = 0; i < arr.length; ++i) {
+        //     if (maxv < arr[i].volume) {
+        //         maxv = arr[i].volume;
+        //     }
+        // }
+        //
+        // let lbp = arr[0].price;
+        // let lsp = arr[0].price;
+
+        let lcp = -1;
+
+        for (let i = 0; i < arr.length; ++i) {
+            let cn = arr[i];
+            strdate += '"';
+            strdate += new Date(cn.ts).toISOString();
+            strdate += '"';
+
+            if (lcp == -1) {
+                lcp = cn.op;
+            }
+
+            let ca = [lcp, cn.cp, cn.lp, cn.hp];
+            strdata += JSON.stringify(ca);
+
+            lcp = cn.cp;
+
+            // if (cn.volume >= 0.01) {
+            //     if (cn.type == 1) {
+            //         strdata += (cn.price - bp) / bp;
+            //         strdata3 += (lsp - bp) / bp;
+            //
+            //         lbp = cn.price;
+            //     }
+            //     else {
+            //         strdata += (lbp - bp) / bp;
+            //         strdata3 += (cn.price - bp) / bp;
+            //
+            //         lsp = cn.price;
+            //     }
+            // }
+            // else {
+            //     strdata += (lbp - bp) / bp;
+            //     strdata3 += (lsp - bp) / bp;
+            // }
+            //
+            // strdata1 += (cn.price - lp) / lp;
+            // strdata2 += (cn.askprice - cn.bidprice) / lp;
+            // // strdata3 += (cn.volume) / maxv * 0.1;
+            //
+            if (i < arr.length - 1) {
+                strdate += ', ';
+                strdata += ', ';
+                // strdata1 += ', ';
+                // strdata2 += ', ';
+                // strdata3 += ', ';
+            }
+            else {
+                strdate += ']\n';
+                strdata += ']\n';
+                // strdata1 += ']\n';
+                // strdata2 += ']\n';
+                // strdata3 += ']\n';
+            }
+            //
+            // lp = cn.price;
+        }
+
+        fs.writeFileSync(htmlname, HTML_START + strdate + strdata + HTML_KLINE_OPTION + HTML_END, 'utf-8');
+    }
+
+    outputKLineOff(arr0, arr1, htmlname) {
+        let strdate = 'var date = [';
+        let strdata = 'var data = [';
+        // let strdata1 = 'var data1 = [';
+        // let strdata2 = 'var data2 = [';
+        // let strdata3 = 'var data3 = [';
+
+        // let bp = arr[0].price;
+        // let lp = arr[0].price;
+        // let maxv = 0;
+
+        // for (let i = 0; i < arr.length; ++i) {
+        //     if (maxv < arr[i].volume) {
+        //         maxv = arr[i].volume;
+        //     }
+        // }
+
+        // let lbp = arr[0].price;
+        // let lsp = arr[0].price;
+
+        for (let i = 0; i < arr0.length; ++i) {
+            let cn = arr0[i];
+            strdate += '"';
+            strdate += new Date(cn.ts).toISOString();
+            strdate += '"';
+
+            strdata += (arr0[i].cp - arr1[i].cp) / arr0[i].cp;
+
+            // if (cn.volume >= 0.01) {
+            //     if (cn.type == 1) {
+            //         strdata += (cn.price - bp) / bp;
+            //         strdata3 += (lsp - bp) / bp;
+            //
+            //         lbp = cn.price;
+            //     }
+            //     else {
+            //         strdata += (lbp - bp) / bp;
+            //         strdata3 += (cn.price - bp) / bp;
+            //
+            //         lsp = cn.price;
+            //     }
+            // }
+            // else {
+            //     strdata += (lbp - bp) / bp;
+            //     strdata3 += (lsp - bp) / bp;
+            // }
+            //
+            // strdata1 += (cn.price - lp) / lp;
+            // strdata2 += (cn.askprice - cn.bidprice) / lp;
+            // // strdata3 += (cn.volume) / maxv * 0.1;
+
+            if (i < arr0.length - 1) {
+                strdate += ', ';
+                strdata += ', ';
+                // strdata1 += ', ';
+                // strdata2 += ', ';
+                // strdata3 += ', ';
+            }
+            else {
+                strdate += ']\n';
+                strdata += ']\n';
+                // strdata1 += ']\n';
+                // strdata2 += ']\n';
+                // strdata3 += ']\n';
+            }
+
+            // lp = cn.price;
+        }
+
+        fs.writeFileSync(htmlname, HTML_START + strdate + strdata + HTML_LINE_OPTION + HTML_END, 'utf-8');
     }
 };
 
