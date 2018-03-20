@@ -1,6 +1,7 @@
 "use strict";
 
 const { SIMDBDataStream_DND } = require('../src/sim/simds_dnd');
+const { runDND } = require('../src/sim/run');
 
 const { Trader } = require('../src/trader');
 const { Strategy_MarketMaker } = require('../src/strategy/marketmaker');
@@ -90,7 +91,7 @@ BTCTraderMgr.singleton.init(cfg).then(async () => {
 
     ds.init();
 
-    await ds.run();
+    await runDND(ds);
 
     process.exit();
 });
