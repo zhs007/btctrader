@@ -45,8 +45,10 @@ BTCTraderMgr.singleton.init(cfg).then(async () => {
     trader.addMarket('btc', 0, 0, 10000, ds0);
     trader.addMarket('btcex', 0, 0, 10000, ds1);
 
-    ds0.init();
-    ds1.init();
+    // ds0.init();
+    // ds1.init();
+
+    strategy.start(1000);
 
     await runDNDLink(ds0, ds1);
 });

@@ -22,6 +22,12 @@ class Strategy_MarketLink extends Strategy {
 
         this.curHigh = [0, 0];
         this.curLow = [0, 0];
+
+        this.lstBuy = [];
+        this.lstSell = [];
+
+        this.lstDealBuy = [];
+        this.lstDealSell = [];
     }
 
     _newTradeData(dp) {
@@ -156,6 +162,138 @@ class Strategy_MarketLink extends Strategy {
         }
     }
 
+    _buy(cp, cv, p, v, destp, tsms) {
+        if (this.lstBuy.length == 0) {
+            // this.buyPrice = p;
+            // this.buyDestPrice = destp;
+
+            let ct = this.buy(this.trader.lstMarket[1], cp, cv, p, v, tsms);
+            ct.data = this._newTradeData(destp);
+            this._insertBuy(ct);
+        }
+        else {
+            if (p <= this.lstBuy[0].bp) {
+                return ;
+            }
+
+            if (p > this.lstBuy[0].bp * (1 - 0.002)) {
+                // this.buyPrice = p;
+
+                let ct = this.buy(this.trader.lstMarket[1], cp, cv, p, v, tsms);
+                ct.data = this._newTradeData(destp);
+                this._insertBuy(ct);
+            }
+        }
+    }
+
+    _sell(cp, cv, p, v, destp, tsms) {
+        if (this.lstSell.length == 0) {
+            // this.sellPrice = p;
+            // this.sellDestPrice = destp;
+
+            let ct = this.sell(this.trader.lstMarket[1], cp, cv, p, v, tsms);
+            ct.data = this._newTradeData(destp);
+            this._insertSell(ct);
+        }
+        else {
+            if (p >= this.lstSell[0].bp) {
+                return ;
+            }
+
+            if (p < this.lstSell[0].bp * (1 - 0.002)) {
+                // this.sellPrice = p;
+
+                let ct = this.sell(this.trader.lstMarket[1], cp, cv, p, v, tsms);
+                ct.data = this._newTradeData(destp);
+                this._insertSell(ct);
+            }
+        }
+    }
+
+    _close(trade, cp, cv, p, v, tsms) {
+        this.close(this.trader.lstMarket[1], trade, cp, cv, p, v, tsms);
+    }
+
+    _insertBuy(trade) {
+        this.lstBuy.push(trade);
+
+        this.lstBuy.sort((a, b) => {
+            return b.bp - a.bp;
+        });
+    }
+
+    _insertSell(trade) {
+        this.lstSell.push(trade);
+
+        this.lstSell.sort((a, b) => {
+            return a.bp - b.bp;
+        });
+    }
+
+    _removeBuy(trade) {
+        for (let i = 0; i < this.lstBuy.length; ++i) {
+            if (this.lstBuy[i].tid == trade.tid) {
+                this.lstBuy.splice(i, 1);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    _removeSell(trade) {
+        for (let i = 0; i < this.lstSell.length; ++i) {
+            if (this.lstSell[i].tid == trade.tid) {
+                this.lstSell.splice(i, 1);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    _insertDealBuy(trade) {
+        this.lstDealBuy.push(trade);
+
+        this.lstDealBuy.sort((a, b) => {
+            return b.bp - a.bp;
+        });
+    }
+
+    _insertDealSell(trade) {
+        this.lstDealSell.push(trade);
+
+        this.lstDealSell.sort((a, b) => {
+            return a.bp - b.bp;
+        });
+    }
+
+    _removeDealBuy(trade) {
+        for (let i = 0; i < this.lstDealBuy.length; ++i) {
+            if (this.lstDealBuy[i].tid == trade.tid) {
+                this.lstDealBuy.splice(i, 1);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    _removeDealSell(trade) {
+        for (let i = 0; i < this.lstDealSell.length; ++i) {
+            if (this.lstDealSell[i].tid == trade.tid) {
+                this.lstDealSell.splice(i, 1);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     onDepth(market) {
 
     }
@@ -176,12 +314,64 @@ class Strategy_MarketLink extends Strategy {
             if (per > this.linkPriceOffPer + 0.004) {
                 console.log(util.format('sell %f %f %j %j', per, this.linkPriceOffPer, this.curHigh, this.curLow));
 
-                let ct = this.sell(this.trader.lstMarket[1], deal[1][DEALSINDEX.PRICE], deal[1][DEALSINDEX.VOLUME], deal[1][DEALSINDEX.PRICE], 0.1, curdeal[DEALSINDEX.TMS]);
+                let ct = this._sell(deal[1][DEALSINDEX.PRICE], deal[1][DEALSINDEX.VOLUME], deal[1][DEALSINDEX.PRICE], 0.1, p[0] + p[0] * this.linkPriceOffPer, curdeal[DEALSINDEX.TMS]);
             }
             else if (per < this.linkPriceOffPer - 0.004) {
                 console.log(util.format('buy %f %f %j %j', per, this.linkPriceOffPer, this.curHigh, this.curLow));
 
-                let ct = this.buy(this.trader.lstMarket[1], deal[1][DEALSINDEX.PRICE], deal[1][DEALSINDEX.VOLUME], deal[1][DEALSINDEX.PRICE], 0.1, curdeal[DEALSINDEX.TMS]);
+                let ct = this._buy(deal[1][DEALSINDEX.PRICE], deal[1][DEALSINDEX.VOLUME], deal[1][DEALSINDEX.PRICE], 0.1, p[0] + p[0] * this.linkPriceOffPer, curdeal[DEALSINDEX.TMS]);
+            }
+        }
+
+        this._onTick();
+    }
+
+    onTradeChg(trade) {
+        super.onTradeChg(trade);
+
+        if (trade.v <= 0) {
+            if (trade.parent == undefined) {
+                if (this._removeBuy(trade)) {
+                    this._insertDealBuy(trade);
+
+                    return ;
+                }
+
+                if (this._removeSell(trade)) {
+                    this._insertDealSell(trade);
+
+                    return ;
+                }
+            }
+            else {
+                if (this._removeDealBuy(trade)) {
+
+                    return ;
+                }
+
+                if (this._removeDealSell(trade)) {
+
+                    return ;
+                }
+            }
+        }
+    }
+
+    _onTick() {
+        let curdeal = this.trader.lstMarket[1].ds.deals[this.trader.lstMarket[1].ds.deals.length - 1];
+        for (let i = 0; i < this.lstDealBuy.length; ++i) {
+            let cn = this.lstDealBuy[i];
+
+            if (cn.data.dp <= curdeal[DEALSINDEX.PRICE]) {
+                this._close(cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], cn.data.dp, cn.bv, curdeal[DEALSINDEX.TMS]);
+            }
+        }
+
+        for (let i = 0; i < this.lstDealSell.length; ++i) {
+            let cn = this.lstDealSell[i];
+
+            if (cn.data.dp >= curdeal[DEALSINDEX.PRICE]) {
+                this._close(cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], cn.data.dp, cn.bv, curdeal[DEALSINDEX.TMS]);
             }
         }
     }

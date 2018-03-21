@@ -87,13 +87,13 @@ class BTCTraderMgr {
 
         let str = util.format("state = %d", trade.state);
 
-        if (trade.deal != undefined) {
-            let strdeal = util.format(", dp = %f, dv = %f, dts = '%s', dtsms = %d", trade.deal.p, trade.deal.v, new Date(trade.deal.tsms).toISOString(), trade.deal.tsms);
+        if (trade.childDeal != undefined) {
+            let strdeal = util.format(", dp = %f, dv = %f, dts = '%s', dtsms = %d", trade.childDeal.p, trade.childDeal.v, new Date(trade.childDeal.tsms).toISOString(), trade.childDeal.tsms);
             str += strdeal;
         }
 
-        if (trade.close != undefined) {
-            let strclose = util.format(", cp = %f, cv = %f, cts = '%s', ctsms = %d", trade.close.p, trade.close.v, new Date(trade.close.tsms).toISOString(), trade.close.tsms);
+        if (trade.childClose != undefined) {
+            let strclose = util.format(", cp = %f, cv = %f, cts = '%s', ctsms = %d", trade.childClose.p, trade.childClose.bv - trade.childClose.v, new Date(trade.childClose.tsms).toISOString(), trade.childClose.tsms);
             str += strclose;
         }
 
