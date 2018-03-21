@@ -3,13 +3,14 @@
 class Strategy {
     constructor() {
         this.trader = undefined;
+        this.simid = 0;
     }
 
     onDepth(market) {
 
     }
 
-    onDeals(market) {
+    onDeals(market, newnums) {
 
     }
 
@@ -17,11 +18,15 @@ class Strategy {
 
     }
 
-    onSimDeals(market) {
+    onSimDeals(market, newnums) {
 
     }
 
-    onTrade(trade) {
+    onUnsoldTrade(trade) {
+
+    }
+
+    onOpenTrade(trade) {
 
     }
 };

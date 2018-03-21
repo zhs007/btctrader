@@ -9,10 +9,15 @@ const BTCTraderMgr = require('../src/btctradermgr');
 const fs = require('fs');
 
 const SIMTRADE = true;
+const SIMNAME = 'markerlink';
 
 const cfg = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 
 BTCTraderMgr.singleton.init(cfg).then(async () => {
+
+    let simid = await BTCTraderMgr.singleton.newSim(SIMNAME);
+    console.log('new simid is ' + simid);
+
     var ds0 = new SIMDBDataStream_DND({
         mysqlcfg: cfg,
         tablename: 'bitflyer_btcjpy',
@@ -31,8 +36,11 @@ BTCTraderMgr.singleton.init(cfg).then(async () => {
         simtrade: SIMTRADE
     });
 
+    let strategy = new Strategy_MarketLink();
+    strategy.simid = simid;
+
     var trader = new Trader();
-    trader.setStrategy(new Strategy_MarketLink());
+    trader.setStrategy(strategy);
     trader.addMarket('btc', 0, 0, 10000, ds0);
     trader.addMarket('btcex', 0, 0, 10000, ds1);
 
