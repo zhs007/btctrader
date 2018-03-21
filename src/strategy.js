@@ -1,6 +1,7 @@
 "use strict";
 
 const BTCTraderMgr = require('../src/btctradermgr');
+const process = require('process');
 
 class Strategy {
     constructor() {
@@ -14,6 +15,10 @@ class Strategy {
 
         if (this.save2db) {
             BTCTraderMgr.singleton.insertTrade(this.simid, trade);
+            // process.nextTick(async () => {
+            //     await BTCTraderMgr.singleton.insertTrade(this.simid, trade);
+            //     console.log('BTCTraderMgr.singleton.insertTrade ok.');
+            // });
         }
     }
 
@@ -22,6 +27,10 @@ class Strategy {
 
         if (this.save2db) {
             BTCTraderMgr.singleton.insertTrade(this.simid, trade);
+            // process.nextTick(async () => {
+            //     await BTCTraderMgr.singleton.insertTrade(this.simid, trade);
+            //     console.log('BTCTraderMgr.singleton.insertTrade ok.');
+            // });
         }
     }
 
@@ -47,6 +56,12 @@ class Strategy {
 
     onOpenTrade(trade) {
 
+    }
+
+    onTradeChg(trade) {
+        if (this.save2db) {
+            BTCTraderMgr.singleton.updTrade(this.simid, trade);
+        }
     }
 };
 

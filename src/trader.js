@@ -31,6 +31,8 @@ class Trade {
 
         this.deal = undefined;
         this.close = undefined;
+
+        this.data = undefined;
     }
 
     buy(cp, cv, p, v, tsms) {
@@ -151,9 +153,9 @@ class Market {
         this.lstTrade.push(ct);
         this.lstUnsold.push(ct);
 
-        let lastv = this.volume;
-        this.volume += v;
-        this.price = (lastv * this.price + cm) / this.volume;
+        // let lastv = this.volume;
+        // this.volume += v;
+        // this.price = (lastv * this.price + cm) / this.volume;
 
         // this.money -= cm;
 
@@ -173,11 +175,11 @@ class Market {
 
         // let cm = p * v;
         let ct = new Trade(this.lstTrade.length);
-        ct.sell(cp, cv, ts);
+        ct.sell(cp, cv, p, v, ts);
         this.lstTrade.push(ct);
         this.lstUnsold.push(ct);
 
-        this.volume -= v;
+        // this.volume -= v;
         // this.money += cm;
 
         // BTCTraderMgr.singleton.insertTrade(TRADETYPE_SELL, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
@@ -213,6 +215,10 @@ class Market {
                         this.lstOpen.push(cn);
                     }
 
+                    if (this.ds.strategy) {
+                        this.ds.strategy.onTradeChg(cn);
+                    }
+
                     if (cn.v <= 0) {
                         this.lstUnsold.splice(i, 1);
                     }
@@ -225,6 +231,9 @@ class Market {
                     if (lv <= 0) {
                         return ;
                     }
+                }
+                else {
+                    ++i;
                 }
             }
             else if (cn.type == TRADETYPE_SELL) {
@@ -235,6 +244,10 @@ class Market {
                         this.lstOpen.push(cn);
                     }
 
+                    if (this.ds.strategy) {
+                        this.ds.strategy.onTradeChg(cn);
+                    }
+
                     if (cn.v <= 0) {
                         this.lstUnsold.splice(i, 1);
                     }
@@ -248,6 +261,12 @@ class Market {
                         return ;
                     }
                 }
+                else {
+                    ++i;
+                }
+            }
+            else {
+                ++i;
             }
         }
     }

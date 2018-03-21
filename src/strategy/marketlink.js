@@ -24,6 +24,12 @@ class Strategy_MarketLink extends Strategy {
         this.curLow = [0, 0];
     }
 
+    _newTradeData(dp) {
+        return {
+            dp: dp
+        };
+    }
+
     // 这里有点复杂
     // 算法上是按小区间统计，但有可能发生这个小区间内，某一个完全没有成交记录的情况，这时会用上一个区间内的最后一笔交易
     // 只要有一笔交易产生，上一次的就不重复计算
@@ -168,11 +174,14 @@ class Strategy_MarketLink extends Strategy {
             let p = [parseFloat(deal[0][DEALSINDEX.PRICE]), parseFloat(deal[1][DEALSINDEX.PRICE])];
             let per = (p[1] - p[0]) / p[0];
             if (per > this.linkPriceOffPer + 0.004) {
-                console.log(per);
-                console.log(this.linkPriceOffPer);
-                console.log(this.curHigh);
-                console.log(this.curLow);
-                // this.trader.lstMarket[1]
+                console.log(util.format('sell %f %f %j %j', per, this.linkPriceOffPer, this.curHigh, this.curLow));
+
+                let ct = this.sell(this.trader.lstMarket[1], deal[1][DEALSINDEX.PRICE], deal[1][DEALSINDEX.VOLUME], deal[1][DEALSINDEX.PRICE], 0.1, curdeal[DEALSINDEX.TMS]);
+            }
+            else if (per < this.linkPriceOffPer - 0.004) {
+                console.log(util.format('buy %f %f %j %j', per, this.linkPriceOffPer, this.curHigh, this.curLow));
+
+                let ct = this.buy(this.trader.lstMarket[1], deal[1][DEALSINDEX.PRICE], deal[1][DEALSINDEX.VOLUME], deal[1][DEALSINDEX.PRICE], 0.1, curdeal[DEALSINDEX.TMS]);
             }
         }
     }

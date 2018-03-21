@@ -35,7 +35,20 @@ class SIMDBDataStream_DND extends DataStream {
             return undefined;
         }
 
+        for (let i = 0; i < rows.length; ++i) {
+            this._formatDND(rows[i]);
+        }
+
         return rows;
+    }
+
+    _formatDND(cn) {
+        cn.price = parseFloat(cn.price);
+        cn.volume = parseFloat(cn.volume);
+        cn.askprice = parseFloat(cn.askprice);
+        cn.askvolume = parseFloat(cn.askvolume);
+        cn.bidprice = parseFloat(cn.bidprice);
+        cn.bidvolume = parseFloat(cn.bidvolume);
     }
 
     // async run() {

@@ -61,12 +61,19 @@ class BTCTraderMgr {
         }
 
         let str0 = 'simid, tid, type, state, curprice, curvolume, p, v, ts, tsms';
-        let str1 = util.format("%d, %d, %d, %f, %f, %f, %f, '%s', %d", simid, trade.tid, trade.type, trade.state, trade.cp, trade.cv, trade.bp, trade.bc, new Date(trade.tsms).toISOString(), trade.tsms);
+        let str1 = util.format("%d, %d, %d, %d, %f, %f, %f, %f, '%s', %d", simid, trade.tid, trade.type, trade.state, trade.cp, trade.cv, trade.bp, trade.bv, new Date(trade.tsms).toISOString(), trade.tsms);
 
         let sql = util.format('insert into %s(%s) values(%s)', TNAME_TRADE, str0, str1);
 
         try {
-            await this.mysql.run(sql);
+            let [err, results, fields] = await this.mysql.run(sql);
+            if (err) {
+                console.log('BTCTraderMgr.insertTrade(' + sql + ') err ' + err);
+
+                return ;
+            }
+
+            return ;
         }
         catch (err) {
             console.log('BTCTraderMgr.insertTrade(' + sql + ') err ' + err);

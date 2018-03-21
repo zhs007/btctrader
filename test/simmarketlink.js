@@ -38,6 +38,7 @@ BTCTraderMgr.singleton.init(cfg).then(async () => {
 
     let strategy = new Strategy_MarketLink();
     strategy.simid = simid;
+    strategy.save2db = true;
 
     var trader = new Trader();
     trader.setStrategy(strategy);
