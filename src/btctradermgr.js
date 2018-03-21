@@ -60,10 +60,12 @@ class BTCTraderMgr {
             return ;
         }
 
-        let sql = '';
+        let str0 = 'simid, tid, type, state, curprice, curvolume, p, v, ts, tsms';
+        let str1 = util.format("%d, %d, %d, %f, %f, %f, %f, '%s', %d", simid, trade.tid, trade.type, trade.state, trade.cp, trade.cv, trade.bp, trade.bc, new Date(trade.tsms).toISOString(), trade.tsms);
+
+        let sql = util.format('insert into %s(%s) values(%s)', TNAME_TRADE, str0, str1);
+
         try {
-            sql = util.format('insert into btctrader_trade(tid, type, curprice, curvolume, price, volume, money, bprice, bvolume, bmoney) values(' +
-                '%d, %d, %f, %f, %f, %f, %f, %f, %f, %f)', this.curTID, type, cp, cv, p, v, m, bp, bv, bm);
             await this.mysql.run(sql);
         }
         catch (err) {
@@ -72,7 +74,30 @@ class BTCTraderMgr {
     }
 
     async updTrade(simid, trade) {
+        if (this.mysql == undefined) {
+            return ;
+        }
 
+        let str = util.format("state = %d", trade.state);
+
+        if (trade.deal != undefined) {
+            let strdeal = util.format(", dp = %f, dv = %f, dts = '%s', dtsms = %d", trade.deal.p, trade.deal.v, new Date(trade.deal.tsms).toISOString(), trade.deal.tsms);
+            str += strdeal;
+        }
+
+        if (trade.close != undefined) {
+            let strclose = util.format(", cp = %f, cv = %f, cts = '%s', ctsms = %d", trade.close.p, trade.close.v, new Date(trade.close.tsms).toISOString(), trade.close.tsms);
+            str += strclose;
+        }
+
+        let sql = util.format('update %s set %s where simid = %d and tid = %d', TNAME_TRADE, str, simid, trade.tid);
+
+        try {
+            await this.mysql.run(sql);
+        }
+        catch (err) {
+            console.log('BTCTraderMgr.updTrade(' + sql + ') err ' + err);
+        }
     }
 };
 

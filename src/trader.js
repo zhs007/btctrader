@@ -7,27 +7,37 @@ const TRADETYPE_BUY     = 1;
 const TRADETYPE_NORMAL  = 0;
 const TRADETYPE_SELL    = -1;
 
+const TRADESTATE_OPEN   = 0;
+const TRADESTATE_DEAL   = 1;
+const TRADESTATE_CLOSE  = 2;
+const TRADESTATE_FAIL   = 3;
+
 class Trade {
     constructor(tid) {
         this.tid = tid;
 
         this.tsms = new Date().getTime();
+        this.cp = 0;
+        this.cv = 0;
+
         this.bp = 0;
         this.bv = 0;
+
         this.p = 0;
         this.v = 0;
         this.type = TRADETYPE_NORMAL;
-        // this.ep = 0;
-        // this.ev = 0;
 
-        // this.isok = false;
+        this.state = TRADESTATE_OPEN;
 
         this.deal = undefined;
         this.close = undefined;
     }
 
-    buy(p, v, tsms) {
-        this.tsms = ts;
+    buy(cp, cv, p, v, tsms) {
+        this.cp = cp;
+        this.cv = cv;
+
+        this.tsms = tsms;
         this.bp = p;
         this.bv = v;
         this.p = p;
@@ -35,7 +45,10 @@ class Trade {
         this.type = TRADETYPE_BUY;
     }
 
-    sell(p, v, tsms) {
+    sell(cp, cv, p, v, tsms) {
+        this.cp = cp;
+        this.cv = cv;
+
         this.tsms = tsms;
         this.bp = p;
         this.bv = v;
@@ -46,6 +59,10 @@ class Trade {
 
     cancel() {
         this.v = 0;
+
+        if (this.state == TRADESTATE_OPEN) {
+            this.state = TRADESTATE_FAIL;
+        }
     }
 
     onDeal(newtid, p, v, tsms) {
@@ -65,6 +82,8 @@ class Trade {
             this.deal.p = p;
 
             this.v -= v;
+
+            this.state = TRADESTATE_DEAL;
 
             return [this.deal, v];
         }
@@ -115,20 +134,20 @@ class Market {
         this.money = m;
     }
 
-    buy(p, v, ts) {
-        if (this.money <= 0) {
-            return false;
-        }
-
-        let cm = p * v;
-        if (cm > this.money) {
-            v = this.money / p;
-        }
-
-        cm = p * v;
+    buy(cp, cv, p, v, ts) {
+        // if (this.money <= 0) {
+        //     return false;
+        // }
+        //
+        // let cm = p * v;
+        // if (cm > this.money) {
+        //     v = this.money / p;
+        // }
+        //
+        // cm = p * v;
 
         let ct = new Trade(this.lstTrade.length);
-        ct.buy(p, v, ts);
+        ct.buy(cp, cv, p, v, ts);
         this.lstTrade.push(ct);
         this.lstUnsold.push(ct);
 
@@ -136,34 +155,34 @@ class Market {
         this.volume += v;
         this.price = (lastv * this.price + cm) / this.volume;
 
-        this.money -= cm;
+        // this.money -= cm;
 
         // BTCTraderMgr.singleton.insertTrade(TRADETYPE_BUY, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
 
-        return true;
+        return ct;
     }
 
-    sell(p, v, ts) {
-        if (this.volume <= 0) {
-            return false;
-        }
+    sell(cp, cv, p, v, ts) {
+        // if (this.volume <= 0) {
+        //     return false;
+        // }
+        //
+        // if (v > this.volume) {
+        //     v = this.volume;
+        // }
 
-        if (v > this.volume) {
-            v = this.volume;
-        }
-
-        let cm = p * v;
+        // let cm = p * v;
         let ct = new Trade(this.lstTrade.length);
-        ct.sell(p, v, ts);
+        ct.sell(cp, cv, ts);
         this.lstTrade.push(ct);
         this.lstUnsold.push(ct);
 
         this.volume -= v;
-        this.money += cm;
+        // this.money += cm;
 
         // BTCTraderMgr.singleton.insertTrade(TRADETYPE_SELL, p, v, this.price, this.volume, this.money, this.bp, this.bv, this.bm);
 
-        return true;
+        return ct;
     }
 
     foreachUnsoldTrade(strategy) {

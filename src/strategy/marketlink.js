@@ -19,6 +19,9 @@ class Strategy_MarketLink extends Strategy {
         this.minofftime = 5 * 1000;
 
         this.lstTimeOffNode = [];
+
+        this.curHigh = [0, 0];
+        this.curLow = [0, 0];
     }
 
     // 这里有点复杂
@@ -29,6 +32,8 @@ class Strategy_MarketLink extends Strategy {
             btms: btms,
             p: [0, 0],
             v: [0, 0],
+            h: [0, 0],
+            l: [0, 0],
 
             lp: [0, 0],
             lv: [0, 0],
@@ -56,6 +61,11 @@ class Strategy_MarketLink extends Strategy {
             cn.v[0] = ln.lv[0];
             cn.v[1] = ln.lv[1];
 
+            cn.h[0] = ln.lp[0];
+            cn.h[1] = ln.lp[1];
+            cn.l[0] = ln.lp[0];
+            cn.l[1] = ln.lp[1];
+
             cn.lp[0] = ln.lp[0];
             cn.lp[1] = ln.lp[1];
             cn.lv[0] = ln.lv[0];
@@ -72,8 +82,18 @@ class Strategy_MarketLink extends Strategy {
     _add2TimeOffNode(cn, mi, p, v) {
         if (cn.ltms[mi] != cn.btms) {
             cn.p[mi] = 0;
+            cn.h[mi] = 0;
+            cn.l[mi] = 0;
             cn.v[mi] = 0;
             cn.ltms[mi] = cn.btms;
+        }
+
+        if (cn.h[mi] < p) {
+            cn.h[mi] = p;
+        }
+
+        if (cn.l[mi] > p) {
+            cn.l[mi] = p;
         }
 
         cn.lp[mi] = p;
@@ -88,6 +108,9 @@ class Strategy_MarketLink extends Strategy {
     _countNewOff(tms) {
         let p = [0, 0];
         let v = [0, 0];
+        let h = [0, 0];
+        let l = [0, 0];
+
         for (let i = 0; i < this.lstTimeOffNode.length; ++i) {
             let cn = this.lstTimeOffNode[this.lstTimeOffNode.length - i - 1];
 
@@ -97,11 +120,30 @@ class Strategy_MarketLink extends Strategy {
                     let ap = cn.p[j] * cn.v[j] / tv + p[j] * v[j] / tv;
                     v[j] = tv;
                     p[j] = ap;
+
+                    if (h[j] == 0) {
+                        h[j] = cn.p[j];
+                    }
+
+                    if (h[j] < cn.p[j]) {
+                        h[j] = cn.p[j];
+                    }
+
+                    if (l[j] == 0) {
+                        l[j] = cn.p[j];
+                    }
+
+                    if (l[j] > cn.p[j]) {
+                        l[j] = cn.p[j];
+                    }
                 }
             }
             else {
                 this.linkPriceOffPer = (p[1] - p[0]) / p[0];
                 this.linkVolume = v[0];
+
+                this.curHigh = h;
+                this.curLow = l;
 
                 break;
             }
@@ -125,8 +167,11 @@ class Strategy_MarketLink extends Strategy {
             let deal = [this.trader.lstMarket[0].ds.deals[this.trader.lstMarket[0].ds.deals.length - 1], this.trader.lstMarket[1].ds.deals[this.trader.lstMarket[1].ds.deals.length - 1]];
             let p = [parseFloat(deal[0][DEALSINDEX.PRICE]), parseFloat(deal[1][DEALSINDEX.PRICE])];
             let per = (p[1] - p[0]) / p[0];
-            if (per > this.linkPriceOffPer + 0.001) {
+            if (per > this.linkPriceOffPer + 0.004) {
                 console.log(per);
+                console.log(this.linkPriceOffPer);
+                console.log(this.curHigh);
+                console.log(this.curLow);
                 // this.trader.lstMarket[1]
             }
         }
