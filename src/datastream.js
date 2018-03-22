@@ -109,7 +109,7 @@ class DataStream {
 
         if (this.strategy != undefined) {
             if (this.cfg.simtrade) {
-                this.market.onSimDeals(newnums);
+                this.market.onMarketSimDeals(newnums, this.strategy.cfg.sim_newdealdelayms);
 
                 this.strategy.onSimDeals(this.market, newnums);
             }

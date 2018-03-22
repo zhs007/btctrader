@@ -21,6 +21,13 @@ const DEALTYPE = {
     SELL:       2
 };
 
+const TRADETYPE = {
+    BUY:    1,
+    NORMAL: 0,
+    SELL:   -1
+};
+
 exports.DEPTHINDEX      = DEPTHINDEX;
 exports.DEALSINDEX      = DEALSINDEX;
 exports.DEALTYPE        = DEALTYPE;
+exports.TRADETYPE       = TRADETYPE;
