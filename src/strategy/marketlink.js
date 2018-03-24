@@ -320,7 +320,7 @@ class Strategy_MarketLink extends Strategy {
 
     }
 
-    onSimDeals(market) {
+    onSimDeals(market, newnums) {
         let curdeal = market.ds.deals[market.ds.deals.length - 1];
         let cn = this._getCurTimeOffNode(curdeal[DEALSINDEX.TMS]);
         this._add2TimeOffNode(cn, market.marketindex, parseFloat(curdeal[DEALSINDEX.PRICE]), parseFloat(curdeal[DEALSINDEX.VOLUME]));
@@ -350,6 +350,10 @@ class Strategy_MarketLink extends Strategy {
         }
 
         this._onTick();
+
+        if (market.marketindex == 1) {
+            this.statistics.onDealPrice(curdeal[DEALSINDEX.PRICE]);
+        }
     }
 
     // onTradeChg(marketindex, trade) {

@@ -44,15 +44,15 @@ class MarketInfo {
         return ct;
     }
 
-    cancelTrade(trade, cp, cv, p, tsms) {
-        if (trade.childDeal != undefined) {
-            this.market.closeTrade(trade, cp, cv, p, tsms);
-        }
-
-        if (trade.v > 0) {
-            this.market.cancelTrade(trade);
-        }
-    }
+    // cancelTrade(trade, cp, cv, tsms) {
+    //     if (trade.childDeal != undefined) {
+    //         this.market.closeTrade(trade, cp, cv, -1, tsms);
+    //     }
+    //
+    //     if (trade.v > 0) {
+    //         this.market.cancelTrade(trade);
+    //     }
+    // }
 
     onTradeChg(trade) {
         if (trade.v <= 0) {
@@ -109,7 +109,7 @@ class MarketInfo {
         for (let i = 0; i < this.lstBuy.lst.length; ++i) {
             let cn = this.lstBuy.lst[i];
 
-            this.cancelTrade(cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], curdeal[DEALSINDEX.PRICE], cn.bv, curdeal[DEALSINDEX.TMS]);
+            this.closeTrade(cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], -1, curdeal[DEALSINDEX.TMS]);
         }
     }
 
@@ -118,7 +118,7 @@ class MarketInfo {
         for (let i = 0; i < this.lstSell.lst.length; ++i) {
             let cn = this.lstSell.lst[i];
 
-            this.cancelTrade(cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], curdeal[DEALSINDEX.PRICE], cn.bv, curdeal[DEALSINDEX.TMS]);
+            this.closeTrade(cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], -1, curdeal[DEALSINDEX.TMS]);
         }
     }
 
@@ -154,6 +154,11 @@ class Strategy {
         this.msSimEnd = 0;
         this.msSimTradeStart = 0;
         this.msSimTradeEnd = 0;
+
+        this.startMoney = 0;
+        this.curMoney = 0;
+        this.startValue = 0;
+        this.curValue = 0;
 
         this._procConfig();
     }
@@ -194,7 +199,14 @@ class Strategy {
         this.lstMarketInfo[mi].chgState(s);
     }
 
-    start(ticktimems) {
+    start(money, value, price, ticktimems) {
+        this.startMoney = money;
+        this.curMoney = money;
+        this.startValue = value;
+        this.curValue = value;
+
+        this.statistics.onStart(money, value, price);
+
         this.lstMarketInfo = [];
         for (let i = 0; i < this.trader.lstMarket.length; ++i) {
             this.lstMarketInfo.push(new MarketInfo(this, this.trader.lstMarket[i]));
@@ -220,6 +232,13 @@ class Strategy {
     }
 
     buy(mi, cp, cv, p, v, tsms) {
+        // let cm = p * v;
+        // if (cm > this.curMoney) {
+        //     return undefined;
+        // }
+        //
+        // this.curMoney -= cm;
+
         if (!(tsms >= this.msSimTradeStart && tsms <= this.msSimTradeEnd)) {
             return undefined;
         }
@@ -240,7 +259,7 @@ class Strategy {
         }
 
         let trade = this.lstMarketInfo[mi].buy(cp, cv, p, v, tsms);
-        this.statistics.onOpen(p, v);
+        this.statistics.onOpen(TRADETYPE.BUY, p, v);
 
         if (this.save2db) {
             BTCTraderMgr.singleton.insertTrade(this.simid, trade);
@@ -250,6 +269,12 @@ class Strategy {
     }
 
     sell(mi, cp, cv, p, v, tsms) {
+        // if (v > this.curValue) {
+        //     return undefined;
+        // }
+        //
+        // this.curValue -= v;
+
         if (!(tsms >= this.msSimTradeStart && tsms <= this.msSimTradeEnd)) {
             return undefined;
         }
@@ -270,7 +295,7 @@ class Strategy {
         }
 
         let trade = this.lstMarketInfo[mi].sell(cp, cv, p, v, tsms);
-        this.statistics.onOpen(p, v);
+        this.statistics.onOpen(TRADETYPE.SELL, p, v);
 
         if (this.save2db) {
             BTCTraderMgr.singleton.insertTrade(this.simid, trade);
@@ -281,16 +306,20 @@ class Strategy {
 
     closeTrade(mi, trade, cp, cv, p, tsms) {
         let ct = this.lstMarketInfo[mi].closeTrade(trade, cp, cv, p, tsms);
+        if (ct != undefined) {
+            this.statistics.onClose(trade.type, ct.bp, ct.bv);
+        }
+
         return ct;
     }
 
-    cancelTrade(mi, trade, cp, cv, p, v, tsms) {
-        if (trade.v > 0) {
-            this.statistics.onCancel(trade.bp, trade.v);
-        }
-
-        this.lstMarketInfo[mi].cancelTrade(trade, cp, cv, p, v, tsms);
-    }
+    // cancelTrade(mi, trade, cp, cv, tsms) {
+    //     if (trade.v > 0) {
+    //         this.statistics.onCancel(trade.bp, trade.v);
+    //     }
+    //
+    //     this.lstMarketInfo[mi].cancelTrade(trade, cp, cv, tsms);
+    // }
 
     onDepth(market) {
 
@@ -316,14 +345,47 @@ class Strategy {
 
     }
 
+    onTradeClose(mi, trade, dp, dv) {
+        // if (trade.type == TRADETYPE.BUY) {
+        //     this.curValue -= dv;
+        // }
+        // else {
+        //     this.curMoney -= dp * dv;
+        // }
+    }
+
+    onTradeDeal(mi, trade, dp, dv) {
+        if (trade.type == TRADETYPE.BUY) {
+            this.curValue += dv;
+            this.curMoney -= dp * dv;
+        }
+        else {
+            this.curMoney += dp * dv;
+            this.curValue -= dv;
+        }
+
+        if (trade.parent != undefined) {
+            this.statistics.onDealClose(trade.parent.type, dp, dv);
+        }
+        else {
+            this.statistics.onDealOpen(trade.type, dp, dv);
+        }
+    }
+
+    onTradeCancel(mi, trade, bp, bv) {
+        // if (trade.type == TRADETYPE.BUY) {
+        //     this.curMoney += bp * bv;
+        // }
+        // else {
+        //     this.curValue += bv;
+        // }
+    }
+
     onTradeChg(mi, trade) {
         if (trade.childDeal != undefined) {
             if (trade.v <= 0) {
                 if (trade.parent != undefined) {
-                    this.statistics.onDealClose(trade.parent.type, trade.parent.childDeal.p, trade.childDeal.p, trade.childDeal.v);
-                }
-                else if (trade.childClose != undefined) {
-                    this.statistics.onDealOpen(trade.childDeal.p, trade.childDeal.v);
+                    this.statistics.onCloseEnd(trade.parent.type, trade.parent.childDeal.p, trade.childDeal.p);
                 }
             }
         }

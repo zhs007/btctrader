@@ -136,8 +136,15 @@ class Trade {
     // }
 
     close(newtid, cp, cv, p, tsms) {
+        let ct = undefined;
+        let cv0 = this.v;
+
+        if (cv0 > 0) {
+            this.v = 0;
+        }
+
         if (this.childDeal == undefined) {
-            return undefined;
+            return [ct, cv0];
         }
 
         if (this.childClose == undefined) {
@@ -151,10 +158,10 @@ class Trade {
 
             this.childClose.type = (this.type == TRADETYPE.BUY ? TRADETYPE.SELL : TRADETYPE.BUY);
 
-            return this.childClose;
+            return [this.childClose, cv0];
         }
 
-        return undefined;
+        return [ct, cv0];
     }
 };
 
@@ -244,11 +251,19 @@ class Market {
     // else is a limit order
     closeTrade(trade, cp, cv, p, ts) {
         this._removeUnsold(trade);
-        let ct = trade.close(this.lstTrade.length, cp, cv, p, ts);
+        let [ct, cv0] = trade.close(this.lstTrade.length, cp, cv, p, ts);
 
-        if (this.ds.strategy && ct) {
-            this.ds.strategy.onTradeChg(this.marketindex, trade);
+        if (this.ds.strategy) {
+            if (cv0 > 0) {
+                this.ds.strategy.onTradeCancel(this.marketindex, trade, trade.bp, cv0);
+            }
+
+            if (ct) {
+                this.ds.strategy.onTradeChg(this.marketindex, trade);
+            }
         }
+
+        return ct;
     }
 
     _removeUnsold(trade) {
@@ -265,13 +280,13 @@ class Market {
         }
     }
 
-    cancelTrade(trade) {
-        trade.cancel();
-
-        if (this.ds.strategy) {
-            this.ds.strategy.onTradeChg(this.marketindex, trade);
-        }
-    }
+    // cancelTrade(trade) {
+    //     trade.cancel();
+    //
+    //     if (this.ds.strategy) {
+    //         this.ds.strategy.onTradeChg(this.marketindex, trade);
+    //     }
+    // }
 
     foreachUnsoldTrade(strategy) {
         for (let i = 0; i < this.lstUnsold.length; ++i) {
@@ -305,6 +320,7 @@ class Market {
                     }
 
                     if (this.ds.strategy) {
+                        this.ds.strategy.onTradeDeal(this.marketindex, cn, deal[DEALSINDEX.PRICE], cv);
                         this.ds.strategy.onTradeChg(this.marketindex, cn);
                     }
 
@@ -329,6 +345,7 @@ class Market {
                     }
 
                     if (this.ds.strategy) {
+                        this.ds.strategy.onTradeDeal(this.marketindex, cn, deal[DEALSINDEX.PRICE], cv);
                         this.ds.strategy.onTradeChg(this.marketindex, cn);
                     }
 
@@ -358,6 +375,7 @@ class Market {
                     }
 
                     if (this.ds.strategy) {
+                        this.ds.strategy.onTradeDeal(this.marketindex, cn, deal[DEALSINDEX.PRICE], cv);
                         this.ds.strategy.onTradeChg(this.marketindex, cn);
                     }
 
@@ -382,6 +400,7 @@ class Market {
                     }
 
                     if (this.ds.strategy) {
+                        this.ds.strategy.onTradeDeal(this.marketindex, cn, deal[DEALSINDEX.PRICE], cv);
                         this.ds.strategy.onTradeChg(this.marketindex, cn);
                     }
 

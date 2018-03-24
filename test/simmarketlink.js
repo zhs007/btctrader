@@ -70,7 +70,7 @@ BTCTraderMgr.singleton.init(cfg).then(async () => {
     // ds0.init();
     // ds1.init();
 
-    strategy.start(1000);
+    strategy.start(1000000, 1000, 900900, 1000);
 
     await runDNDLink(ds0, ds1);
 
