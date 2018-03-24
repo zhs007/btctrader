@@ -1,12 +1,15 @@
 "use strict";
 
 const mysql = require('mysql2/promise');
+const process = require('process');
 
 class Mysql {
     constructor(cfg) {
         this.cfg = cfg;
         this.conn = undefined;//mysql.createConnection(this.cfg);
         // this.isconnected = false;
+
+        this.alivesqlnums = 0;
     }
 
     // // callback(err)
@@ -26,11 +29,15 @@ class Mysql {
                 this.conn = await mysql.createConnection(this.cfg);
             }
 
+            this.alivesqlnums++;
             const [rows, fields] = await this.conn.query(sql);
+            this.alivesqlnums--;
 
             return [undefined, rows, fields];
         }
         catch(err) {
+            this.alivesqlnums--;
+
             return [ err ];
         }
 
@@ -61,6 +68,16 @@ class Mysql {
         //         });
         //     // });
         // });
+    }
+
+    safeExit(callback) {
+        setInterval(() => {
+            if (this.alivesqlnums == 0) {
+                callback();
+
+                process.exit();
+            }
+        }, 1000);
     }
 };
 

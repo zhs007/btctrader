@@ -1,13 +1,15 @@
 "use strict";
 
 const BTCTraderMgr = require('../src/btctradermgr');
-const { TRADETYPE } = require('./basedef');
+const { DEALSINDEX, TRADETYPE, STRATEGYSTATE } = require('./basedef');
 const { TradeSortList } = require('./tradelist');
+const { StrategyStatistics } = require('./statistics');
 const process = require('process');
 
 class MarketInfo {
-    constructor(market) {
+    constructor(strategy, market) {
         this.market = market;
+        this.strategy = strategy;
 
         this.lstBuy = new TradeSortList(TRADETYPE.BUY);
         this.lstSell = new TradeSortList(TRADETYPE.SELL);
@@ -17,6 +19,8 @@ class MarketInfo {
 
         this.lastmsBuy = 0;
         this.lastmsSell = 0;
+
+        this.strategyState = STRATEGYSTATE.NULL;
     }
 
     buy(cp, cv, p, v, tsms) {
@@ -35,9 +39,19 @@ class MarketInfo {
         return trade;
     }
 
-    closeTrade(trade, cp, cv, p, v, tsms) {
-        let ct = this.market.closeTrade(trade, cp, cv, p, v, tsms);
+    closeTrade(trade, cp, cv, p, tsms) {
+        let ct = this.market.closeTrade(trade, cp, cv, p, tsms);
         return ct;
+    }
+
+    cancelTrade(trade, cp, cv, p, tsms) {
+        if (trade.childDeal != undefined) {
+            this.market.closeTrade(trade, cp, cv, p, tsms);
+        }
+
+        if (trade.v > 0) {
+            this.market.cancelTrade(trade);
+        }
     }
 
     onTradeChg(trade) {
@@ -89,6 +103,37 @@ class MarketInfo {
             }
         }
     }
+
+    cancelBuy() {
+        let curdeal = this.market.ds.deals[this.market.ds.deals.length - 1];
+        for (let i = 0; i < this.lstBuy.lst.length; ++i) {
+            let cn = this.lstBuy.lst[i];
+
+            this.cancelTrade(cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], curdeal[DEALSINDEX.PRICE], cn.bv, curdeal[DEALSINDEX.TMS]);
+        }
+    }
+
+    cancelSell() {
+        let curdeal = this.market.ds.deals[this.market.ds.deals.length - 1];
+        for (let i = 0; i < this.lstSell.lst.length; ++i) {
+            let cn = this.lstSell.lst[i];
+
+            this.cancelTrade(cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], curdeal[DEALSINDEX.PRICE], cn.bv, curdeal[DEALSINDEX.TMS]);
+        }
+    }
+
+    chgState(s) {
+        if (this.strategyState != STRATEGYSTATE.NULL && this.strategyState != s) {
+            if (this.strategyState == STRATEGYSTATE.LONG) {
+                this.cancelBuy();
+            }
+            else {
+                this.cancelSell();
+            }
+        }
+
+        this.strategyState = s;
+    }
 };
 
 class Strategy {
@@ -102,6 +147,13 @@ class Strategy {
         this.timerTick = undefined;
 
         this.lstMarketInfo = [];
+
+        this.statistics = new StrategyStatistics();
+
+        this.msSimStart = 0;
+        this.msSimEnd = 0;
+        this.msSimTradeStart = 0;
+        this.msSimTradeEnd = 0;
 
         this._procConfig();
     }
@@ -127,10 +179,25 @@ class Strategy {
         }
     }
 
+    setSimTime(start, end, tradestart, tradeend) {
+        this.msSimStart = start;
+        this.msSimEnd = end;
+        this.msSimTradeStart = tradestart;
+        this.msSimTradeEnd = tradeend;
+    }
+
+    isInSim(tsms) {
+        return tsms >= this.msSimStart && tsms <= this.msSimTradeEnd;
+    }
+
+    chgState(mi, s) {
+        this.lstMarketInfo[mi].chgState(s);
+    }
+
     start(ticktimems) {
         this.lstMarketInfo = [];
         for (let i = 0; i < this.trader.lstMarket.length; ++i) {
-            this.lstMarketInfo.push(new MarketInfo(this.trader.lstMarket[i]));
+            this.lstMarketInfo.push(new MarketInfo(this, this.trader.lstMarket[i]));
         }
 
         if (this.timerTick) {
@@ -153,6 +220,10 @@ class Strategy {
     }
 
     buy(mi, cp, cv, p, v, tsms) {
+        if (!(tsms >= this.msSimTradeStart && tsms <= this.msSimTradeEnd)) {
+            return undefined;
+        }
+
         let curmi = this.lstMarketInfo[mi];
         if (curmi.lstBuy.lst.length > 0) {
             if (curmi.lastmsBuy <= tsms + this.cfg.newdealdelayms) {
@@ -169,6 +240,7 @@ class Strategy {
         }
 
         let trade = this.lstMarketInfo[mi].buy(cp, cv, p, v, tsms);
+        this.statistics.onOpen(p, v);
 
         if (this.save2db) {
             BTCTraderMgr.singleton.insertTrade(this.simid, trade);
@@ -178,6 +250,10 @@ class Strategy {
     }
 
     sell(mi, cp, cv, p, v, tsms) {
+        if (!(tsms >= this.msSimTradeStart && tsms <= this.msSimTradeEnd)) {
+            return undefined;
+        }
+
         let curmi = this.lstMarketInfo[mi];
         if (curmi.lstSell.lst.length > 0) {
             if (curmi.lastmsSell <= tsms + this.cfg.newdealdelayms) {
@@ -194,6 +270,7 @@ class Strategy {
         }
 
         let trade = this.lstMarketInfo[mi].sell(cp, cv, p, v, tsms);
+        this.statistics.onOpen(p, v);
 
         if (this.save2db) {
             BTCTraderMgr.singleton.insertTrade(this.simid, trade);
@@ -202,9 +279,17 @@ class Strategy {
         return trade;
     }
 
-    closeTrade(mi, trade, cp, cv, p, v, tsms) {
-        let ct = this.lstMarketInfo[mi].closeTrade(trade, cp, cv, p, v, tsms);
+    closeTrade(mi, trade, cp, cv, p, tsms) {
+        let ct = this.lstMarketInfo[mi].closeTrade(trade, cp, cv, p, tsms);
         return ct;
+    }
+
+    cancelTrade(mi, trade, cp, cv, p, v, tsms) {
+        if (trade.v > 0) {
+            this.statistics.onCancel(trade.bp, trade.v);
+        }
+
+        this.lstMarketInfo[mi].cancelTrade(trade, cp, cv, p, v, tsms);
     }
 
     onDepth(market) {
@@ -232,6 +317,17 @@ class Strategy {
     }
 
     onTradeChg(mi, trade) {
+        if (trade.childDeal != undefined) {
+            if (trade.v <= 0) {
+                if (trade.parent != undefined) {
+                    this.statistics.onDealClose(trade.parent.type, trade.parent.childDeal.p, trade.childDeal.p, trade.childDeal.v);
+                }
+                else if (trade.childClose != undefined) {
+                    this.statistics.onDealOpen(trade.childDeal.p, trade.childDeal.v);
+                }
+            }
+        }
+
         this.lstMarketInfo[mi].onTradeChg(trade);
 
         if (this.save2db) {

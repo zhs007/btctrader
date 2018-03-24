@@ -18,20 +18,41 @@ BTCTraderMgr.singleton.init(cfg).then(async () => {
     let simid = await BTCTraderMgr.singleton.newSim(SIMNAME);
     console.log('new simid is ' + simid);
 
+    // var ds0 = new SIMDBDataStream_DND({
+    //     mysqlcfg: cfg,
+    //     tablename: 'bitflyer_btcjpy_3',
+    //     begintime: '2018-03-20 06:53:22 UTC',
+    //     endtime: '2018-03-23 14:02:50 UTC',
+    //     output_message: false,
+    //     simtrade: SIMTRADE
+    // });
+    //
+    // var ds1 = new SIMDBDataStream_DND({
+    //     mysqlcfg: cfg,
+    //     tablename: 'bitflyer_btcexjpy_3',
+    //     begintime: '2018-03-20 06:53:22 UTC',
+    //     endtime: '2018-03-23 14:02:50 UTC',
+    //     output_message: false,
+    //     simtrade: SIMTRADE
+    // });
+
+    let begintime = new Date('2018-03-19 02:54:03 UTC').getTime();
+    let endtime = new Date('2018-03-20 06:53:13 UTC').getTime();
+
     var ds0 = new SIMDBDataStream_DND({
         mysqlcfg: cfg,
-        tablename: 'bitflyer_btcjpy',
-        begintime: '2018-03-16 13:02:03 UTC',
-        endtime: '2018-03-19 02:53:58 UTC',
+        tablename: 'bitflyer_btcjpy2',
+        begintime: begintime,//'2018-03-19 02:54:03 UTC',
+        endtime: endtime,//'2018-03-20 06:53:13 UTC',
         output_message: false,
         simtrade: SIMTRADE
     });
 
     var ds1 = new SIMDBDataStream_DND({
         mysqlcfg: cfg,
-        tablename: 'bitflyer_btcexjpy',
-        begintime: '2018-03-16 13:02:03 UTC',
-        endtime: '2018-03-19 02:53:58 UTC',
+        tablename: 'bitflyer_btcexjpy2',
+        begintime: begintime,//'2018-03-19 02:54:03 UTC',
+        endtime: endtime,//'2018-03-20 06:53:13 UTC',
         output_message: false,
         simtrade: SIMTRADE
     });
@@ -39,6 +60,7 @@ BTCTraderMgr.singleton.init(cfg).then(async () => {
     let strategy = new Strategy_MarketLink();
     strategy.simid = simid;
     strategy.save2db = true;
+    strategy.setSimTime(begintime, endtime, begintime + 5 * 60 * 1000, endtime - 5 * 60 * 1000);
 
     var trader = new Trader();
     trader.setStrategy(strategy);
@@ -51,4 +73,8 @@ BTCTraderMgr.singleton.init(cfg).then(async () => {
     strategy.start(1000);
 
     await runDNDLink(ds0, ds1);
+
+    BTCTraderMgr.singleton.safeExit(() => {
+        strategy.statistics.output();
+    });
 });

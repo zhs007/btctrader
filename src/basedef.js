@@ -27,7 +27,14 @@ const TRADETYPE = {
     SELL:   -1
 };
 
-exports.DEPTHINDEX      = DEPTHINDEX;
+const STRATEGYSTATE = {
+    LONG:   1,
+    NULL:   0,
+    SHORT:  -1
+};
+
+exports.DEPTHINDEX      = DEPTHINDEX
 exports.DEALSINDEX      = DEALSINDEX;
 exports.DEALTYPE        = DEALTYPE;
 exports.TRADETYPE       = TRADETYPE;
+exports.STRATEGYSTATE   = STRATEGYSTATE;

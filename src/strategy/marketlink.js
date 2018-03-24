@@ -3,7 +3,7 @@
 const util = require('util');
 const { Strategy } = require('../strategy');
 // const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../datastream');
-const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../basedef');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE, STRATEGYSTATE } = require('../basedef');
 const { countPriceWithDepth_asks_depth2, countPriceWithDepth_bids_depth2 } = require('../util');
 
 class Strategy_MarketLink extends Strategy {
@@ -163,6 +163,8 @@ class Strategy_MarketLink extends Strategy {
     }
 
     _buy(cp, cv, p, v, destp, tsms) {
+        this.chgState(1, STRATEGYSTATE.LONG);
+
         let ct = this.buy(1, cp, cv, p, v, tsms);
         if (ct == undefined) {
             return undefined;
@@ -194,6 +196,8 @@ class Strategy_MarketLink extends Strategy {
     }
 
     _sell(cp, cv, p, v, destp, tsms) {
+        this.chgState(1, STRATEGYSTATE.SHORT);
+
         let ct = this.sell(1, cp, cv, p, v, tsms);
         if (ct == undefined) {
             return undefined;
@@ -228,85 +232,85 @@ class Strategy_MarketLink extends Strategy {
     //     this.close(this.trader.lstMarket[1], trade, cp, cv, p, v, tsms);
     // }
 
-    _insertBuy(trade) {
-        this.lstBuy.push(trade);
-
-        this.lstBuy.sort((a, b) => {
-            return b.bp - a.bp;
-        });
-    }
-
-    _insertSell(trade) {
-        this.lstSell.push(trade);
-
-        this.lstSell.sort((a, b) => {
-            return a.bp - b.bp;
-        });
-    }
-
-    _removeBuy(trade) {
-        for (let i = 0; i < this.lstBuy.length; ++i) {
-            if (this.lstBuy[i].tid == trade.tid) {
-                this.lstBuy.splice(i, 1);
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    _removeSell(trade) {
-        for (let i = 0; i < this.lstSell.length; ++i) {
-            if (this.lstSell[i].tid == trade.tid) {
-                this.lstSell.splice(i, 1);
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    _insertDealBuy(trade) {
-        this.lstDealBuy.push(trade);
-
-        this.lstDealBuy.sort((a, b) => {
-            return b.bp - a.bp;
-        });
-    }
-
-    _insertDealSell(trade) {
-        this.lstDealSell.push(trade);
-
-        this.lstDealSell.sort((a, b) => {
-            return a.bp - b.bp;
-        });
-    }
-
-    _removeDealBuy(trade) {
-        for (let i = 0; i < this.lstDealBuy.length; ++i) {
-            if (this.lstDealBuy[i].tid == trade.tid) {
-                this.lstDealBuy.splice(i, 1);
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    _removeDealSell(trade) {
-        for (let i = 0; i < this.lstDealSell.length; ++i) {
-            if (this.lstDealSell[i].tid == trade.tid) {
-                this.lstDealSell.splice(i, 1);
-
-                return true;
-            }
-        }
-
-        return false;
-    }
+    // _insertBuy(trade) {
+    //     this.lstBuy.push(trade);
+    //
+    //     this.lstBuy.sort((a, b) => {
+    //         return b.bp - a.bp;
+    //     });
+    // }
+    //
+    // _insertSell(trade) {
+    //     this.lstSell.push(trade);
+    //
+    //     this.lstSell.sort((a, b) => {
+    //         return a.bp - b.bp;
+    //     });
+    // }
+    //
+    // _removeBuy(trade) {
+    //     for (let i = 0; i < this.lstBuy.length; ++i) {
+    //         if (this.lstBuy[i].tid == trade.tid) {
+    //             this.lstBuy.splice(i, 1);
+    //
+    //             return true;
+    //         }
+    //     }
+    //
+    //     return false;
+    // }
+    //
+    // _removeSell(trade) {
+    //     for (let i = 0; i < this.lstSell.length; ++i) {
+    //         if (this.lstSell[i].tid == trade.tid) {
+    //             this.lstSell.splice(i, 1);
+    //
+    //             return true;
+    //         }
+    //     }
+    //
+    //     return false;
+    // }
+    //
+    // _insertDealBuy(trade) {
+    //     this.lstDealBuy.push(trade);
+    //
+    //     this.lstDealBuy.sort((a, b) => {
+    //         return b.bp - a.bp;
+    //     });
+    // }
+    //
+    // _insertDealSell(trade) {
+    //     this.lstDealSell.push(trade);
+    //
+    //     this.lstDealSell.sort((a, b) => {
+    //         return a.bp - b.bp;
+    //     });
+    // }
+    //
+    // _removeDealBuy(trade) {
+    //     for (let i = 0; i < this.lstDealBuy.length; ++i) {
+    //         if (this.lstDealBuy[i].tid == trade.tid) {
+    //             this.lstDealBuy.splice(i, 1);
+    //
+    //             return true;
+    //         }
+    //     }
+    //
+    //     return false;
+    // }
+    //
+    // _removeDealSell(trade) {
+    //     for (let i = 0; i < this.lstDealSell.length; ++i) {
+    //         if (this.lstDealSell[i].tid == trade.tid) {
+    //             this.lstDealSell.splice(i, 1);
+    //
+    //             return true;
+    //         }
+    //     }
+    //
+    //     return false;
+    // }
 
     onDepth(market) {
 
@@ -345,7 +349,7 @@ class Strategy_MarketLink extends Strategy {
             }
         }
 
-        // this._onTick();
+        this._onTick();
     }
 
     // onTradeChg(marketindex, trade) {
@@ -379,18 +383,20 @@ class Strategy_MarketLink extends Strategy {
     //     }
     // }
 
-    onTick() {
+    _onTick() {
         let curmi = this.lstMarketInfo[1];
         let curdeal = curmi.market.ds.deals[curmi.market.ds.deals.length - 1];
         curmi.foreachDealTrade((cn) => {
-            if (cn.data.dp <= curdeal[DEALSINDEX.PRICE]) {
-                this.closeTrade(1, cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], cn.data.dp, cn.bv, curdeal[DEALSINDEX.TMS]);
+            if (cn.childClose == undefined && (cn.data.dp <= curdeal[DEALSINDEX.PRICE] || cn.tsms <= curdeal[DEALSINDEX.TMS] + 3 * 60 * 1000)) {
+                // this.closeTrade(1, cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], cn.data.dp, cn.bv, curdeal[DEALSINDEX.TMS]);
+                this.closeTrade(1, cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], -1, curdeal[DEALSINDEX.TMS]);
             }
 
             return false;
         }, (cn) => {
-            if (cn.data.dp >= curdeal[DEALSINDEX.PRICE]) {
-                this.closeTrade(1, cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], cn.data.dp, cn.bv, curdeal[DEALSINDEX.TMS]);
+            if (cn.childClose == undefined && (cn.data.dp >= curdeal[DEALSINDEX.PRICE] || cn.tsms <= curdeal[DEALSINDEX.TMS] + 3 * 60 * 1000)) {
+                // this.closeTrade(1, cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], cn.data.dp, cn.bv, curdeal[DEALSINDEX.TMS]);
+                this.closeTrade(1, cn, curdeal[DEALSINDEX.PRICE], curdeal[DEALSINDEX.VOLUME], -1, curdeal[DEALSINDEX.TMS]);
             }
 
             return false;

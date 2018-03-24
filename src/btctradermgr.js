@@ -94,6 +94,12 @@ class BTCTraderMgr {
 
         if (trade.childClose != undefined) {
             let strclose = util.format(", cp = %f, cv = %f, cts = '%s', ctsms = %d", trade.childClose.p, trade.childClose.bv - trade.childClose.v, new Date(trade.childClose.tsms).toISOString(), trade.childClose.tsms);
+
+            if (trade.childClose.childDeal != undefined) {
+                let strclosedeal = util.format(", cdp = %f, cdv = %f, cdts = '%s', cdtsms = %d", trade.childClose.childDeal.p, trade.childClose.childDeal.v, new Date(trade.childClose.childDeal.tsms).toISOString(), trade.childClose.childDeal.tsms);
+                strclose += strclosedeal;
+            }
+
             str += strclose;
         }
 
@@ -104,6 +110,12 @@ class BTCTraderMgr {
         }
         catch (err) {
             console.log('BTCTraderMgr.updTrade(' + sql + ') err ' + err);
+        }
+    }
+
+    safeExit(callback) {
+        if (this.mysql != undefined) {
+            this.mysql.safeExit(callback);
         }
     }
 };

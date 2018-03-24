@@ -60,9 +60,9 @@ class Trade {
     cancel() {
         this.v = 0;
 
-        if (this.state == TRADESTATE_OPEN) {
+        // if (this.state == TRADESTATE_OPEN) {
             this.state = TRADESTATE_FAIL;
-        }
+        // }
     }
 
     onDeal(newtid, p, v, tsms) {
@@ -87,6 +87,8 @@ class Trade {
 
             return [this.childDeal, v];
         }
+
+        this.childDeal.tsms = tsms;
 
         let tv = this.childDeal.v + v;
         let ap = this.childDeal.p * this.childDeal.v / tv + p * v / tv;
@@ -133,14 +135,18 @@ class Trade {
     //     return [undefined, v];
     // }
 
-    close(newtid, cp, cv, p, v, tsms) {
+    close(newtid, cp, cv, p, tsms) {
+        if (this.childDeal == undefined) {
+            return undefined;
+        }
+
         if (this.childClose == undefined) {
             this.childClose = new Trade(newtid, this);
             this.childClose.tsms = tsms;
 
-            this.childClose.bv = v;
+            this.childClose.bv = this.childDeal.v;
             this.childClose.bp = p;
-            this.childClose.v = v;
+            this.childClose.v = this.childDeal.v;
             this.childClose.p = p;
 
             this.childClose.type = (this.type == TRADETYPE.BUY ? TRADETYPE.SELL : TRADETYPE.BUY);
@@ -234,8 +240,37 @@ class Market {
         return ct;
     }
 
-    closeTrade(trade, cp, cv, p, v, ts) {
-        let ct = trade.close(this.lstTrade.length, cp, cv, p, v, ts);
+    // if p <= 0 then is a market order
+    // else is a limit order
+    closeTrade(trade, cp, cv, p, ts) {
+        this._removeUnsold(trade);
+        let ct = trade.close(this.lstTrade.length, cp, cv, p, ts);
+
+        if (this.ds.strategy && ct) {
+            this.ds.strategy.onTradeChg(this.marketindex, trade);
+        }
+    }
+
+    _removeUnsold(trade) {
+        if (trade.v <= 0) {
+            return ;
+        }
+
+        for (let i = 0; i < this.lstUnsold.length; ++i) {
+            if (this.lstUnsold[i].tid == trade.tid) {
+                this.lstUnsold.splice(i, 1);
+
+                return ;
+            }
+        }
+    }
+
+    cancelTrade(trade) {
+        trade.cancel();
+
+        if (this.ds.strategy) {
+            this.ds.strategy.onTradeChg(this.marketindex, trade);
+        }
     }
 
     foreachUnsoldTrade(strategy) {
@@ -256,14 +291,17 @@ class Market {
 
     _onSimDeal(deal, timeoff) {
         let lv = deal[DEALSINDEX.VOLUME];
-        for (let i = 0; i < this.lstUnsold.length; ++i) {
-            let cn = this.lstUnsold[i];
+        for (let i = 0; i < this.lstOpen.length; ++i) {
+            let cn = this.lstOpen[i].childClose;
+            if (cn == undefined) {
+                continue ;
+            }
+
             if (cn.type == TRADETYPE.BUY) {
-                if (deal[DEALSINDEX.PRICE] <= cn.bp && deal[DEALSINDEX.TMS] >= cn.tsms + timeoff) {
+                if (deal[DEALSINDEX.TMS] >= cn.tsms + timeoff && (cn.bp <= 0 || deal[DEALSINDEX.PRICE] <= cn.bp)) {
                     let [dt, cv] = cn.onDeal(this.lstTrade.length, deal[DEALSINDEX.PRICE], lv, deal[DEALSINDEX.TMS]);
                     if (dt != undefined) {
                         this.lstTrade.push(dt);
-                        this.lstOpen.push(cn);
                     }
 
                     if (this.ds.strategy) {
@@ -271,7 +309,8 @@ class Market {
                     }
 
                     if (cn.v <= 0) {
-                        this.lstUnsold.splice(i, 1);
+                        this.lstOpen.splice(i, 1);
+                        this.lstClose.push(cn);
                         --i;
                     }
 
@@ -283,11 +322,10 @@ class Market {
                 }
             }
             else if (cn.type == TRADETYPE.SELL) {
-                if (deal[DEALSINDEX.PRICE] >= cn.bp && deal[DEALSINDEX.TMS] >= cn.tsms + timeoff) {
+                if (deal[DEALSINDEX.TMS] >= cn.tsms + timeoff && (cn.bp <= 0 || deal[DEALSINDEX.PRICE] >= cn.bp)) {
                     let [dt, cv] = cn.onDeal(this.lstTrade.length, deal[DEALSINDEX.PRICE], lv, deal[DEALSINDEX.TMS]);
                     if (dt != undefined) {
                         this.lstTrade.push(dt);
-                        this.lstOpen.push(cn);
                     }
 
                     if (this.ds.strategy) {
@@ -295,7 +333,8 @@ class Market {
                     }
 
                     if (cn.v <= 0) {
-                        this.lstUnsold.splice(i, 1);
+                        this.lstOpen.splice(i, 1);
+                        this.lstClose.push(cn);
                         --i;
                     }
 
@@ -308,17 +347,14 @@ class Market {
             }
         }
 
-        for (let i = 0; i < this.lstOpen.length; ++i) {
-            let cn = this.lstOpen[i].childClose;
-            if (cn == undefined) {
-                continue ;
-            }
-
+        for (let i = 0; i < this.lstUnsold.length; ++i) {
+            let cn = this.lstUnsold[i];
             if (cn.type == TRADETYPE.BUY) {
-                if (deal[DEALSINDEX.PRICE] <= cn.bp && deal[DEALSINDEX.TMS] >= cn.tsms + timeoff) {
+                if (deal[DEALSINDEX.TMS] >= cn.tsms + timeoff && (cn.bp <= 0 || deal[DEALSINDEX.PRICE] <= cn.bp)) {
                     let [dt, cv] = cn.onDeal(this.lstTrade.length, deal[DEALSINDEX.PRICE], lv, deal[DEALSINDEX.TMS]);
                     if (dt != undefined) {
                         this.lstTrade.push(dt);
+                        this.lstOpen.push(cn);
                     }
 
                     if (this.ds.strategy) {
@@ -326,8 +362,7 @@ class Market {
                     }
 
                     if (cn.v <= 0) {
-                        this.lstOpen.splice(i, 1);
-                        this.lstClose.push(cn);
+                        this.lstUnsold.splice(i, 1);
                         --i;
                     }
 
@@ -339,10 +374,11 @@ class Market {
                 }
             }
             else if (cn.type == TRADETYPE.SELL) {
-                if (deal[DEALSINDEX.PRICE] >= cn.bp && deal[DEALSINDEX.TMS] >= cn.tsms + timeoff) {
+                if (deal[DEALSINDEX.TMS] >= cn.tsms + timeoff && (cn.bp <= 0 || deal[DEALSINDEX.PRICE] >= cn.bp)) {
                     let [dt, cv] = cn.onDeal(this.lstTrade.length, deal[DEALSINDEX.PRICE], lv, deal[DEALSINDEX.TMS]);
                     if (dt != undefined) {
                         this.lstTrade.push(dt);
+                        this.lstOpen.push(cn);
                     }
 
                     if (this.ds.strategy) {
@@ -350,8 +386,7 @@ class Market {
                     }
 
                     if (cn.v <= 0) {
-                        this.lstOpen.splice(i, 1);
-                        this.lstClose.push(cn);
+                        this.lstUnsold.splice(i, 1);
                         --i;
                     }
 
