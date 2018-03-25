@@ -1,12 +1,12 @@
 "use strict";
 
-const { Mysql } = require('./mysql');
-const { insertList, removeList, makeInsertSql } = require('./util');
+const { Mysql } = require('../../mysql');
+const { insertList, removeList, makeInsertSql } = require('../../util');
 const util = require('util');
 
 const BATCH_MUL_LINE = 1024;
 
-class DataMgr {
+class BithumbDataMgr {
     constructor() {
         this.cfg = undefined;
         this.mysql = undefined;
@@ -26,13 +26,10 @@ class DataMgr {
         try {
             sql = util.format("insert into %s(type, price, volume, askprice, askvolume, bidprice, bidvolume, ts, tsms) values(" +
                 "%d, %f, %f, %f, %f, %f, %f, '%s', %d);", tname, type, p, v, askp, askv, bidp, bidv, new Date(ts).toISOString(), ts);
-            let [err, results, fields] = await this.mysql.run(sql);
-            if (err) {
-                console.log('DataMgr.insertTick(' + sql + ') err ' + err);
-            }
+            await this.mysql.run(sql);
         }
         catch (err) {
-            console.log('DataMgr.insertTick(' + sql + ') err ' + err);
+            console.log('BitflyerDataMgr.insertTick(' + sql + ') err ' + err);
         }
     }
 
@@ -45,14 +42,11 @@ class DataMgr {
         try {
             sql = util.format("select * from %s where tsms >= %d and tsms <= %d order by tsms;", tname, new Date(bt).getTime(), new Date(et).getTime());
             let [err, results, fields] = await this.mysql.run(sql);
-            if (err) {
-                console.log('DataMgr.getTick(' + sql + ') err ' + err);
-            }
 
             return results;
         }
         catch (err) {
-            console.log('DataMgr.getTick(' + sql + ') err ' + err);
+            console.log('BitflyerDataMgr.getTick(' + sql + ') err ' + err);
         }
 
         return undefined;
@@ -90,14 +84,11 @@ class DataMgr {
         try {
             sql = util.format("select * from %s where UNIX_TIMESTAMP(ts) >= %d and UNIX_TIMESTAMP(ts) <= %d order by ts;", tname, Math.floor(new Date(bt).getTime() / 1000), Math.floor(new Date(et).getTime() / 1000));
             let [err, results, fields] = await this.mysql.run(sql);
-            if (err) {
-                console.log('DataMgr.getCandles(' + sql + ') err ' + err);
-            }
 
             return results;
         }
         catch (err) {
-            console.log('DataMgr.getCandles(' + sql + ') err ' + err);
+            console.log('BitflyerDataMgr.getCandles(' + sql + ') err ' + err);
         }
 
         return undefined;
@@ -110,15 +101,12 @@ class DataMgr {
 
         let sql = makeInsertSql(tname, candle);
         try {
-            let [err, results, fields] = await this.mysql.run(sql);
-            if (err) {
-                console.log('DataMgr.insertCandle(' + sql + ') err ' + err);
-            }
+            await this.mysql.run(sql);
         }
         catch (err) {
-            console.log('DataMgr.insertCandle(' + sql + ') err ' + err);
+            console.log('BitflyerDataMgr.insertCandle(' + sql + ') err ' + err);
         }
     }
 };
 
-exports.DataMgr = DataMgr;
+exports.singleton = new BithumbDataMgr();

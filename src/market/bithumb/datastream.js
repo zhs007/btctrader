@@ -25,6 +25,7 @@ class BithumbDataStream extends HTTPDataStream {
     }
 
     _onChannel_Deals(data) {
+        let newnums = 0;
         for (let i = 0; i < data.length; ++i) {
             let cn = data[data.length - i - 1];
 
@@ -44,10 +45,12 @@ class BithumbDataStream extends HTTPDataStream {
                     new Date(cn.transaction_date).getTime(),
                     cn.type == 'ask' ? DEALTYPE.BUY : DEALTYPE.SELL
                 ]);
+
+                ++newnums;
             }
         }
 
-        this._onDeals();
+        this._onDeals(newnums);
     }
 
     _onChannel_Depth(data) {
