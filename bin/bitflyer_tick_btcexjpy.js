@@ -12,8 +12,8 @@ bitflyer.DataMgr.singleton.init(cfg).then(() => {
     var ds = new bitflyer.DataStream({
         output_message: false,
         simtrade: SIMTRADE,
-        tickdatatname: 'bitflyer_btcexjpy_3',
-        candledatatname: 'bitflyer_kl_btcexjpy_3'
+        tickdatatname: 'bitflyer_btcexjpy_5',
+        candledatatname: 'bitflyer_kl_btcexjpy_5'
     });
 
     ds.mgrData = bitflyer.DataMgr.singleton;
