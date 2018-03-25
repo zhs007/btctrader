@@ -71,11 +71,18 @@ class Mysql {
     }
 
     safeExit(callback) {
+        let isend = false;
         setInterval(() => {
-            if (this.alivesqlnums == 0) {
-                callback();
+            if (isend) {
+                return ;
+            }
 
-                process.exit();
+            if (this.alivesqlnums == 0) {
+                isend = true;
+
+                callback().then(() => {
+                    process.exit();
+                });
             }
         }, 1000);
     }

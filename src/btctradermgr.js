@@ -55,6 +55,24 @@ class BTCTraderMgr {
         return -1;
     }
 
+    async updSim(simid, starttime, endtime, roi, startmoney, endmoney, startvalue, endvalue, maxdrawdown) {
+        if (this.mysql == undefined) {
+            return ;
+        }
+
+        let str = util.format("starttime = '%s', endtime = '%s', roi = %f, startmoney = %f, endmoney = %f, startvalue = %f, endvalue = %f, maxdrawdown = %f",
+            new Date(starttime).toISOString(), new Date(endtime).toISOString(), roi, startmoney, endmoney, startvalue, endvalue, maxdrawdown);
+
+        let sql = util.format('update %s set %s where id = %d', TNAME_SIMINFO, str, simid);
+
+        try {
+            await this.mysql.run(sql);
+        }
+        catch (err) {
+            console.log('BTCTraderMgr.updSim(' + sql + ') err ' + err);
+        }
+    }
+
     async insertTrade(simid, trade) {
         if (this.mysql == undefined) {
             return ;
@@ -104,6 +122,8 @@ class BTCTraderMgr {
         }
 
         let sql = util.format('update %s set %s where simid = %d and tid = %d', TNAME_TRADE, str, simid, trade.tid);
+
+        // console.log(sql);
 
         try {
             await this.mysql.run(sql);

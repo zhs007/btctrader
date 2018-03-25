@@ -58,13 +58,17 @@ class MarketInfo {
         if (trade.v <= 0) {
             if (trade.parent == undefined) {
                 if (this.lstBuy.remove(trade)) {
-                    this.lstDealBuy.insert(trade);
+                    if (trade.childDeal != undefined) {
+                        this.lstDealBuy.insert(trade);
+                    }
 
                     return true;
                 }
 
                 if (this.lstSell.remove(trade)) {
-                    this.lstDealSell.insert(trade);
+                    if (trade.childDeal != undefined) {
+                        this.lstDealSell.insert(trade);
+                    }
 
                     return true;
                 }
@@ -199,13 +203,13 @@ class Strategy {
         this.lstMarketInfo[mi].chgState(s);
     }
 
-    start(money, value, price, ticktimems) {
-        this.startMoney = money;
-        this.curMoney = money;
-        this.startValue = value;
-        this.curValue = value;
+    start(ticktimems) {
+        this.startMoney = 0;
+        this.curMoney = 0;
+        this.startValue = 0;
+        this.curValue = 0;
 
-        this.statistics.onStart(money, value, price);
+        this.statistics.onStart();
 
         this.lstMarketInfo = [];
         for (let i = 0; i < this.trader.lstMarket.length; ++i) {
@@ -245,7 +249,7 @@ class Strategy {
 
         let curmi = this.lstMarketInfo[mi];
         if (curmi.lstBuy.lst.length > 0) {
-            if (curmi.lastmsBuy <= tsms + this.cfg.newdealdelayms) {
+            if (tsms <= curmi.lastmsBuy + this.cfg.newdealdelayms) {
                 return undefined;
             }
 
@@ -281,7 +285,7 @@ class Strategy {
 
         let curmi = this.lstMarketInfo[mi];
         if (curmi.lstSell.lst.length > 0) {
-            if (curmi.lastmsSell <= tsms + this.cfg.newdealdelayms) {
+            if (tsms <= curmi.lastmsSell + this.cfg.newdealdelayms) {
                 return undefined;
             }
 
@@ -366,6 +370,10 @@ class Strategy {
 
         if (trade.parent != undefined) {
             this.statistics.onDealClose(trade.parent.type, dp, dv);
+
+            if (trade.v <= 0) {
+                this.statistics.onCloseEnd(trade.parent.type, trade.parent.childDeal.p, trade.childDeal.p);
+            }
         }
         else {
             this.statistics.onDealOpen(trade.type, dp, dv);
@@ -382,13 +390,13 @@ class Strategy {
     }
 
     onTradeChg(mi, trade) {
-        if (trade.childDeal != undefined) {
-            if (trade.v <= 0) {
-                if (trade.parent != undefined) {
-                    this.statistics.onCloseEnd(trade.parent.type, trade.parent.childDeal.p, trade.childDeal.p);
-                }
-            }
-        }
+        // if (trade.childDeal != undefined) {
+        //     if (trade.v <= 0) {
+        //         if (trade.parent != undefined) {
+        //             this.statistics.onCloseEnd(trade.parent.type, trade.parent.childDeal.p, trade.childDeal.p);
+        //         }
+        //     }
+        // }
 
         this.lstMarketInfo[mi].onTradeChg(trade);
 

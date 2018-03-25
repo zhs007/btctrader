@@ -258,9 +258,9 @@ class Market {
                 this.ds.strategy.onTradeCancel(this.marketindex, trade, trade.bp, cv0);
             }
 
-            if (ct) {
-                this.ds.strategy.onTradeChg(this.marketindex, trade);
-            }
+            // if (ct) {
+            this.ds.strategy.onTradeChg(this.marketindex, trade);
+            // }
         }
 
         return ct;
