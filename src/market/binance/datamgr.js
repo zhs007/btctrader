@@ -7,10 +7,10 @@ const util = require('util');
 
 const BATCH_MUL_LINE = 1024;
 
-class BithumbDataMgr extends DataMgr{
+class BinanceDataMgr extends DataMgr{
     constructor() {
         super();
     }
 };
 
-exports.singleton = new BithumbDataMgr();
+exports.singleton = new BinanceDataMgr();

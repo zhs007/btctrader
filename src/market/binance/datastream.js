@@ -374,7 +374,7 @@ class BinanceDataStream extends MulWSDataStream {
             if (msg.e == 'trade') {
                 this._onChannel_Deals(msg);
 
-                this._onDeals();
+                this._onDeals(1);
             }
         }
 
