@@ -28,7 +28,7 @@ class __MulWSDataStreamConfig {
         this.ds._onClose(this.curIndex);
     }
 
-    funcOnError(i, err) {
+    funcOnError(err) {
         this.ds._onError(this.curIndex, err);
     }
 

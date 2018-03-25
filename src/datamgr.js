@@ -15,6 +15,7 @@ class DataMgr {
     async init(cfg) {
         this.cfg = cfg;
         this.mysql = new Mysql(cfg);
+        await this.mysql.connect();
     }
 
     async insertTick(tname, type, p, v, askp, askv, bidp, bidv, ts) {

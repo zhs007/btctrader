@@ -136,25 +136,25 @@ class BinanceDataStream extends MulWSDataStream {
         });
     }
 
-    // init() {
-    //     console.log('binance init...');
-    //
-    //     if (this.hasDepth()) {
-    //         if (this.hasDeals()) {
-    //             super.init();
-    //         }
-    //         else {
-    //             this._startTrades(() => {
-    //                 super.init();
-    //             });
-    //         }
-    //     }
-    //     else {
-    //         this._startDepth(() => {
-    //             super.init();
-    //         });
-    //     }
-    // }
+    init() {
+        console.log('binance init...');
+
+        if (this.hasDepth()) {
+            if (this.hasDeals()) {
+                super.init();
+            }
+            else {
+                this._startTrades(() => {
+                    super.init();
+                });
+            }
+        }
+        else {
+            this._startDepth(() => {
+                super.init();
+            });
+        }
+    }
 
     _onChannel_Deals(data) {
         this.deals.push([

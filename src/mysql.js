@@ -12,6 +12,13 @@ class Mysql {
         this.alivesqlnums = 0;
     }
 
+    async connect() {
+        if (this.conn == undefined) {
+            this.conn = await mysql.createConnection(this.cfg);
+            console.log('mysql connect ...');
+        }
+    }
+
     // // callback(err)
     // _connect(callback) {
     //     if (this.isconnected) {
@@ -27,6 +34,7 @@ class Mysql {
         try {
             if (this.conn == undefined) {
                 this.conn = await mysql.createConnection(this.cfg);
+                console.log('mysql connect ...');
             }
 
             this.alivesqlnums++;

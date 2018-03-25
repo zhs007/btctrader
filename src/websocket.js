@@ -25,18 +25,20 @@ class WebSocketClient {
         this.lastts = new Date().getTime();
 
         this._procConfig();
+
+        this.connecting = false;
     }
 
     _procConfig() {
-        if (!this.cfg.hasOwnProperty('timeout_keepalive')) {
+        if (!this.cfg.timeout_keepalive) {
             this.cfg.timeout_keepalive = 30 * 1000;
         }
 
-        if (!this.cfg.hasOwnProperty('timeout_connect')) {
-            this.cfg.timeout_connect = 30 * 1000;
+        if (!this.cfg.timeout_connect) {
+            this.cfg.timeout_connect = 90 * 1000;
         }
 
-        if (!this.cfg.hasOwnProperty('timeout_message')) {
+        if (!this.cfg.timeout_message) {
             this.cfg.timeout_message = 30 * 1000;
         }
     }
@@ -79,15 +81,21 @@ class WebSocketClient {
                 return ;
             }
 
+            if (this.ws) {
+                this.ws.close();
+            }
+
             this.init();
 
         }, this.cfg.timeout_connect);
     }
 
     init() {
+        this.connecting = true;
+
         this.ws = undefined;
 
-        this._startTimer_Keepalive();
+        // this._startTimer_Keepalive();
         this._startTimer_Connect();
 
         if (this.cfg.proxysocks) {
@@ -98,7 +106,10 @@ class WebSocketClient {
         }
 
         this.ws.on('open', () => {
+            this.connecting = false;
             this._onOpen();
+
+            this._startTimer_Keepalive();
         });
 
         this.ws.on('message', (data) => {
@@ -107,6 +118,7 @@ class WebSocketClient {
 
         this.ws.on('close', () => {
             this._onClose();
+            this.connecting = false;
         });
 
         this.ws.on('error', (err) => {
@@ -120,6 +132,10 @@ class WebSocketClient {
         }
 
         this.ws.send(buff);
+    }
+
+    isConnecting() {
+        return this.connecting;
     }
 
     isConnected() {
