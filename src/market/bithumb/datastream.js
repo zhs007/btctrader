@@ -21,7 +21,7 @@ class BithumbDataStream extends HTTPDataStream {
         this.depthIndexBid = 0;
 
         this.urlDepth = cfg.baseurl + 'orderbook/' + cfg.symbol;
-        this.urlTrade = cfg.baseurl + 'recent_transactions/' + cfg.symbol;
+        this.urlTrade = cfg.baseurl + 'recent_transactions/' + cfg.symbol + '?count=100';
     }
 
     _onChannel_Deals(data) {
@@ -31,7 +31,7 @@ class BithumbDataStream extends HTTPDataStream {
 
             let hascurnode = false;
             for (let j = 0; j < this.deals.length; ++j) {
-                if (this.deals[DEALSINDEX.ID] == cn.cont_no) {
+                if (this.deals[j][DEALSINDEX.ID] == cn.cont_no) {
                     hascurnode = true;
                     break;
                 }
@@ -187,14 +187,8 @@ class BithumbDataStream extends HTTPDataStream {
     //------------------------------------------------------------------------------
     // HTTPDataStream
 
-    _onTick() {
-        this.startRequest(this.urlDepth, (err, data) => {
-            if (err) {
-                console.log('bithumb depth err ' + err);
-
-                return ;
-            }
-
+    async _onTick() {
+        await this.startRequestAsync(this.urlDepth).then((data) => {
             if (this.cfg.output_message) {
                 console.log('bithumb depth + ' + data);
             }
@@ -202,15 +196,15 @@ class BithumbDataStream extends HTTPDataStream {
             let msg = JSON.parse(data);
 
             this._onChannel_Depth(msg.data);
-        });
-
-        this.startRequest(this.urlTrade, (err, data) => {
+        }).catch((err) => {
             if (err) {
-                console.log('bithumb trade err ' + err);
+                console.log('bithumb depth err ' + err);
 
                 return ;
             }
+        });
 
+        await this.startRequestAsync(this.urlTrade).then((data) => {
             if (this.cfg.output_message) {
                 console.log('bithumb trade + ' + data);
             }
@@ -218,6 +212,12 @@ class BithumbDataStream extends HTTPDataStream {
             let msg = JSON.parse(data);
 
             this._onChannel_Deals(msg.data);
+        }).catch((err) => {
+            if (err) {
+                console.log('bithumb trade err ' + err);
+
+                return ;
+            }
         });
     }
 };
