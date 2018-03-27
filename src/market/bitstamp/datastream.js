@@ -1,264 +1,201 @@
 "use strict";
 
-const { WSDataStream } = require('../../wsdatastream');
+const { PusherDataStream } = require('../../pusherdatastream');
 const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
 
-class BitstampDataStream extends WSDataStream {
-    // cfg.addr - like wss://testnet.bitmex.com/realtime
-    // cfg.symbol - XBTUSD
+class BitstampDataStream extends PusherDataStream {
+    // cfg.pusherkey - like de504dc5763aeef9ff52
+    // cfg.symbol - btcusd
     constructor(cfg) {
         super(cfg);
 
-        // this.channelDepth = 'ok_sub_spot_' + this.cfg.symbol + '_depth';
-        // this.channelDeals = 'ok_sub_spot_' + this.cfg.symbol + '_deals';
-
-        // this.depthIndexAsk = 0;
-        // this.depthIndexBid = 0;
+        this.depthIndexAsk = 0;
+        this.depthIndexBid = 0;
     }
 
     _procConfig() {
         super._procConfig();
 
-        if (!this.cfg.addr) {
-            this.cfg.addr = 'wss://testnet.bitmex.com/realtime';
+        if (!this.cfg.pusherkey) {
+            this.cfg.pusherkey = 'de504dc5763aeef9ff52';
         }
 
         if (!this.cfg.symbol) {
-            this.cfg.symbol = 'XBTUSD';
+            this.cfg.symbol = 'btcusd';
         }
     }
 
-    _addChannel() {
-        this.sendMsg({
-            op: 'subscribe',
-            args: ['orderBookL2:' + this.cfg.symbol, 'trade:' + this.cfg.symbol]
+    _getChannel_trades() {
+        if (this.cfg.symbol == 'btcusd') {
+            return 'live_trades';
+        }
+
+        return 'live_trades_' + this.cfg.symbol;
+    }
+
+    _getChannel_orderbook() {
+        if (this.cfg.symbol == 'btcusd') {
+            return 'order_book';
+        }
+
+        return 'order_book_' + this.cfg.symbol;
+    }
+
+    init() {
+        console.log('bitstamp init. ');
+
+        this.subscribe(this._getChannel_trades(), 'trade', (msg) => {
+            this._onTrades(msg);
+        });
+
+        this.subscribe(this._getChannel_orderbook(), 'data', (msg) => {
+            this._onOrderBook(msg);
         });
     }
 
-    _onChannel_Deals(data) {
-        for (let i = 0; i < data.length; ++i) {
-            if (data[i].symbol == this.cfg.symbol) {
-                this.deals.push([
-                    data[i].trdMatchID,
-                    parseFloat(data[i].price),
-                    parseFloat(data[i].size),
-                    new Date(data[i].timestamp).getTime(),
-                    data[i].side == 'Buy' ? DEALTYPE.BUY : DEALTYPE.SELL
-                ]);
-            }
-        }
-    }
-
-    __insertDepth_asks(id, p, v) {
-        for (let i = 0; i < this.asks.length; ++i) {
-            if (p < this.asks[i][DEPTHINDEX.PRICE]) {
-                this.asks.splice(i, 0, [p, v, id, v]);
-
-                return ;
-            }
-        }
-    }
-
-    __updateDepth_asks(id, p, v) {
-        for (let i = 0; i < this.asks.length; ++i) {
-            if (id == this.asks[i][DEPTHINDEX.ID]) {
-                this.asks[i][DEPTHINDEX.PRICE] = p;
-                this.asks[i][DEPTHINDEX.VOLUME] = v;
-                this.asks[i][DEPTHINDEX.LASTVOLUME] = v;
-
-                return ;
-            }
-        }
-
-        // this.__insertDepth_asks(id, p, v);
-    }
-
-    __deleteDepth_asks(id) {
-        for (let i = 0; i < this.asks.length; ++i) {
-            if (id == this.asks[i][DEPTHINDEX.ID]) {
-                this.asks.splice(i, 1);
-
-                return ;
-            }
-        }
-
-        // this.__insertDepth_asks(id, p, v);
-    }
-
-    __insertDepth_bids(id, p, v) {
-        for (let i = 0; i < this.bids.length; ++i) {
-            if (p > this.bids[i][DEPTHINDEX.PRICE]) {
-                this.bids.splice(i, 0, [p, v, id, v]);
-
-                return ;
-            }
-        }
-    }
-
-    __updateDepth_bids(id, p, v) {
-        for (let i = 0; i < this.bids.length; ++i) {
-            if (id == this.bids[i][DEPTHINDEX.ID]) {
-                this.bids[i][DEPTHINDEX.PRICE] = p;
-                this.bids[i][DEPTHINDEX.VOLUME] = v;
-                this.bids[i][DEPTHINDEX.LASTVOLUME] = v;
-
-                return ;
-            }
-        }
-
-        // this.__insertDepth_bids(id, p, v);
-    }
-
-    __deleteDepth_bids(id) {
-        for (let i = 0; i < this.bids.length; ++i) {
-            if (id == this.bids[i][DEPTHINDEX.ID]) {
-                this.bids.splice(i, 1);
-
-                return ;
-            }
-        }
-
-        // this.__insertDepth_asks(id, p, v);
-    }
-
-    _onChannel_Depth(action, data) {
-        if (this.asks.length == 0 || this.bids.length == 0) {
-            if (action != 'partial') {
-                return ;
-            }
-
-            for (let i = 0; i < data.length; ++i) {
-                if (data[i].symbol == this.cfg.symbol) {
-                    let p = parseFloat(data[i].price);
-                    let v = parseFloat(data[i].size);
-
-                    if (data[i].side == 'Buy') {
-                        this.bids.push([p, v, data[i].id, v]);
-                    }
-                    else {
-                        this.asks.push([p, v, data[i].id, v]);
-                    }
-                }
-            }
-
-            this.asks.sort((a, b) => {
-                return a.price - b.price;
-            });
-
-            this.bids.sort((a, b) => {
-                return b.price - a.price;
-            });
-
-            return ;
-        }
-
-        if (action == 'insert') {
-            for (let i = 0; i < data.length; ++i) {
-                if (data[i].symbol == this.cfg.symbol) {
-                    let p = parseFloat(data[i].price);
-                    let v = parseFloat(data[i].size);
-
-                    if (data[i].side == 'Buy') {
-                        this.__insertDepth_bids(data[i].id, p, v);
-                    }
-                    else {
-                        this.__insertDepth_asks(data[i].id, p, v);
-                    }
-                }
-            }
-        }
-        else if (action == 'update') {
-            for (let i = 0; i < data.length; ++i) {
-                if (data[i].symbol == this.cfg.symbol) {
-                    let p = parseFloat(data[i].price);
-                    let v = parseFloat(data[i].size);
-
-                    if (data[i].side == 'Buy') {
-                        this.__updateDepth_bids(data[i].id, p, v);
-                    }
-                    else {
-                        this.__updateDepth_asks(data[i].id, p, v);
-                    }
-                }
-            }
-        }
-        else if (action == 'delete') {
-            for (let i = 0; i < data.length; ++i) {
-                if (data[i].symbol == this.cfg.symbol) {
-                    if (data[i].side == 'Buy') {
-                        this.__deleteDepth_bids(data[i].id);
-                    }
-                    else {
-                        this.__deleteDepth_asks(data[i].id);
-                    }
-                }
-            }
-        }
-    }
-
-    //------------------------------------------------------------------------------
-    // WSDataStream
-
-    sendMsg(msg) {
-        this._send(JSON.stringify(msg));
-    }
-
-    _onOpen() {
-        super._onOpen();
-
-        console.log('bitmex open ');
-
-        this._addChannel();
-    }
-
-    _onMsg(data) {
-        super._onMsg(data);
-
+    _onTrades(msg) {
         if (this.cfg.output_message) {
-            console.log(data);
+            console.log(JSON.stringify(msg));
         }
 
-        let curts = new Date().getTime();
+        this.deals.push([
+            msg.id,
+            parseFloat(msg.price),
+            parseFloat(msg.amount),
+            new Date(msg.timestamp * 1000).getTime(),
+            msg.type == 0 ? DEALTYPE.BUY : DEALTYPE.SELL
+        ]);
+    }
 
-        try{
-            let msg = JSON.parse(data);
-            if (msg) {
-                if (msg.table == 'trade') {
-                    if (msg.action == 'insert' || msg.action == 'partial') {
-                        this._onChannel_Deals(msg.data);
+    _onOrderBook(data) {
+        if (this.cfg.output_message) {
+            console.log(JSON.stringify(data));
+        }
 
-                        this._onDeals();
+        if (this.cfg.simtrade) {
+            if (this.asks.length > 0) {
+                let oi = 0;
+                for (let ci = 0; ci < data.asks.length; ++ci) {
+                    let p = parseFloat(data.asks[ci][DEPTHINDEX.PRICE]);
+                    let v = parseFloat(data.asks[ci][DEPTHINDEX.VOLUME]);
+
+                    data.asks[ci][DEPTHINDEX.PRICE] = p;
+                    data.asks[ci][DEPTHINDEX.VOLUME] = v;
+
+                    for (; oi < this.asks.length; ++oi) {
+                        if (data.asks[ci][DEPTHINDEX.PRICE] == this.asks[oi][DEPTHINDEX.PRICE]) {
+
+                            if (data.asks[ci].length == 2) {
+                                data.asks[ci].push(this.asks[oi][DEPTHINDEX.ID]);
+                                data.asks[ci].push(v - this.asks[oi][DEPTHINDEX.VOLUME] + this.asks[oi][DEPTHINDEX.LASTVOLUME]);
+                            }
+                            else {
+                                data.asks[ci][DEPTHINDEX.LASTVOLUME] = v - this.asks[oi][DEPTHINDEX.VOLUME] + this.asks[oi][DEPTHINDEX.LASTVOLUME];
+                            }
+
+                            break;
+                        }
+                        else if (p < this.asks[oi][DEPTHINDEX.PRICE]) {
+
+                            if (data.asks[ci].length == 2) {
+                                data.asks[ci].push(++this.depthIndexAsk);
+                                data.asks[ci].push(v);
+                            }
+
+                            break;
+                        }
+                        else {
+                            ++oi;
+                        }
+                    }
+
+                    if (data.asks[ci].length == 2) {
+                        data.asks[ci].push(++this.depthIndexAsk);
+                        data.asks[ci].push(v);
                     }
                 }
-                else if (msg.table == 'orderBookL2') {
-                    this._onChannel_Depth(msg.action, msg.data);
+            }
+            else {
+                for (let ci = 0; ci < data.asks.length; ++ci) {
+                    let p = parseFloat(data.asks[ci][DEPTHINDEX.PRICE]);
+                    let v = parseFloat(data.asks[ci][DEPTHINDEX.VOLUME]);
 
-                    this._onDepth();
+                    data.asks[ci][DEPTHINDEX.PRICE] = p;
+                    data.asks[ci][DEPTHINDEX.VOLUME] = v;
+
+                    if (data.asks[ci].length == 2) {
+                        data.asks[ci].push(++this.depthIndexAsk);
+                        data.asks[ci].push(v);
+                    }
                 }
             }
+
+            if (this.bids.length > 0) {
+                let oi = 0;
+                for (let ci = 0; ci < data.bids.length; ++ci) {
+                    let p = parseFloat(data.bids[ci][DEPTHINDEX.PRICE]);
+                    let v = parseFloat(data.bids[ci][DEPTHINDEX.VOLUME]);
+
+                    data.bids[ci][DEPTHINDEX.PRICE] = p;
+                    data.bids[ci][DEPTHINDEX.VOLUME] = v;
+
+                    for (; oi < this.bids.length; ++oi) {
+                        if (data.bids[ci][DEPTHINDEX.PRICE] == this.bids[oi][DEPTHINDEX.PRICE]) {
+
+                            if (data.bids[ci].length == 2) {
+                                data.bids[ci].push(this.bids[oi][DEPTHINDEX.ID]);
+                                data.bids[ci].push(v - this.bids[oi][DEPTHINDEX.VOLUME] + this.bids[oi][DEPTHINDEX.LASTVOLUME]);
+                            }
+                            else {
+                                data.bids[ci][DEPTHINDEX.LASTVOLUME] = v - this.bids[oi][DEPTHINDEX.VOLUME] + this.bids[oi][DEPTHINDEX.LASTVOLUME];
+                            }
+
+                            break;
+                        }
+                        else if (p > this.bids[oi][DEPTHINDEX.PRICE]) {
+
+                            if (data.bids[ci].length == 2) {
+                                data.bids[ci].push(++this.depthIndexBid);
+                                data.bids[ci].push(v);
+                            }
+
+                            break;
+                        }
+                        else {
+                            ++oi;
+                        }
+                    }
+
+                    if (data.bids[ci].length == 2) {
+                        data.bids[ci].push(++this.depthIndexAsk);
+                        data.bids[ci].push(v);
+                    }
+                }
+            }
+            else {
+                for (let ci = 0; ci < data.bids.length; ++ci) {
+                    let p = parseFloat(data.bids[ci][DEPTHINDEX.PRICE]);
+                    let v = parseFloat(data.bids[ci][DEPTHINDEX.VOLUME]);
+
+                    data.bids[ci][DEPTHINDEX.PRICE] = p;
+                    data.bids[ci][DEPTHINDEX.VOLUME] = v;
+
+                    if (data.bids[ci].length == 2) {
+                        data.bids[ci].push(++this.depthIndexBid);
+                        data.bids[ci].push(v);
+                    }
+                }
+            }
+
+            this.asks = data.asks;
+            this.bids = data.bids;
         }
-        catch (err) {
-            console.log('bitmex onmsg err! ' + err);
-            this.client.close();
+        else {
+            this.asks = data.asks;
+            this.bids = data.bids;
         }
-    }
 
-    _onClose() {
-        console.log('bitmex close ');
-
-        super._onClose();
-    }
-
-    _onError(err) {
-        console.log('bitmex error ' + JSON.stringify(err));
-
-        super._onError(err);
-    }
-
-    _onKeepalive() {
-        this.sendMsg({event: 'ping'});
-
-        super._onKeepalive();
+        this._onDepth();
     }
 };
 
