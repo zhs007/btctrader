@@ -20,7 +20,8 @@ class BitmexDataStream extends WSDataStream {
         super._procConfig();
 
         if (!this.cfg.addr) {
-            this.cfg.addr = 'wss://testnet.bitmex.com/realtime';
+            // this.cfg.addr = 'wss://testnet.bitmex.com/realtime';
+            this.cfg.addr = 'wss://www.bitmex.com/realtime';
         }
 
         if (!this.cfg.symbol) {
