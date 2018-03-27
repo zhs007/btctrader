@@ -65,6 +65,8 @@ class BitstampDataStream extends PusherDataStream {
             new Date(msg.timestamp * 1000).getTime(),
             msg.type == 0 ? DEALTYPE.BUY : DEALTYPE.SELL
         ]);
+
+        this._onDeals(1);
     }
 
     _onOrderBook(data) {

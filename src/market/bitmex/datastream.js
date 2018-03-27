@@ -48,6 +48,8 @@ class BitmexDataStream extends WSDataStream {
                 ]);
             }
         }
+
+        this._onDeals(data.length);
     }
 
     __insertDepth_asks(id, p, v) {
@@ -60,10 +62,10 @@ class BitmexDataStream extends WSDataStream {
         }
     }
 
-    __updateDepth_asks(id, p, v) {
+    __updateDepth_asks(id, v) {
         for (let i = 0; i < this.asks.length; ++i) {
             if (id == this.asks[i][DEPTHINDEX.ID]) {
-                this.asks[i][DEPTHINDEX.PRICE] = p;
+                // this.asks[i][DEPTHINDEX.PRICE] = p;
                 this.asks[i][DEPTHINDEX.VOLUME] = v;
                 this.asks[i][DEPTHINDEX.LASTVOLUME] = v;
 
@@ -96,10 +98,10 @@ class BitmexDataStream extends WSDataStream {
         }
     }
 
-    __updateDepth_bids(id, p, v) {
+    __updateDepth_bids(id, v) {
         for (let i = 0; i < this.bids.length; ++i) {
             if (id == this.bids[i][DEPTHINDEX.ID]) {
-                this.bids[i][DEPTHINDEX.PRICE] = p;
+                // this.bids[i][DEPTHINDEX.PRICE] = p;
                 this.bids[i][DEPTHINDEX.VOLUME] = v;
                 this.bids[i][DEPTHINDEX.LASTVOLUME] = v;
 
@@ -171,14 +173,14 @@ class BitmexDataStream extends WSDataStream {
         else if (action == 'update') {
             for (let i = 0; i < data.length; ++i) {
                 if (data[i].symbol == this.cfg.symbol) {
-                    let p = parseFloat(data[i].price);
+                    // let p = parseFloat(data[i].price);
                     let v = parseFloat(data[i].size);
 
                     if (data[i].side == 'Buy') {
-                        this.__updateDepth_bids(data[i].id, p, v);
+                        this.__updateDepth_bids(data[i].id, v);
                     }
                     else {
-                        this.__updateDepth_asks(data[i].id, p, v);
+                        this.__updateDepth_asks(data[i].id, v);
                     }
                 }
             }
@@ -227,8 +229,6 @@ class BitmexDataStream extends WSDataStream {
                 if (msg.table == 'trade') {
                     if (msg.action == 'insert' || msg.action == 'partial') {
                         this._onChannel_Deals(msg.data);
-
-                        this._onDeals();
                     }
                 }
                 else if (msg.table == 'orderBookL2') {

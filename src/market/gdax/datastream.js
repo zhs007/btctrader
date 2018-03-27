@@ -43,7 +43,7 @@ class GDAXDataStream extends WSDataStream {
     // }
 
     _onChannel_Deals(data) {
-        if (data.product_id == this.cfg.symbol) {
+        if (data.product_id == this.cfg.symbol && data.trade_id) {
             this.deals.push([
                 data.trade_id,
                 parseFloat(data.price),
@@ -51,6 +51,8 @@ class GDAXDataStream extends WSDataStream {
                 new Date(data.time).getTime(),
                 data.side == 'buy' ? DEALTYPE.BUY : DEALTYPE.SELL
             ]);
+
+            this._onDeals(1);
         }
     }
 
@@ -221,15 +223,13 @@ class GDAXDataStream extends WSDataStream {
             if (msg) {
                 if (msg.type == 'ticker') {
                     this._onChannel_Deals(msg);
-
-                    this._onDeals();
                 }
-                else if (msg.table == 'snapshot') {
+                else if (msg.type == 'snapshot') {
                     this._onChannel_initdepth(msg);
 
                     this._onDepth();
                 }
-                else if (msg.table == 'l2update') {
+                else if (msg.type == 'l2update') {
                     this._onChannel_upddepth(msg);
 
                     this._onDepth();
