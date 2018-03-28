@@ -33,6 +33,8 @@ class DataStream {
     // cfg.simtrade
     // cfg.tickdatatname
     // cfg.candledatatname
+    // cfg.onlycandleinfo
+    // cfg.buildcandle
     constructor(cfg) {
         this.cfg = cfg;
 
@@ -51,20 +53,31 @@ class DataStream {
         this.mgrData = undefined;
         this.dataCandles = undefined;
 
+        this.funcOnDepth = undefined;
+        this.funcOnDeals = undefined;
+
         this._procConfig();
     }
 
     _procConfig() {
-        if (!this.cfg.hasOwnProperty('simtrade')) {
+        if (!this.cfg.simtrade) {
             this.cfg.simtrade = false;
         }
 
-        if (!this.cfg.hasOwnProperty('maxdeals')) {
+        if (!this.cfg.maxdeals) {
             this.cfg.maxdeals = 500;
         }
 
-        if (!this.cfg.hasOwnProperty('output_message')) {
+        if (!this.cfg.output_message) {
             this.cfg.output_message = false;
+        }
+
+        if (!this.cfg.buildcandle) {
+            this.cfg.buildcandle = false;
+        }
+
+        if (this.cfg.candledatatname) {
+            this.cfg.buildcandle = true;
         }
     }
 
@@ -80,8 +93,8 @@ class DataStream {
     // 需要重载的接口
 
     _onDepth() {
-        if (this.cfg.funcOnDepth) {
-            this.cfg.funcOnDepth();
+        if (this.funcOnDepth) {
+            this.funcOnDepth();
         }
 
         if (this.strategy != undefined) {
@@ -103,8 +116,8 @@ class DataStream {
             this.lastPrice = this.deals[this.deals.length - 1][DEALSINDEX.PRICE];
         }
 
-        if (this.cfg.funcOnDeals) {
-            this.cfg.funcOnDeals();
+        if (this.funcOnDeals) {
+            this.funcOnDeals(newnums);
         }
 
         if (this.strategy != undefined) {
@@ -130,17 +143,30 @@ class DataStream {
             }
         }
 
-        if (this.cfg.candledatatname && this.mgrData && this.asks.length > 0 && this.bids.length > 0) {
-            if (this.dataCandles == undefined) {
-                this.dataCandles = new Candles();
+        if (this.cfg.buildcandle) {
+            if (this.cfg.onlycandleinfo) {
+                if (this.dataCandles == undefined) {
+                    this.dataCandles = new Candles();
+                }
+
+                for (let i = this.deals.length - newnums; i < this.deals.length; ++i) {
+                    let cn = this.deals[i];
+
+                    this.dataCandles.onDeals_simple(this.mgrData, this.cfg.candledatatname, cn);
+                }
             }
+            else if (this.asks.length > 0 && this.bids.length > 0) {
+                if (this.dataCandles == undefined) {
+                    this.dataCandles = new Candles();
+                }
 
-            for (let i = this.deals.length - newnums; i < this.deals.length; ++i) {
-                let cn = this.deals[i];
-                let cask = this.asks[0];
-                let cbid = this.bids[0];
+                for (let i = this.deals.length - newnums; i < this.deals.length; ++i) {
+                    let cn = this.deals[i];
+                    let cask = this.asks[0];
+                    let cbid = this.bids[0];
 
-                this.dataCandles.onDeals(this.mgrData, this.cfg.candledatatname, cn, cask, cbid);
+                    this.dataCandles.onDeals(this.mgrData, this.cfg.candledatatname, cn, cask, cbid);
+                }
             }
         }
     }
