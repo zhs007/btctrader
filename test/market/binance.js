@@ -1,6 +1,6 @@
 "use strict";
 
-const binance = require('../src/market/binance/index');
+const binance = require('../../src/market/binance/index');
 // var SocksProxyAgent = require('socks-proxy-agent');
 
 var ds = new binance.DataStream({

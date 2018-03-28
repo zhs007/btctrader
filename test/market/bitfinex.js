@@ -1,6 +1,6 @@
 "use strict";
 
-const bitfinex = require('../src/market/bitfinex/index');
+const bitfinex = require('../../src/market/bitfinex/index');
 // var SocksProxyAgent = require('socks-proxy-agent');
 
 var ds = new bitfinex.DataStream({

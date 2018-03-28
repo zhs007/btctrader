@@ -1,9 +1,9 @@
 "use strict";
 
-const bitmex = require('../src/market/bitmex/index');
+const bcex = require('../../src/market/bcex/index');
 // var SocksProxyAgent = require('socks-proxy-agent');
 
-var ds = new bitmex.DataStream({
+var ds = new bcex.DataStream({
     // addr: 'wss://api.bitfinex.com/ws/2',
     // symbol: 'BTC',
     time_tick: 1000,

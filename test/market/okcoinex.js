@@ -1,6 +1,6 @@
 "use strict";
 
-const okcoinex = require('../src/market/okcoinex/index');
+const okcoinex = require('../../src/market/okcoinex/index');
 
 var ds = new okcoinex.DataStream({
     addr: 'wss://real.okcoin.com:10440/websocket',

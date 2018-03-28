@@ -1,6 +1,6 @@
 "use strict";
 
-const huobi = require('../src/market/huobi/index');
+const huobi = require('../../src/market/huobi/index');
 // var SocksProxyAgent = require('socks-proxy-agent');
 
 var ds = new huobi.DataStream({

@@ -1,9 +1,9 @@
 "use strict";
 
-const quoinex = require('../src/market/quoinex/index');
+const allcoin = require('../../src/market/allcoin/index');
 // var SocksProxyAgent = require('socks-proxy-agent');
 
-var ds = new quoinex.DataStream({
+var ds = new allcoin.DataStream({
     // addr: 'wss://api.bitfinex.com/ws/2',
     // symbol: 'BTC',
     time_tick: 1000,

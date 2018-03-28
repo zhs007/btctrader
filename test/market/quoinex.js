@@ -1,11 +1,11 @@
 "use strict";
 
-const coincheck = require('../src/market/coincheck/index');
+const quoinex = require('../../src/market/quoinex/index');
 // var SocksProxyAgent = require('socks-proxy-agent');
 
-var ds = new coincheck.DataStream({
+var ds = new quoinex.DataStream({
     // addr: 'wss://api.bitfinex.com/ws/2',
-    symbol: 'BTC',
+    // symbol: 'BTC',
     time_tick: 1000,
     output_message: true,
     simtrade: true,

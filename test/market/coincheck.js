@@ -1,9 +1,9 @@
 "use strict";
 
-const bithumb = require('../src/market/bithumb/index');
+const coincheck = require('../../src/market/coincheck/index');
 // var SocksProxyAgent = require('socks-proxy-agent');
 
-var ds = new bithumb.DataStream({
+var ds = new coincheck.DataStream({
     // addr: 'wss://api.bitfinex.com/ws/2',
     symbol: 'BTC',
     time_tick: 1000,
