@@ -2,10 +2,13 @@
 
 const { WSDataStream } = require('../../wsdatastream');
 const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
+const crypto = require('crypto');
 
 class BitmexDataStream extends WSDataStream {
     // cfg.addr - like wss://testnet.bitmex.com/realtime
     // cfg.symbol - XBTUSD
+    // cfg.apikey
+    // cfg.apisecret
     constructor(cfg) {
         super(cfg);
 
@@ -14,6 +17,11 @@ class BitmexDataStream extends WSDataStream {
 
         // this.depthIndexAsk = 0;
         // this.depthIndexBid = 0;
+    }
+
+    _makeSignature(expires) {
+        let s = crypto.createHmac('sha256', this.cfg.apisecret).update('GET' + '/realtime' + expires).digest('hex');
+        return s;
     }
 
     _procConfig() {
@@ -210,6 +218,18 @@ class BitmexDataStream extends WSDataStream {
         super._onOpen();
 
         console.log('bitmex open ');
+
+        if (this.cfg.apikey && this.cfg.apisecret) {
+            let expires = new Date().getTime() + (60 * 1000);
+            this.sendMsg({
+                op: 'authKey',
+                args: [
+                    this.cfg.apikey,
+                    expires,
+                    this._makeSignature(expires)
+                ]
+            });
+        }
 
         this._addChannel();
     }

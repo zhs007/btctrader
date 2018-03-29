@@ -33,8 +33,28 @@ const STRATEGYSTATE = {
     SHORT:  -1
 };
 
-exports.DEPTHINDEX      = DEPTHINDEX
+const ORDERSIDE = {
+    BUY:        1,
+    SELL:       -1,
+};
+
+const ORDERTYPE = {
+    LIMIT:   0,
+    MARKET:  1,
+};
+
+const ORDERSTATE = {
+    OPEN:       0,
+    RUNNING:    1,
+    CLOSE:      2,
+};
+
+exports.DEPTHINDEX      = DEPTHINDEX;
 exports.DEALSINDEX      = DEALSINDEX;
 exports.DEALTYPE        = DEALTYPE;
 exports.TRADETYPE       = TRADETYPE;
 exports.STRATEGYSTATE   = STRATEGYSTATE;
+
+exports.ORDERSIDE       = ORDERSIDE;
+exports.ORDERTYPE       = ORDERTYPE;
+exports.ORDERSTATE      = ORDERSTATE;
