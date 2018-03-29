@@ -1,7 +1,7 @@
 "use strict";
 
 const { WSDataStream } = require('../../wsdatastream');
-const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../../basedef');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE, ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('../../basedef');
 const crypto = require('crypto');
 
 class BitmexDataStream extends WSDataStream {
@@ -37,11 +37,19 @@ class BitmexDataStream extends WSDataStream {
         }
     }
 
-    _addChannel() {
-        this.sendMsg({
-            op: 'subscribe',
-            args: ['orderBookL2:' + this.cfg.symbol, 'trade:' + this.cfg.symbol]
-        });
+    _addChannel(isauth) {
+        if (isauth) {
+            this.sendMsg({
+                op: 'subscribe',
+                args: ['orderBookL2:' + this.cfg.symbol, 'trade:' + this.cfg.symbol, 'order:' + this.cfg.symbol]//, 'execution:' + this.cfg.symbol, 'position:' + this.cfg.symbol]
+            });
+        }
+        else {
+            this.sendMsg({
+                op: 'subscribe',
+                args: ['orderBookL2:' + this.cfg.symbol, 'trade:' + this.cfg.symbol]
+            });
+        }
     }
 
     _onChannel_Deals(data) {
@@ -207,6 +215,54 @@ class BitmexDataStream extends WSDataStream {
         }
     }
 
+    _onChannel_Order(action, data) {
+        this.formatOrder();
+
+        if (action == 'insert' || action == 'partial') {
+            for (let i = 0; i < data.length; ++i) {
+                let co = data[i];
+                let no = {
+                    id: co.orderID,
+                    symbol: co.symbol,
+                    side: co.side == 'Buy' ? ORDERSIDE.BUY : ORDERSIDE.SELL,
+                    openms: new Date(co.timestamp).getTime(),
+                    closems: new Date(co.transactTime).getTime(),
+                    type: co.ordType == 'Limit' ? ORDERTYPE.LIMIT : ORDERTYPE.MARKET,
+                    price: co.price,
+                    volume: co.orderQty,
+                    avgprice: co.avgPx,
+                    lastvolume: co.leavesQty,
+                };
+
+                this.orders.push(no);
+            }
+        }
+        else if (action == 'update') {
+            for (let i = 0; i < data.length; ++i) {
+                let co = data[i];
+                // if (co.leavesQty == 0) {
+                //     this.removeOrder(co.orderID);
+                // }
+                // else {
+                let oldorder = this.findOrder(co.orderID);
+                if (oldorder) {
+                    if (co.hasOwnProperty('avgPx')) {
+                        oldorder.avgprice = co.avgPx;
+                    }
+
+                    if (co.hasOwnProperty('leavesQty')) {
+                        oldorder.lastvolume = co.leavesQty;
+                    }
+                }
+                // }
+            }
+        }
+
+        if (action != 'partial') {
+            this._onOrder();
+        }
+    }
+
     //------------------------------------------------------------------------------
     // WSDataStream
 
@@ -230,8 +286,9 @@ class BitmexDataStream extends WSDataStream {
                 ]
             });
         }
-
-        this._addChannel();
+        else {
+            this._addChannel(false);
+        }
     }
 
     _onMsg(data) {
@@ -251,10 +308,27 @@ class BitmexDataStream extends WSDataStream {
                         this._onChannel_Deals(msg.data);
                     }
                 }
+                else if (msg.table == 'order') {
+                    console.log(data);
+
+                    this._onChannel_Order(msg.action, msg.data);
+                }
                 else if (msg.table == 'orderBookL2') {
                     this._onChannel_Depth(msg.action, msg.data);
 
                     this._onDepth();
+                }
+                else if (msg.success == true) {
+                    if (msg.request.op == 'authKey') {
+                        this._addChannel(true);
+
+                        if (this.funcOnAuth) {
+                            this.funcOnAuth();
+                        }
+                    }
+                }
+                else {
+                    console.log(data);
                 }
             }
         }

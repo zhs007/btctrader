@@ -1,6 +1,6 @@
 "use strict";
 
-const bithumb = require('../src/market/bithumb/index');
+const bithumb = require('../../src/market/bithumb/index');
 
 const fs = require('fs');
 
@@ -12,9 +12,9 @@ bithumb.DataMgr.singleton.init(cfg).then(() => {
     var ds = new bithumb.DataStream({
         output_message: false,
         simtrade: SIMTRADE,
-        tickdatatname: 'bithumb_eos',
-        candledatatname: 'bithumb_kl_eos',
-        symbol: 'eos'
+        tickdatatname: 'bithumb_btc',
+        candledatatname: 'bithumb_kl_btc',
+        symbol: 'btc'
     });
 
     ds.mgrData = bithumb.DataMgr.singleton;

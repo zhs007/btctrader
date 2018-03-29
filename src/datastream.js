@@ -55,6 +55,9 @@ class DataStream {
 
         this.funcOnDepth = undefined;
         this.funcOnDeals = undefined;
+        this.funcOnAuth = undefined;
+
+        this.orders = [];
 
         this._procConfig();
     }
@@ -89,6 +92,37 @@ class DataStream {
         return this.deals.length > 0;
     }
 
+    formatOrder() {
+        for (let i = 0; i < this.orders.length; ) {
+            if (this.orders[i].lastvolume == 0) {
+                this.orders.splice(i, 1);
+            }
+            else {
+                ++i;
+            }
+        }
+    }
+
+    findOrder(orderid) {
+        for (let i = 0; i < this.orders.length; ++i) {
+            if (this.orders[i].id == orderid) {
+                return this.orders[i];
+            }
+        }
+
+        return undefined;
+    }
+
+    removeOrder(orderid) {
+        for (let i = 0; i < this.orders.length; ++i) {
+            if (this.orders[i].id == orderid) {
+                this.orders.splice(i, 1);
+
+                return ;
+            }
+        }
+    }
+
     //------------------------------------------------------------------------------
     // 需要重载的接口
 
@@ -103,6 +137,17 @@ class DataStream {
             }
             else {
                 this.strategy.onDepth(this.market);
+            }
+        }
+    }
+
+    _onOrder() {
+        if (this.strategy != undefined) {
+            if (this.cfg.simtrade) {
+                this.strategy.onSimOrder(this.market);
+            }
+            else {
+                this.strategy.onOrder(this.market);
             }
         }
     }

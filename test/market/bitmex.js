@@ -9,7 +9,7 @@ var ds = new bitmex.DataStream({
     addr: 'wss://testnet.bitmex.com/realtime',
     // symbol: 'BTC',
     time_tick: 1000,
-    output_message: true,
+    output_message: false,
     simtrade: true,
     apikey: 'S5Sz2chVmHCcgOkACnOP736M',
     apisecret: 'wz380WdzyRxJct6Dx8hzoJ22STrIy6b2woGLZhdB5FMlI2mH',
@@ -17,16 +17,34 @@ var ds = new bitmex.DataStream({
 });
 
 ds.init();
+ds.funcOnAuth = () => {
+    var traderctrl = new bitmex.TraderCtrl({
+        baseuri: 'https://testnet.bitmex.com',
+        apikey: 'S5Sz2chVmHCcgOkACnOP736M',
+        apisecret: 'wz380WdzyRxJct6Dx8hzoJ22STrIy6b2woGLZhdB5FMlI2mH',
+    });
 
-var traderctrl = new bitmex.TraderCtrl({
-    baseuri: 'https://testnet.bitmex.com',
-    apikey: 'S5Sz2chVmHCcgOkACnOP736M',
-    apisecret: 'wz380WdzyRxJct6Dx8hzoJ22STrIy6b2woGLZhdB5FMlI2mH',
-});
+    process.nextTick(async () => {
+        let lst = await traderctrl.getAllOrderList();
+        // console.log(lst);
+        let ret = countOrderList(lst);
+        console.log(ret);
 
-process.nextTick(async () => {
-    let lst = await traderctrl.getAllOrderList();
-    console.log(lst);
-    let ret = countOrderList(lst);
-    console.log(ret);
-});
+        // traderctrl.newMarketOrder(true, 'XBTUSD', 1, () => {});
+    });
+};
+
+// var traderctrl = new bitmex.TraderCtrl({
+//     baseuri: 'https://testnet.bitmex.com',
+//     apikey: 'S5Sz2chVmHCcgOkACnOP736M',
+//     apisecret: 'wz380WdzyRxJct6Dx8hzoJ22STrIy6b2woGLZhdB5FMlI2mH',
+// });
+//
+// process.nextTick(async () => {
+//     let lst = await traderctrl.getAllOrderList();
+//     console.log(lst);
+//     let ret = countOrderList(lst);
+//     console.log(ret);
+//
+//     traderctrl.newMarketOrder(false, 'XBTUSD', 1, () => {});
+// });

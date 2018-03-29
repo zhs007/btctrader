@@ -1,6 +1,6 @@
 "use strict";
 
-const gdax = require('../src/market/gdax/index');
+const gdax = require('../../src/market/gdax/index');
 
 const fs = require('fs');
 

@@ -4,6 +4,7 @@ const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 
 // order
 // order.id
+// order.symbol
 // order.side
 // order.openms
 // order.closems
@@ -17,9 +18,14 @@ function countOrderList(lst) {
     let v = 0;
     let p = 0;
     let win = 0;
+    let opennums = 0;
 
     for (let i = 0; i < lst.length; ++i) {
         let co = lst[i];
+
+        if (co.lastvolume > 0) {
+            opennums++;
+        }
 
         let cv = co.volume - co.lastvolume;
         if (cv == 0) {
@@ -49,7 +55,8 @@ function countOrderList(lst) {
     return {
         lastvolume: v,
         avgprice: p,
-        win: win
+        win: win,
+        opennums: opennums
     };
 }
 

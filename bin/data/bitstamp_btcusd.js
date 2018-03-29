@@ -1,6 +1,6 @@
 "use strict";
 
-const bitstamp = require('../src/market/bitstamp/index');
+const bitstamp = require('../../src/market/bitstamp/index');
 
 const fs = require('fs');
 

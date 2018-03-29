@@ -1,6 +1,6 @@
 "use strict";
 
-const bitmex = require('../src/market/bitmex/index');
+const bitmex = require('../../src/market/bitmex/index');
 
 const fs = require('fs');
 

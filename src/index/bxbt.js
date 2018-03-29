@@ -1,8 +1,8 @@
 "use strict";
 
-const bitstamp = require('../src/market/bitstamp/index');
-const gdax = require('../src/market/gdax/index');
-const { IndexDataStream } = require('../src/indexdatastream');
+const bitstamp = require('../market/bitstamp/index');
+const gdax = require('../market/gdax/index');
+const { IndexDataStream } = require('../indexdatastream');
 
 class BXBTDataStream extends IndexDataStream {
     constructor(cfg) {

@@ -1,6 +1,6 @@
 "use strict";
 
-const bithumb = require('../src/market/bithumb/index');
+const bithumb = require('../../src/market/bithumb/index');
 
 const fs = require('fs');
 

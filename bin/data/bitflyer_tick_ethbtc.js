@@ -1,6 +1,6 @@
 "use strict";
 
-const bitflyer = require('../src/market/bitflyer/index');
+const bitflyer = require('../../src/market/bitflyer/index');
 
 const fs = require('fs');
 

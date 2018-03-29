@@ -1,6 +1,6 @@
 "use strict";
 
-const bitflyer = require('../src/market/bitflyer/index');
+const bitflyer = require('../../src/market/bitflyer/index');
 
 const fs = require('fs');
 
@@ -12,9 +12,8 @@ bitflyer.DataMgr.singleton.init(cfg).then(() => {
     var ds = new bitflyer.DataStream({
         output_message: false,
         simtrade: SIMTRADE,
-        tickdatatname: 'bitflyer_btcjpy30mar2018_3',
-        candledatatname: 'bitflyer_kl_btcjpy30mar2018_3',
-        symbol: 'BTCJPY30MAR2018'
+        tickdatatname: 'bitflyer_btcexjpy_5',
+        candledatatname: 'bitflyer_kl_btcexjpy_5'
     });
 
     ds.mgrData = bitflyer.DataMgr.singleton;

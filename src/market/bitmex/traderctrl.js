@@ -10,6 +10,7 @@ class BitmexTraderCtrl extends TraderCtrl {
     // cfg.baseapiuri
     // cfg.apikey
     // cfg.apisecret
+    // cfg.symbol
     constructor(cfg) {
         super(cfg);
     }
@@ -98,7 +99,7 @@ class BitmexTraderCtrl extends TraderCtrl {
         let start = 0;
 
         while (true) {
-            let { err, res, body } = await this.requestPromise('GET', 'order', {start: start, count: count});
+            let { err, res, body } = await this.requestPromise('GET', 'order', {symbol: this.symbol, start: start, count: count});
             if (err) {
                 return lst;
             }
@@ -110,6 +111,7 @@ class BitmexTraderCtrl extends TraderCtrl {
 
                 lst.push({
                     id: co.orderID,
+                    symbol: co.symbol,
                     side: co.side == 'Buy' ? ORDERSIDE.BUY : ORDERSIDE.SELL,
                     openms: new Date(co.timestamp).getTime(),
                     closems: new Date(co.transactTime).getTime(),
@@ -137,7 +139,7 @@ class BitmexTraderCtrl extends TraderCtrl {
         let start = 0;
 
         while (true) {
-            let { err, res, body } = await this.requestPromise('GET', 'order', {open: true, start: start, count: count});
+            let { err, res, body } = await this.requestPromise('GET', 'order', {symbol: this.cfg.symbol, open: true, start: start, count: count});
             if (err) {
                 return lst;
             }
@@ -152,6 +154,7 @@ class BitmexTraderCtrl extends TraderCtrl {
 
                 lst.push({
                     id: co.orderID,
+                    symbol: co.symbol,
                     side: co.side == 'Buy' ? ORDERSIDE.BUY : ORDERSIDE.SELL,
                     openms: new Date(co.timestamp).getTime(),
                     closems: new Date(co.transactTime).getTime(),
@@ -169,9 +172,9 @@ class BitmexTraderCtrl extends TraderCtrl {
         return lst;
     }
 
-    newLimitOrder(isbuy, symbol, price, volume, callback) {
+    newLimitOrder(isbuy, price, volume, callback) {
         this.request('POST', 'order', {
-            symbol: symbol,
+            symbol: this.cfg.symbol,
             ordType: 'Limit',
             orderQty: volume,
             price: price,
@@ -183,9 +186,9 @@ class BitmexTraderCtrl extends TraderCtrl {
         });
     }
 
-    newMarketOrder(isbuy, symbol, volume, callback) {
+    newMarketOrder(isbuy, volume, callback) {
         this.request('POST', 'order', {
-            symbol: symbol,
+            symbol: this.cfg.symbol,
             ordType: 'Market',
             orderQty: volume,
             side: isbuy ? 'Buy' : 'Sell'

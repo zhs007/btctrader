@@ -1,6 +1,6 @@
 "use strict";
 
-const binance = require('../src/market/binance/index');
+const binance = require('../../src/market/binance/index');
 
 const fs = require('fs');
 
@@ -12,9 +12,9 @@ binance.DataMgr.singleton.init(cfg).then(() => {
     var ds = new binance.DataStream({
         output_message: false,
         simtrade: SIMTRADE,
-        tickdatatname: 'binance_bccusdt',
-        candledatatname: 'binance_kl_bccusdt',
-        symbol: 'bccusdt'
+        tickdatatname: 'binance_ethusdt',
+        candledatatname: 'binance_kl_ethusdt',
+        symbol: 'ethusdt'
     });
 
     ds.mgrData = binance.DataMgr.singleton;

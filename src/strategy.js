@@ -21,6 +21,8 @@ class MarketInfo {
         this.lastmsSell = 0;
 
         this.strategyState = STRATEGYSTATE.NULL;
+
+        this.ctrlTrader = undefined;
     }
 
     buy(cp, cv, p, v, tsms) {
@@ -333,11 +335,19 @@ class Strategy {
 
     }
 
+    onOrder(market) {
+
+    }
+
     onSimDepth(market) {
 
     }
 
     onSimDeals(market, newnums) {
+
+    }
+
+    onSimOrder(market) {
 
     }
 
