@@ -3,6 +3,21 @@
 const { DEPTHINDEX } = require('./wsdatastream');
 const util = require('util');
 
+const STRING_ARR = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+function randomInt(max) {
+    return Math.floor(Math.random() * max);
+}
+
+function randomString(len) {
+    let str = '';
+    for (let i = 0; i < len; ++i) {
+        str += STRING_ARR[randomInt(STRING_ARR.length)];
+    }
+
+    return str;
+}
+
 function _matchmaking_ask(ask_p, ask_v, bids) {
     let arr = [];
     for (let i = 0; i < bids.length; ) {
@@ -406,6 +421,27 @@ function makeInsertSql(tname, obj, funcOnFilter) {
     return sql;
 }
 
+function makeUpdateSql(tname, obj, wherestr, funcOnFilter) {
+    let str = '';
+
+    let j = 0;
+    for (let key in obj) {
+        if (funcOnFilter == undefined || funcOnFilter(key)) {
+            if (j != 0) {
+                str += ', ';
+            }
+
+            str += '`' + key + '` = ';
+            str += "'" + obj[key] + "'";
+
+            ++j;
+        }
+    }
+
+    let sql = util.format("update %s set %s where %s;", tname, str, wherestr);
+    return sql;
+}
+
 async function insertList(mysql, tablename, lst, batchnums, funcOnFilter) {
     let fullsql = '';
     let sqlnums = 0;
@@ -485,6 +521,9 @@ async function removeList(mysql, tablename, lst, batchnums, funcBuildSql) {
     }
 }
 
+exports.randomInt = randomInt;
+exports.randomString = randomString;
+
 exports.matchmakingAsk = matchmakingAsk;
 exports.matchmakingBid = matchmakingBid;
 exports.matchmakingAsk_depth2 = matchmakingAsk_depth2;
@@ -499,3 +538,4 @@ exports.countPriceWithDepth_bids_depth2 = countPriceWithDepth_bids_depth2;
 exports.insertList = insertList;
 exports.removeList = removeList;
 exports.makeInsertSql = makeInsertSql;
+exports.makeUpdateSql = makeUpdateSql;

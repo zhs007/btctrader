@@ -3,16 +3,24 @@
 const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 
 // order
-// order.id
 // order.symbol
-// order.side
+// order.side           - ORDERSIDE
 // order.openms
 // order.closems
-// order.type
+// order.ordtype        - ORDERTYPE
 // order.price
 // order.volume
 // order.avgprice
 // order.lastvolume
+// order.lstchild
+// order.parent
+// order.clordid        - mainid-indexid
+// order.clordlinkid    - linkid
+// order.ordstate       - ORDERSTATE
+// order.mainid         - main id
+// order.indexid        - index id
+// order.ordid          - serv id
+// order.parentindexid  - parent indexid
 
 function countOrderList(lst) {
     let v = 0;

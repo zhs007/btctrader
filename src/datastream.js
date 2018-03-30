@@ -2,6 +2,7 @@
 
 const { Candles } = require('./data/candles');
 const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./basedef');
+const OrderMgr = require('./ordermgr');
 
 // asks sort asc
 // bids sort desc
@@ -141,13 +142,17 @@ class DataStream {
         }
     }
 
-    _onOrder() {
+    _onOrder(order) {
+        if (order.isupd) {
+            OrderMgr.singleton.updOrder(order);
+        }
+
         if (this.strategy != undefined) {
             if (this.cfg.simtrade) {
-                this.strategy.onSimOrder(this.market);
+                this.strategy.onSimOrder(this.market, order);
             }
             else {
-                this.strategy.onOrder(this.market);
+                this.strategy.onOrder(this.market, order);
             }
         }
     }

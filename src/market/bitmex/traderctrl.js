@@ -2,6 +2,7 @@
 
 const { TraderCtrl } = require('../../traderctrl');
 const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('../../basedef');
+const OrderMgr = require('../../ordermgr');
 const request = require('request');
 const crypto = require('crypto');
 
@@ -172,29 +173,110 @@ class BitmexTraderCtrl extends TraderCtrl {
         return lst;
     }
 
-    newLimitOrder(isbuy, price, volume, callback) {
+    _formatPrice(side, p) {
+        let fp = p.toFixed(1);
+        let arr = fp.split('.');
+        if (arr.length == 2) {
+            if (arr[1] == '0' || arr[1] == '5') {
+                return parseFloat(fp);
+            }
+
+            if (side == ORDERSIDE.BUY) {
+                if (arr[1] > 5) {
+                    return parseFloat(arr[0] + '.5');
+                }
+
+                return parseFloat(arr[0] + '.0');
+            }
+            else {
+                if (arr[1] > 5) {
+                    return parseFloat((parseInt(arr[0]) + 1).toString() + '.0');
+                }
+
+                return parseFloat(arr[0] + '.5');
+            }
+        }
+
+        return parseFloat(fp);
+    }
+
+    newLimitOrder(order, callback) {
         this.request('POST', 'order', {
-            symbol: this.cfg.symbol,
+            symbol: order.symbol,
             ordType: 'Limit',
-            orderQty: volume,
-            price: price,
-            side: isbuy ? 'Buy' : 'Sell'
+            orderQty: order.volume,
+            price: this._formatPrice(order.side, order.price),
+            side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+            clOrdID: order.mainid + '-' + order.indexid,
         }, (err, res, body) => {
             if (callback) {
-                callback([]);
+                callback(order);
             }
         });
     }
 
-    newMarketOrder(isbuy, volume, callback) {
+    newMarketOrder(order, callback) {
         this.request('POST', 'order', {
-            symbol: this.cfg.symbol,
+            symbol: order.symbol,
             ordType: 'Market',
-            orderQty: volume,
-            side: isbuy ? 'Buy' : 'Sell'
+            orderQty: order.volume,
+            side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+            clOrdID: order.mainid + '-' + order.indexid,
         }, (err, res, body) => {
             if (callback) {
-                callback([]);
+                callback(order);
+            }
+        });
+    }
+
+    newOCOOrder(order, callback) {
+        let spo = order.lstchild[0];
+        let slo = order.lstchild[1];
+        let lstorders = [];
+
+        lstorders.push({
+            symbol: spo.symbol,
+            ordType: 'Limit',
+            orderQty: spo.volume,
+            price: this._formatPrice(order.side, spo.price),
+            side: spo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+            contingencyType: 'OneCancelsTheOther',
+            clOrdLinkID: slo.mainid + '-' + slo.indexid,
+            clOrdID: spo.mainid + '-' + spo.indexid,
+        });
+
+        if (slo.side == ORDERSIDE.BUY) {
+            lstorders.push({
+                symbol: slo.symbol,
+                ordType: 'StopLimit',
+                orderQty: slo.volume,
+                price: this._formatPrice(order.side, slo.price),
+                stopPx: this._formatPrice(order.side, slo.price) - 0.5,
+                side: 'Buy',
+                contingencyType: 'OneCancelsTheOther',
+                clOrdLinkID: spo.mainid + '-' + spo.indexid,
+                clOrdID: slo.mainid + '-' + slo.indexid,
+            });
+        }
+        else {
+            lstorders.push({
+                symbol: slo.symbol,
+                ordType: 'StopLimit',
+                orderQty: slo.volume,
+                price: this._formatPrice(order.side, slo.price),
+                stopPx: this._formatPrice(order.side, slo.price) + 0.5,
+                side: 'Sell',
+                contingencyType: 'OneCancelsTheOther',
+                clOrdLinkID: spo.mainid + '-' + spo.indexid,
+                clOrdID: slo.mainid + '-' + slo.indexid,
+            });
+        }
+
+        this.request('POST', 'order/bulk', {
+            orders: lstorders,
+        }, (err, res, body) => {
+            if (callback) {
+                callback(order);
             }
         });
     }

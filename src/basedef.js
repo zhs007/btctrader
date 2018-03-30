@@ -39,14 +39,18 @@ const ORDERSIDE = {
 };
 
 const ORDERTYPE = {
-    LIMIT:   0,
-    MARKET:  1,
+    LIMIT:          0,
+    MARKET:         1,
+    OCO:            2,  // one cancel the other
+    OTO:            3,  // one trigger the other
 };
 
 const ORDERSTATE = {
-    OPEN:       0,
-    RUNNING:    1,
-    CLOSE:      2,
+    OPEN:           0,
+    RUNNING:        1,
+    CLOSE:          2,
+    CANCEL:         3,
+    FULLCANCEL:     4,
 };
 
 exports.DEPTHINDEX      = DEPTHINDEX;

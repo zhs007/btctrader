@@ -16,6 +16,7 @@ class BTCTraderMgr {
     async init(cfg) {
         this.cfg = cfg;
         this.mysql = new Mysql(cfg);
+        await this.mysql.connect();
     }
 
     async newSim(name, strinfo, strparams) {

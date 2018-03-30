@@ -4,6 +4,7 @@ const bitmex = require('../src/market/bitmex/index');
 const { BXBTDataStream } = require('../src/index/bxbt');
 const { Strategy_AnchoredPrice } = require('../src/strategy/anchoredprice');
 const BTCTraderMgr = require('../src/btctradermgr');
+const OrderMgr = require('../src/ordermgr');
 const { Trader } = require('../src/trader');
 
 const fs = require('fs');
@@ -25,7 +26,7 @@ const cfg = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 //     ds.init();
 // });
 
-BTCTraderMgr.singleton.init(cfg).then(() => {
+OrderMgr.singleton.init(cfg, 'btctrader_order').then(() => {
     var ds0 = new BXBTDataStream({
         simtrade: SIMTRADE
     });

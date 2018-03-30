@@ -1,6 +1,7 @@
 "use strict";
 
 const { WSDataStream } = require('../../wsdatastream');
+const OrderMgr = require('../../ordermgr');
 const { DEPTHINDEX, DEALSINDEX, DEALTYPE, ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('../../basedef');
 const crypto = require('crypto');
 
@@ -216,51 +217,122 @@ class BitmexDataStream extends WSDataStream {
     }
 
     _onChannel_Order(action, data) {
-        this.formatOrder();
-
-        if (action == 'insert' || action == 'partial') {
-            for (let i = 0; i < data.length; ++i) {
-                let co = data[i];
-                let no = {
-                    id: co.orderID,
-                    symbol: co.symbol,
-                    side: co.side == 'Buy' ? ORDERSIDE.BUY : ORDERSIDE.SELL,
-                    openms: new Date(co.timestamp).getTime(),
-                    closems: new Date(co.transactTime).getTime(),
-                    type: co.ordType == 'Limit' ? ORDERTYPE.LIMIT : ORDERTYPE.MARKET,
-                    price: co.price,
-                    volume: co.orderQty,
-                    avgprice: co.avgPx,
-                    lastvolume: co.leavesQty,
-                };
-
-                this.orders.push(no);
+        for (let i = 0; i < data.length; ++i) {
+            let co = data[i];
+            if (!co.clOrdID) {
+                continue ;
             }
-        }
-        else if (action == 'update') {
-            for (let i = 0; i < data.length; ++i) {
-                let co = data[i];
-                // if (co.leavesQty == 0) {
-                //     this.removeOrder(co.orderID);
-                // }
-                // else {
-                let oldorder = this.findOrder(co.orderID);
-                if (oldorder) {
-                    if (co.hasOwnProperty('avgPx')) {
-                        oldorder.avgprice = co.avgPx;
-                    }
 
-                    if (co.hasOwnProperty('leavesQty')) {
-                        oldorder.lastvolume = co.leavesQty;
-                    }
+            let arrclordid = co.clOrdID.split('-');
+            if (arrclordid.length != 2) {
+                continue ;
+            }
+
+            let curlocalorder = OrderMgr.singleton.mapOrder[co.clOrdID];
+            if (curlocalorder == undefined) {
+                continue ;
+            }
+
+            if (curlocalorder.ordid != co.orderID) {
+                curlocalorder.ordid = co.orderID;
+                curlocalorder.isupd = true;
+            }
+
+            if (co.hasOwnProperty('price')) {
+                if (curlocalorder.price != co.price) {
+                    curlocalorder.price = co.price;
+                    curlocalorder.isupd = true;
                 }
-                // }
             }
+
+            if (co.hasOwnProperty('orderQty')) {
+                if (curlocalorder.volume != co.orderQty) {
+                    curlocalorder.volume = co.orderQty;
+                    curlocalorder.isupd = true;
+                }
+            }
+
+            if (co.hasOwnProperty('avgPx')) {
+                if (curlocalorder.avgprice != co.avgPx) {
+                    curlocalorder.avgprice = co.avgPx;
+                    curlocalorder.isupd = true;
+                }
+            }
+
+            if (co.hasOwnProperty('leavesQty')) {
+                if (curlocalorder.lastvolume != co.leavesQty) {
+                    curlocalorder.lastvolume = co.leavesQty;
+                    curlocalorder.isupd = true;
+                }
+            }
+
+            this._onOrder(curlocalorder);
         }
 
-        if (action != 'partial') {
-            this._onOrder();
-        }
+        // this.formatOrder();
+        //
+        // if (action == 'insert' || action == 'partial') {
+        //     for (let i = 0; i < data.length; ++i) {
+        //         let co = data[i];
+        //         if (!co.clOrdID) {
+        //             continue ;
+        //         }
+        //
+        //         let arrclordid = co.clOrdID.split('-');
+        //         if (arrclordid.length != 2) {
+        //             continue ;
+        //         }
+        //
+        //         let curlocalorder = OrderMgr.singleton.mapOrder[co.clOrdID];
+        //         if (curlocalorder == undefined) {
+        //             continue ;
+        //         }
+        //
+        //         curlocalorder.ordid = co.orderID;
+        //
+        //         if (co.hasOwnProperty('price')) {
+        //             curlocalorder.price = co.price;
+        //         }
+        //
+        //         if (co.hasOwnProperty('orderQty')) {
+        //             curlocalorder.volume = co.orderQty;
+        //         }
+        //
+        //         if (co.hasOwnProperty('avgPx')) {
+        //             curlocalorder.avgprice = co.avgPx;
+        //         }
+        //
+        //         if (co.hasOwnProperty('leavesQty')) {
+        //             curlocalorder.lastvolume = co.leavesQty;
+        //         }
+        //
+        //         this._onOrder(curlocalorder);
+        //     }
+        // }
+        // else if (action == 'update') {
+        //     for (let i = 0; i < data.length; ++i) {
+        //         let co = data[i];
+        //         // if (co.leavesQty == 0) {
+        //         //     this.removeOrder(co.orderID);
+        //         // }
+        //         // else {
+        //         let oldorder = this.findOrder(co.orderID);
+        //         if (oldorder) {
+        //             if (co.hasOwnProperty('avgPx')) {
+        //                 oldorder.avgprice = co.avgPx;
+        //             }
+        //
+        //             if (co.hasOwnProperty('leavesQty')) {
+        //                 oldorder.lastvolume = co.leavesQty;
+        //             }
+        //         }
+        //         // }
+        //     }
+        // }
+        //
+        // if (action != 'partial') {
+        //     this._onOrder();
+        // }
     }
 
     //------------------------------------------------------------------------------
