@@ -58,6 +58,9 @@ class Strategy_AnchoredPrice extends Strategy {
                     this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
                 }
             }
+            else {
+
+            }
 
 
             // if (this.volume != 0) {

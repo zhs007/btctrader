@@ -422,11 +422,11 @@ class BitmexDataStream extends WSDataStream {
         super._onError(err);
     }
 
-    // _onKeepalive() {
-    //     this.sendMsg({event: 'ping'});
-    //
-    //     super._onKeepalive();
-    // }
+    _onKeepalive() {
+        this.sendMsg('ping');
+
+        super._onKeepalive();
+    }
 };
 
 exports.BitmexDataStream = BitmexDataStream;

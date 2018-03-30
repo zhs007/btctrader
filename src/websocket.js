@@ -14,19 +14,27 @@ class WebSocketClient {
     // cfg.funcOnClose
     // cfg.funcOnError
     // cfg.funcOnKeepalive
+    // cfg.timetick
     constructor(cfg) {
         this.cfg = cfg;
 
         this.ws = undefined;
 
-        this.timerKeepalive = undefined;
-        this.timerConnect = undefined;
+        // this.timerKeepalive = undefined;
+        // this.timerConnect = undefined;
 
         this.lastts = new Date().getTime();
 
         this._procConfig();
 
         this.connecting = false;
+        this.tmsConnect = 0;
+
+        this.tmsKeepalive = 0;
+
+        this.timerTick = setInterval(() => {
+            this._onTick();
+        }, this.cfg.timetick);
     }
 
     _procConfig() {
@@ -41,62 +49,71 @@ class WebSocketClient {
         if (!this.cfg.timeout_message) {
             this.cfg.timeout_message = 30 * 1000;
         }
-    }
 
-    _startTimer_Keepalive() {
-        if (this.timerKeepalive != undefined) {
-            clearInterval(this.timerKeepalive);
-
-            this.timerKeepalive = undefined;
+        if (!this.cfg.timetick) {
+            this.cfg.timetick = 1000;
         }
-
-        setInterval(() => {
-            if (!this.isConnected()) {
-                this.init();
-
-                return ;
-            }
-
-            this._onKeepalive();
-
-            let ts = new Date().getTime();
-            if (ts - this.lastts > this.cfg.timeout_message) {
-                this.ws.close();
-
-                return ;
-            }
-
-        }, this.cfg.timeout_keepalive);
     }
 
-    _startTimer_Connect() {
-        if (this.timerConnect != undefined) {
-            clearTimeout(this.timerConnect);
-
-            this.timerConnect = undefined;
-        }
-
-        setTimeout(() => {
-            if (this.isConnected()) {
-                return ;
-            }
-
-            if (this.ws) {
-                this.ws.close();
-            }
-
-            this.init();
-
-        }, this.cfg.timeout_connect);
-    }
+    // _startTimer_Keepalive() {
+    //     if (this.timerKeepalive != undefined) {
+    //         clearInterval(this.timerKeepalive);
+    //
+    //         this.timerKeepalive = undefined;
+    //     }
+    //
+    //     setInterval(() => {
+    //         if (!this.isConnected()) {
+    //             this.init();
+    //
+    //             return ;
+    //         }
+    //
+    //         this._onKeepalive();
+    //
+    //         let ts = new Date().getTime();
+    //         if (ts - this.lastts > this.cfg.timeout_message) {
+    //             this.ws.close();
+    //
+    //             return ;
+    //         }
+    //
+    //     }, this.cfg.timeout_keepalive);
+    // }
+    //
+    // _startTimer_Connect() {
+    //     if (this.timerConnect != undefined) {
+    //         clearTimeout(this.timerConnect);
+    //
+    //         this.timerConnect = undefined;
+    //     }
+    //
+    //     setTimeout(() => {
+    //         if (this.isConnected()) {
+    //             return ;
+    //         }
+    //
+    //         if (this.ws) {
+    //             this.ws.close();
+    //         }
+    //
+    //         this.init();
+    //
+    //     }, this.cfg.timeout_connect);
+    // }
 
     init() {
+        if (this.connecting) {
+            return ;
+        }
+
         this.connecting = true;
+        this.tmsConnect = new Date().getTime();
 
         this.ws = undefined;
 
         // this._startTimer_Keepalive();
-        this._startTimer_Connect();
+        // this._startTimer_Connect();
 
         if (this.cfg.proxysocks) {
             this.ws = new WebSocket(this.cfg.addr, {agent: new SocksProxyAgent(this.cfg.proxysocks)});
@@ -109,7 +126,7 @@ class WebSocketClient {
             this.connecting = false;
             this._onOpen();
 
-            this._startTimer_Keepalive();
+            // this._startTimer_Keepalive();
         });
 
         this.ws.on('message', (data) => {
@@ -117,8 +134,8 @@ class WebSocketClient {
         });
 
         this.ws.on('close', () => {
-            this._onClose();
             this.connecting = false;
+            this._onClose();
         });
 
         this.ws.on('error', (err) => {
@@ -195,6 +212,25 @@ class WebSocketClient {
     _onKeepalive() {
         if (this.cfg.funcOnKeepalive) {
             this.cfg.funcOnKeepalive();
+        }
+    }
+
+    _onTick() {
+        let ts = new Date().getTime();
+        if (this.isConnected()) {
+            if (ts - this.lastts >= this.cfg.timeout_keepalive && ts - this.tmsKeepalive >= this.cfg.timeout_keepalive) {
+                this.tmsKeepalive = ts;
+                this._onKeepalive();
+            }
+
+            if (this.tmsKeepalive - this.lastts > this.cfg.timeout_message) {
+                this.close();
+            }
+        }
+        else if (this.isConnecting()) {
+            if (ts - this.tmsConnect >= this.cfg.timeout_connect) {
+                this.close();
+            }
         }
     }
 };
