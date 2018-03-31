@@ -55,6 +55,20 @@ class BitmexTraderCtrl extends TraderCtrl {
             return RUNQUEUE_RESULT.RETRY;
         }
 
+        try {
+            let ret = JSON.parse(result.body);
+            if (ret) {
+                if (ret.error) {
+                    return RUNQUEUE_RESULT.RETRY;
+                }
+            }
+        }
+        catch (err) {
+            console.log('_resultRQ ' + err);
+
+            return RUNQUEUE_RESULT.RETRY;
+        }
+
         if (result.node && result.node.callback) {
             result.node.callback(result.err, result.res, result.body);
         }
