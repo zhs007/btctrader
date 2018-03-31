@@ -23,7 +23,7 @@ class Strategy_AnchoredPrice extends Strategy {
         this.failPrice = 0;
 
         this.fee = 0.00075;
-        this.minwin = 0.0002;
+        this.minwin = 0.0003;
 
         this.orderstate = 0;
 
