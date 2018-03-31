@@ -3,6 +3,7 @@
 const { TraderCtrl } = require('../../traderctrl');
 const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('../../basedef');
 const OrderMgr = require('../../ordermgr');
+const { RunQueue, RUNQUEUE_RESULT } = require('../../runqueue');
 const request = require('request');
 const crypto = require('crypto');
 
@@ -14,6 +15,12 @@ class BitmexTraderCtrl extends TraderCtrl {
     // cfg.symbol
     constructor(cfg) {
         super(cfg);
+
+        this.runqueue = new RunQueue((node, callback) => {
+            this._runRQ(node, callback);
+        }, (result) => {
+            return this._resultRQ(result);
+        });
     }
 
     _procConfig() {
@@ -28,12 +35,39 @@ class BitmexTraderCtrl extends TraderCtrl {
         }
     }
 
+    _addRQ(node) {
+        this.runqueue.run(node);
+    }
+
+    _runRQ(node, callback) {
+        this.__request(node.verb, node.cmd, node.params, (err, res, body) => {
+            callback({
+                node: node,
+                err: err,
+                res: res,
+                body: body
+            });
+        });
+    }
+
+    _resultRQ(result) {
+        if (result.err) {
+            return RUNQUEUE_RESULT.RETRY;
+        }
+
+        if (result.node && result.node.callback) {
+            result.node.callback(result.err, result.res, result.body);
+        }
+
+        return RUNQUEUE_RESULT.OK;
+    }
+
     _makeSignature(verb, cmd, expires, strparams) {
         let s = crypto.createHmac('sha256', this.cfg.apisecret).update(verb + (this.cfg.baseapipath + cmd) + expires + strparams).digest('hex');
         return s;
     }
 
-    request(verb, cmd, params, callback) {
+    __request(verb, cmd, params, callback) {
         let expires = new Date().getTime() + (60 * 1000);
         let strparams = JSON.stringify(params);
 
@@ -67,6 +101,48 @@ class BitmexTraderCtrl extends TraderCtrl {
                 callback(err, res, body);
             }
         });
+    }
+
+    request(verb, cmd, params, callback) {
+        this._addRQ({
+            verb: verb,
+            cmd: cmd,
+            params: params,
+            callback: callback
+        });
+        // let expires = new Date().getTime() + (60 * 1000);
+        // let strparams = JSON.stringify(params);
+        //
+        // let headers = {
+        //     'content-type': 'application/json',
+        //     'Accept': 'application/json',
+        //     'X-Requested-With': 'XMLHttpRequest',
+        //     'api-expires': expires,
+        //     'api-key': this.cfg.apikey,
+        //     'api-signature': this._makeSignature(verb, cmd, expires, strparams)
+        // };
+        //
+        // let ro = {
+        //     headers: headers,
+        //     url: this.cfg.baseuri + this.cfg.baseapipath + cmd,
+        //     method: verb,
+        //     body: strparams
+        // };
+        //
+        // this.log('log', JSON.stringify(ro));
+        //
+        // request(ro, (err, res, body) => {
+        //     if (err) {
+        //         this.log('error', JSON.stringify(err));
+        //     }
+        //
+        //     this.log('log', JSON.stringify(body));
+        //     // let msg = JSON.parse(body);
+        //
+        //     if (callback) {
+        //         callback(err, res, body);
+        //     }
+        // });
     }
 
     requestPromise(verb, cmd, params) {
