@@ -3,7 +3,7 @@
 const util = require('util');
 const { Strategy } = require('../strategy');
 // const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../datastream');
-const { DEPTHINDEX, DEALSINDEX, DEALTYPE, STRATEGYSTATE } = require('../basedef');
+const { DEPTHINDEX, DEALSINDEX, DEALTYPE, STRATEGYSTATE, ORDERSTATE } = require('../basedef');
 const { countPriceWithDepth_asks_depth2, countPriceWithDepth_bids_depth2 } = require('../util');
 const { countOrderList } = require('../order');
 const OrderMgr = require('../ordermgr');
@@ -169,6 +169,19 @@ class Strategy_AnchoredPrice extends Strategy {
         //         this.side = 0;
         //     }
         // }
+    }
+
+    onTick() {
+        let curms = new Date().getTime();
+        if (this.curOrder != undefined && this.curOrder.lastvolume > 0 && (this.curOrder.ordstate == ORDERSTATE.OPEN || this.curOrder.ordstate == ORDERSTATE.RUNNING)) {
+            let off = (this.curOrder.price - this.marketPrice[1]) / this.curOrder.price;
+            if (Math.abs(off) >= 0.05) {
+                this.lstMarketInfo[1].market.ctrl.deleteOrder(this.curOrder);
+            }
+            else if (curms - this.curOrder.openms >= 3 * 60 * 1000) {
+                this.lstMarketInfo[1].market.ctrl.deleteOrder(this.curOrder);
+            }
+        }
     }
 };
 

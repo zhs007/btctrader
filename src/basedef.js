@@ -50,7 +50,8 @@ const ORDERSTATE = {
     RUNNING:        1,
     CLOSE:          2,
     CANCEL:         3,
-    FULLCANCEL:     4,
+    CANCELED:       4,
+    FULLCANCELED:   5,
 };
 
 exports.DEPTHINDEX      = DEPTHINDEX;

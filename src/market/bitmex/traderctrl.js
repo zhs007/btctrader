@@ -53,6 +53,8 @@ class BitmexTraderCtrl extends TraderCtrl {
             body: strparams
         };
 
+        this.log('log', JSON.stringify(ro));
+
         request(ro, (err, res, body) => {
             if (err) {
                 this.log('error', JSON.stringify(err));
@@ -200,7 +202,59 @@ class BitmexTraderCtrl extends TraderCtrl {
         return parseFloat(fp);
     }
 
+    deleteOrder(order, callback) {
+        this.log('debug', order);
+
+        if (!(order.ordstate == ORDERSTATE.OPEN || order.ordstate == ORDERSTATE.RUNNING)) {
+            this.log('error', 'order state fail!');
+
+            return ;
+        }
+
+        order.ordstate = ORDERSTATE.CANCEL;
+
+        this.request('DELETE', 'order', {
+            clOrdID: order.mainid + '-' + order.indexid
+        }, (err, res, body) => {
+            if (callback) {
+                callback(order);
+            }
+        });
+    }
+
+    deleteOrderList(lstorder, callback) {
+        this.log('debug', lstorder);
+
+        let arr = [];
+        for (let i = 0; i < lstorder.length; ++i) {
+            let co = lstorder[i];
+
+            if (!(co.ordstate == ORDERSTATE.OPEN || co.ordstate == ORDERSTATE.RUNNING)) {
+                this.log('error', 'order state fail!');
+            }
+            else {
+                order.ordstate = ORDERSTATE.CANCEL;
+
+                arr.push(co[i].mainid + '-' + co[i].indexid);
+            }
+        }
+
+        if (arr.length <= 0) {
+            return ;
+        }
+
+        this.request('DELETE', 'order', {
+            clOrdID: arr
+        }, (err, res, body) => {
+            if (callback) {
+                callback(order);
+            }
+        });
+    }
+
     newLimitOrder(order, callback) {
+        this.log('debug', order);
+
         this.request('POST', 'order', {
             symbol: order.symbol,
             ordType: 'Limit',
@@ -216,6 +270,8 @@ class BitmexTraderCtrl extends TraderCtrl {
     }
 
     newMarketOrder(order, callback) {
+        this.log('debug', order);
+
         this.request('POST', 'order', {
             symbol: order.symbol,
             ordType: 'Market',
@@ -230,6 +286,8 @@ class BitmexTraderCtrl extends TraderCtrl {
     }
 
     newOCOOrder(order, callback) {
+        this.log('debug', order);
+
         let spo = order.lstchild[0];
         let slo = order.lstchild[1];
         let lstorders = [];
@@ -248,10 +306,10 @@ class BitmexTraderCtrl extends TraderCtrl {
         if (slo.side == ORDERSIDE.BUY) {
             lstorders.push({
                 symbol: slo.symbol,
-                ordType: 'StopLimit',
+                ordType: 'Stop',
                 orderQty: slo.volume,
-                price: this._formatPrice(order.side, slo.price),
-                stopPx: this._formatPrice(order.side, slo.price) - 0.5,
+                // price: this._formatPrice(order.side, slo.price),
+                stopPx: this._formatPrice(order.side, slo.price),
                 side: 'Buy',
                 contingencyType: 'OneCancelsTheOther',
                 clOrdLinkID: spo.mainid + '-' + spo.indexid,
@@ -261,10 +319,10 @@ class BitmexTraderCtrl extends TraderCtrl {
         else {
             lstorders.push({
                 symbol: slo.symbol,
-                ordType: 'StopLimit',
+                ordType: 'Stop',
                 orderQty: slo.volume,
-                price: this._formatPrice(order.side, slo.price),
-                stopPx: this._formatPrice(order.side, slo.price) + 0.5,
+                // price: this._formatPrice(order.side, slo.price),
+                stopPx: this._formatPrice(order.side, slo.price),
                 side: 'Sell',
                 contingencyType: 'OneCancelsTheOther',
                 clOrdLinkID: spo.mainid + '-' + spo.indexid,

@@ -370,6 +370,10 @@ class BitmexDataStream extends WSDataStream {
             console.log(data);
         }
 
+        if (data == 'pong') {
+            return ;
+        }
+
         let curts = new Date().getTime();
 
         try{
@@ -405,7 +409,7 @@ class BitmexDataStream extends WSDataStream {
             }
         }
         catch (err) {
-            console.log('bitmex onmsg err! ' + err);
+            console.log('bitmex onmsg err! ' + err + ' ' + data);
             this.client.close();
         }
     }
