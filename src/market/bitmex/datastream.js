@@ -220,17 +220,17 @@ class BitmexDataStream extends WSDataStream {
         for (let i = 0; i < data.length; ++i) {
             let co = data[i];
             if (!co.clOrdID) {
-                continue ;
+                continue;
             }
 
             let arrclordid = co.clOrdID.split('-');
             if (arrclordid.length != 2) {
-                continue ;
+                continue;
             }
 
             let curlocalorder = OrderMgr.singleton.mapOrder[co.clOrdID];
             if (curlocalorder == undefined) {
-                continue ;
+                continue;
             }
 
             if (curlocalorder.ordid != co.orderID) {
@@ -264,6 +264,10 @@ class BitmexDataStream extends WSDataStream {
                     curlocalorder.lastvolume = co.leavesQty;
                     curlocalorder.isupd = true;
                 }
+            }
+
+            if (co.ordStatus == 'Canceled') {
+                curlocalorder.ordstate = ORDERSTATE.CANCELED;
             }
 
             this._onOrder(curlocalorder);

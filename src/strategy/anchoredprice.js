@@ -115,24 +115,29 @@ class Strategy_AnchoredPrice extends Strategy {
     onOrder(market, order) {
         if (this.curOrder != undefined) {
             if (order.lastvolume == 0 && this.curOrder.mainid == order.mainid && this.curOrder.indexid == order.indexid) {
-                if (order.side == ORDERSIDE.BUY) {
-                    this.curOCOOrder = OrderMgr.singleton.newOCOOrder(
-                        ORDERSIDE.SELL,
-                        this.lstMarketInfo[1].market.ds.cfg.symbol,
-                        this.destPrice,
-                        order.avgprice - this.marketPrice[1] * 0.003,
-                        order.volume, () => {});
+                if (order.ordstate == ORDERSTATE.CANCELED) {
+                    this.curOrder = undefined;
                 }
                 else {
-                    this.curOCOOrder = OrderMgr.singleton.newOCOOrder(
-                        ORDERSIDE.BUY,
-                        this.lstMarketInfo[1].market.ds.cfg.symbol,
-                        this.destPrice,
-                        order.avgprice + this.marketPrice[1] * 0.003,
-                        order.volume, () => {});
-                }
+                    if (order.side == ORDERSIDE.BUY) {
+                        this.curOCOOrder = OrderMgr.singleton.newOCOOrder(
+                            ORDERSIDE.SELL,
+                            this.lstMarketInfo[1].market.ds.cfg.symbol,
+                            this.destPrice,
+                            order.avgprice - this.marketPrice[1] * 0.003,
+                            order.volume, () => {});
+                    }
+                    else {
+                        this.curOCOOrder = OrderMgr.singleton.newOCOOrder(
+                            ORDERSIDE.BUY,
+                            this.lstMarketInfo[1].market.ds.cfg.symbol,
+                            this.destPrice,
+                            order.avgprice + this.marketPrice[1] * 0.003,
+                            order.volume, () => {});
+                    }
 
-                this.lstMarketInfo[1].market.ctrl.newOCOOrder(this.curOCOOrder);
+                    this.lstMarketInfo[1].market.ctrl.newOCOOrder(this.curOCOOrder);
+                }
             }
         }
 
@@ -178,6 +183,7 @@ class Strategy_AnchoredPrice extends Strategy {
             if (Math.abs(off) >= 0.05) {
                 this.lstMarketInfo[1].market.ctrl.deleteOrder(this.curOrder);
             }
+            // else if (curms - this.curOrder.openms >= 30 * 1000) {
             else if (curms - this.curOrder.openms >= 3 * 60 * 1000) {
                 this.lstMarketInfo[1].market.ctrl.deleteOrder(this.curOrder);
             }
