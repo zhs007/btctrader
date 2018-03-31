@@ -20,7 +20,7 @@ class BitmexTraderCtrl extends TraderCtrl {
         super._procConfig();
 
         if (!this.cfg.baseuri) {
-            this.cfg.baseuri = 'https://testnet.bitmex.com';
+            this.cfg.baseuri = 'https://www.bitmex.com';
         }
 
         if (!this.cfg.baseapipath) {

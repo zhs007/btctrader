@@ -48,13 +48,14 @@ class Strategy_AnchoredPrice extends Strategy {
 
         if (this.marketPrice[0] > 0 && this.marketPrice[1] > 0) {
             let off = (this.marketPrice[1] - this.marketPrice[0]) / this.marketPrice[1];
+            // console.log(off + ' ' + (this.minwin + this.fee) * 2);
 
             if (this.curOrder == undefined) {
                 if (Math.abs(off) > (this.minwin + this.fee) * 2) {
                     this.destPrice = this.marketPrice[1] - (off / 2 * this.marketPrice[1]);
 
                     let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
-                    this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                    this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 1, () => {});
                     this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
                 }
             }
