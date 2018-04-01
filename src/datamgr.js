@@ -37,6 +37,25 @@ class DataMgr {
         }
     }
 
+    async insertTickEx(tname, type, p, v, ts) {
+        if (this.mysql == undefined) {
+            return ;
+        }
+
+        let sql = '';
+        try {
+            sql = util.format("insert into %s(type, price, volume, ts, tsms) values(" +
+                "%d, %f, %f, '%s', %d);", tname, type, p, v, new Date(ts).toISOString(), ts);
+            let [err, results, fields] = await this.mysql.run(sql);
+            if (err) {
+                console.log('DataMgr.insertTick(' + sql + ') err ' + err);
+            }
+        }
+        catch (err) {
+            console.log('DataMgr.insertTick(' + sql + ') err ' + err);
+        }
+    }
+
     async getTick(tname, bt, et) {
         if (this.mysql == undefined) {
             return undefined;

@@ -162,11 +162,11 @@ class BitmexDataStream extends WSDataStream {
             }
 
             this.asks.sort((a, b) => {
-                return a.price - b.price;
+                return a[DEPTHINDEX.PRICE] - b[DEPTHINDEX.PRICE];
             });
 
             this.bids.sort((a, b) => {
-                return b.price - a.price;
+                return b[DEPTHINDEX.PRICE] - a[DEPTHINDEX.PRICE];
             });
 
             return ;

@@ -36,6 +36,7 @@ class DataStream {
     // cfg.candledatatname
     // cfg.onlycandleinfo
     // cfg.buildcandle
+    // cfg.tickdataex
     constructor(cfg) {
         this.cfg = cfg;
 
@@ -181,15 +182,27 @@ class DataStream {
             }
         }
 
-        if (this.cfg.tickdatatname && this.mgrData && this.asks.length > 0 && this.bids.length > 0) {
-            for (let i = this.deals.length - newnums; i < this.deals.length; ++i) {
-                let cn = this.deals[i];
-                let cask = this.asks[0];
-                let cbid = this.bids[0];
+        if (this.cfg.tickdatatname && this.mgrData) {
+            if (this.cfg.tickdataex) {
+                for (let i = this.deals.length - newnums; i < this.deals.length; ++i) {
+                    let cn = this.deals[i];
+                    let cask = this.asks[0];
+                    let cbid = this.bids[0];
 
-                this.mgrData.insertTick(this.cfg.tickdatatname, cn[DEALSINDEX.TYPE], cn[DEALSINDEX.PRICE], cn[DEALSINDEX.VOLUME],
-                    cask[DEPTHINDEX.PRICE], cask[DEPTHINDEX.VOLUME], cbid[DEPTHINDEX.PRICE], cbid[DEPTHINDEX.VOLUME],
-                    cn[DEALSINDEX.TMS]);
+                    this.mgrData.insertTickEx(this.cfg.tickdatatname, cn[DEALSINDEX.TYPE], cn[DEALSINDEX.PRICE], cn[DEALSINDEX.VOLUME],
+                        cn[DEALSINDEX.TMS]);
+                }
+            }
+            else if (this.asks.length > 0 && this.bids.length > 0) {
+                for (let i = this.deals.length - newnums; i < this.deals.length; ++i) {
+                    let cn = this.deals[i];
+                    let cask = this.asks[0];
+                    let cbid = this.bids[0];
+
+                    this.mgrData.insertTick(this.cfg.tickdatatname, cn[DEALSINDEX.TYPE], cn[DEALSINDEX.PRICE], cn[DEALSINDEX.VOLUME],
+                        cask[DEPTHINDEX.PRICE], cask[DEPTHINDEX.VOLUME], cbid[DEPTHINDEX.PRICE], cbid[DEPTHINDEX.VOLUME],
+                        cn[DEALSINDEX.TMS]);
+                }
             }
         }
 
