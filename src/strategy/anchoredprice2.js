@@ -15,10 +15,12 @@ class TimePrice {
 
         this.tms_to = [];
         this.price = [];
+        this.avgprice = [];
 
         for (let i = 0; i < nums; ++i) {
             this.tms_to.push(0);
             this.price.push(0);
+            this.avgprice.push(0);
         }
     }
 
@@ -27,6 +29,7 @@ class TimePrice {
         for (let i = 0; i < len - 1; ++i) {
             this.tms_to[len - 1 - i] = this.tms_to[len - i - 2];
             this.price[len - 1 - i] = this.price[len - i - 2];
+            this.avgprice[len - 1 - i] = this.avgprice[len - i - 2];
         }
     }
 
@@ -35,6 +38,7 @@ class TimePrice {
         if (this.tms_to[0] == 0) {
             this.tms_to[0] = tms_to;
             this.price[0] = price;
+            this.avgprice[0] = price;
 
             return ;
         }
@@ -42,13 +46,74 @@ class TimePrice {
         if (tms_to > this.tms_to[0]) {
             this._onNewTimeOff();
 
-            this.tms_to = tms_to;
-            this.price = price;
+            this.tms_to[0] = tms_to;
+            this.price[0] = price;
+            this.avgprice[0] = price;
 
             return ;
         }
 
-        this.price = price;
+        this.price[0] = price;
+        this.avgprice[0] = (this.price[0] + price) / 2;
+    }
+
+    trend() {
+        let ct = 0;
+        let len = this.tms_to.length;
+        for (let i = 0; i < len - 1; ++i) {
+            if (this.price[i] == 0) {
+                return 0;
+            }
+
+            let cct = this.price[i] - this.price[i + 1];
+            if (ct == 0) {
+                ct = cct;
+            }
+            else {
+                if (ct <= 0 && cct > 0) {
+                    return 0;
+                }
+
+                if (ct >= 0 && cct < 0) {
+                    return 0;
+                }
+            }
+        }
+
+        return ct;
+    }
+
+    isDataInited() {
+        let len = this.tms_to.length;
+        for (let i = 0; i < len; ++i) {
+            if (this.tms_to[i] == 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    trendex(dest) {
+        let ct = 0;
+        let len = this.tms_to.length;
+        for (let i = 0; i < len; ++i) {
+            let cct = this.avgprice[i] - dest.avgprice[i];
+            if (ct == 0) {
+                ct = cct;
+            }
+            else {
+                if (ct <= 0 && cct > 0) {
+                    return 0;
+                }
+
+                if (ct >= 0 && cct < 0) {
+                    return 0;
+                }
+            }
+        }
+
+        return ct;
     }
 };
 
@@ -70,8 +135,13 @@ class Strategy_AnchoredPrice2 extends Strategy {
 
         this.orderstate = 0;
 
+        this.timepriceNums = 3;
+        this.timepriceTimeOff = 60 * 1000;
+
         this.curOrder = undefined;
         this.curOCOOrder = undefined;
+
+        this.tprice = [new TimePrice(this.timepriceNums, this.timepriceTimeOff), new TimePrice(this.timepriceNums, this.timepriceTimeOff)];
     }
 
     newOrder(side) {
@@ -90,20 +160,59 @@ class Strategy_AnchoredPrice2 extends Strategy {
         this.marketPrice[market.marketindex] = curdeal[DEALSINDEX.PRICE];
 
         if (this.marketPrice[0] > 0 && this.marketPrice[1] > 0) {
-            let off = (this.marketPrice[1] - this.marketPrice[0]) / this.marketPrice[1];
-            console.log(off + ' ' + (this.minwin + this.fee) * 2);
+            this.tprice[0].setPrice(curdeal[DEALSINDEX.TMS], this.marketPrice[0]);
+            this.tprice[1].setPrice(curdeal[DEALSINDEX.TMS], this.marketPrice[1]);
 
-            if (this.curOrder == undefined) {
-                if (Math.abs(off) > (this.minwin + this.fee) * 2) {
-                    this.destPrice = this.marketPrice[1] - (off / 2 * this.marketPrice[1]);
+            if (this.tprice[0].isDataInited() && this.tprice[1].isDataInited()) {
+                let off = (this.marketPrice[1] - this.marketPrice[0]) / this.marketPrice[1];
+                // console.log(off + ' ' + (this.minwin + this.fee) * 2);
 
-                    let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
-                    this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
-                    this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+                if (this.curOrder == undefined) {
+                    if (Math.abs(off) > (this.minwin + this.fee) * 2) {
+                        let withbxbtoff = this.tprice[1].trendex(this.tprice[0]);
+                        let bxbtoff = this.tprice[0].trend();
+
+                        console.log('off ' + off + ' ' + (this.minwin + this.fee) * 2);
+                        console.log('bxbtoff ' + withbxbtoff + ' ' + bxbtoff);
+
+                        if (withbxbtoff > 0 && bxbtoff < 0) {
+                            return ;
+                        }
+
+                        if (withbxbtoff < 0 && bxbtoff > 0) {
+                            return ;
+                        }
+
+                        if (withbxbtoff > 0) {
+                            this.destPrice = this.marketPrice[1] + (Math.abs(off) / 2 * this.marketPrice[1]);
+
+                            let side = ORDERSIDE.BUY;
+                            this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                            this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+
+                            return ;
+                        }
+
+                        if (withbxbtoff < 0) {
+                            this.destPrice = this.marketPrice[1] - (Math.abs(off) / 2 * this.marketPrice[1]);
+
+                            let side = ORDERSIDE.SELL;
+                            this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                            this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+
+                            return ;
+                        }
+
+                        this.destPrice = this.marketPrice[1] - (off / 2 * this.marketPrice[1]);
+
+                        let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
+                        this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                        this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+                    }
                 }
-            }
-            else {
+                else {
 
+                }
             }
         }
     }
