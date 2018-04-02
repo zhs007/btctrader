@@ -9,7 +9,50 @@ const { countOrderList } = require('../order');
 const OrderMgr = require('../ordermgr');
 const { ORDERSIDE } = require('../basedef');
 
-class Strategy_AnchoredPrice extends Strategy {
+class TimePrice {
+    constructor(nums, timeoff) {
+        this.timeoff = timeoff;
+
+        this.tms_to = [];
+        this.price = [];
+
+        for (let i = 0; i < nums; ++i) {
+            this.tms_to.push(0);
+            this.price.push(0);
+        }
+    }
+
+    _onNewTimeOff() {
+        let len = this.tms_to.length;
+        for (let i = 0; i < len - 1; ++i) {
+            this.tms_to[len - 1 - i] = this.tms_to[len - i - 2];
+            this.price[len - 1 - i] = this.price[len - i - 2];
+        }
+    }
+
+    setPrice(tms, price) {
+        let tms_to = Math.floor(tms / this.timeoff);
+        if (this.tms_to[0] == 0) {
+            this.tms_to[0] = tms_to;
+            this.price[0] = price;
+
+            return ;
+        }
+
+        if (tms_to > this.tms_to[0]) {
+            this._onNewTimeOff();
+
+            this.tms_to = tms_to;
+            this.price = price;
+
+            return ;
+        }
+
+        this.price = price;
+    }
+};
+
+class Strategy_AnchoredPrice2 extends Strategy {
     constructor() {
         super();
 
@@ -117,4 +160,4 @@ class Strategy_AnchoredPrice extends Strategy {
     }
 };
 
-exports.Strategy_AnchoredPrice = Strategy_AnchoredPrice;
+exports.Strategy_AnchoredPrice2 = Strategy_AnchoredPrice2;
