@@ -132,6 +132,7 @@ class Strategy_AnchoredPrice2 extends Strategy {
 
         this.fee = 0.00075;
         this.minwin = 0.0002;
+        this.minoff = 0.0003;
 
         this.orderstate = 0;
 
@@ -184,7 +185,7 @@ class Strategy_AnchoredPrice2 extends Strategy {
                         }
 
                         if (withbxbtoff > 0) {
-                            this.destPrice = this.marketPrice[1] + (Math.abs(off) / 2 * this.marketPrice[1]);
+                            this.destPrice = this.marketPrice[1] + ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
 
                             let side = ORDERSIDE.BUY;
                             this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
@@ -194,7 +195,7 @@ class Strategy_AnchoredPrice2 extends Strategy {
                         }
 
                         if (withbxbtoff < 0) {
-                            this.destPrice = this.marketPrice[1] - (Math.abs(off) / 2 * this.marketPrice[1]);
+                            this.destPrice = this.marketPrice[1] - ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
 
                             let side = ORDERSIDE.SELL;
                             this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
@@ -203,7 +204,7 @@ class Strategy_AnchoredPrice2 extends Strategy {
                             return ;
                         }
 
-                        this.destPrice = this.marketPrice[1] - (off / 2 * this.marketPrice[1]);
+                        this.destPrice = this.marketPrice[1] - ((off / 2 + this.minoff) * this.marketPrice[1]);
 
                         let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
                         this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
