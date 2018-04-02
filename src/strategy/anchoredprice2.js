@@ -176,39 +176,51 @@ class Strategy_AnchoredPrice2 extends Strategy {
                         console.log('off ' + off + ' ' + (this.minwin + this.fee) * 2);
                         console.log('bxbtoff ' + withbxbtoff + ' ' + bxbtoff);
 
-                        if (withbxbtoff > 0 && bxbtoff < 0) {
-                            return ;
-                        }
-
-                        if (withbxbtoff < 0 && bxbtoff > 0) {
-                            return ;
-                        }
+                        // if (withbxbtoff > 0 && bxbtoff < 0) {
+                        //     return ;
+                        // }
+                        //
+                        // if (withbxbtoff < 0 && bxbtoff > 0) {
+                        //     return ;
+                        // }
 
                         if (withbxbtoff > 0) {
-                            this.destPrice = this.marketPrice[1] + ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
+                            if (bxbtoff >= 0) {
+                                this.destPrice = this.marketPrice[1] + ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
 
-                            let side = ORDERSIDE.BUY;
-                            this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
-                            this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+                                let side = ORDERSIDE.BUY;
+                                this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                                this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+                            }
+                            else {
+                                this.destPrice = this.marketPrice[1] - ((off / 2 + this.minoff) * this.marketPrice[1]);
+
+                                let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
+                                this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                                this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+                            }
 
                             return ;
                         }
 
                         if (withbxbtoff < 0) {
-                            this.destPrice = this.marketPrice[1] - ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
+                            if (bxbtoff <= 0) {
+                                this.destPrice = this.marketPrice[1] - ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
 
-                            let side = ORDERSIDE.SELL;
-                            this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
-                            this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+                                let side = ORDERSIDE.SELL;
+                                this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                                this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+                            }
+                            else {
+                                this.destPrice = this.marketPrice[1] - ((off / 2 + this.minoff) * this.marketPrice[1]);
+
+                                let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
+                                this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                                this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+                            }
 
                             return ;
                         }
-
-                        this.destPrice = this.marketPrice[1] - ((off / 2 + this.minoff) * this.marketPrice[1]);
-
-                        let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
-                        this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
-                        this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
                     }
                 }
                 else {
