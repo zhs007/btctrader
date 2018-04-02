@@ -1,6 +1,6 @@
 "use strict";
 
-const { DEPTHINDEX } = require('./wsdatastream');
+const { DEPTHINDEX } = require('./basedef');
 const util = require('util');
 
 const STRING_ARR = 'abcdefghijklmnopqrstuvwxyz0123456789';

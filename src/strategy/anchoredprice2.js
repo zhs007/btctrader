@@ -91,7 +91,7 @@ class Strategy_AnchoredPrice2 extends Strategy {
 
         if (this.marketPrice[0] > 0 && this.marketPrice[1] > 0) {
             let off = (this.marketPrice[1] - this.marketPrice[0]) / this.marketPrice[1];
-            // console.log(off + ' ' + (this.minwin + this.fee) * 2);
+            console.log(off + ' ' + (this.minwin + this.fee) * 2);
 
             if (this.curOrder == undefined) {
                 if (Math.abs(off) > (this.minwin + this.fee) * 2) {
