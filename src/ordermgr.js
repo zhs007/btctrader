@@ -243,7 +243,7 @@ class OrderMgr {
             openms: new Date().getTime()
         };
 
-        this.mapOrder[po.mainid + '-' + po.indexid] = lo;
+        this.mapOrder[lo.mainid + '-' + lo.indexid] = lo;
 
         let lst = [po, lo];
 
