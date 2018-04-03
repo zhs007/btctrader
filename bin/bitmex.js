@@ -2,7 +2,7 @@
 
 const bitmex = require('../src/market/bitmex/index');
 const { BXBTDataStream } = require('../src/index/bxbt');
-const { Strategy_AnchoredPrice3 } = require('../src/strategy/anchoredprice3');
+const { Strategy_AnchoredPrice } = require('../src/strategy/anchoredprice');
 const BTCTraderMgr = require('../src/btctradermgr');
 const OrderMgr = require('../src/ordermgr');
 const { Trader } = require('../src/trader');
@@ -47,7 +47,7 @@ OrderMgr.singleton.init(cfg, 'btctrader_order').then(() => {
         apisecret: 'wz380WdzyRxJct6Dx8hzoJ22STrIy6b2woGLZhdB5FMlI2mH',
     });
 
-    var strategy = new Strategy_AnchoredPrice3();
+    var strategy = new Strategy_AnchoredPrice();
     var trader = new Trader();
     // trader.setStrategy(new Strategy_AnchoredPrice());
     trader.setStrategy(strategy);
