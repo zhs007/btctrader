@@ -216,6 +216,46 @@ class OrderMgr {
         return co;
     }
 
+    newMakeMarketOrder(side, symbol, price0, price1, volume, funcIns) {
+        let po = {
+            mainid: this.mainid,
+            indexid: this.curindexid++,
+            symbol: symbol,
+            side: side,
+            ordtype: ORDERTYPE.LIMIT,
+            ordstate: ORDERSTATE.OPEN,
+            price: price0,
+            volume: volume,
+            openms: new Date().getTime()
+        };
+
+        this.mapOrder[po.mainid + '-' + po.indexid] = po;
+
+        let lo = {
+            mainid: this.mainid,
+            indexid: this.curindexid++,
+            symbol: symbol,
+            side: side == ORDERSIDE.BUY ? ORDERSIDE.SELL : ORDERSIDE.BUY,
+            ordtype: ORDERTYPE.LIMIT,
+            ordstate: ORDERSTATE.OPEN,
+            price: price1,
+            volume: volume,
+            openms: new Date().getTime()
+        };
+
+        this.mapOrder[po.mainid + '-' + po.indexid] = lo;
+
+        let lst = [po, lo];
+
+        this._insOrderList(lst, () => {
+            if (funcIns) {
+                funcIns();
+            }
+        });
+
+        return lst;
+    }
+
     newOCOOrder(side, symbol, stopProfit, stopLoss, volume, funcIns) {
         let mo = {
             mainid: this.mainid,

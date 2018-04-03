@@ -375,6 +375,69 @@ class BitmexTraderCtrl extends TraderCtrl {
         });
     }
 
+    newMakeMarketOrder(lstorder, callback) {
+        let spo = lstorder[0];
+        let slo = lstorder[1];
+        let lstorders = [];
+
+        lstorders.push({
+            symbol: spo.symbol,
+            ordType: 'Limit',
+            orderQty: spo.volume,
+            price: this._formatPrice(spo.side, spo.price),
+            side: spo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+            // contingencyType: 'OneCancelsTheOther',
+            // clOrdLinkID: slo.mainid + '-' + slo.indexid,
+            clOrdID: spo.mainid + '-' + spo.indexid,
+        });
+
+        lstorders.push({
+            symbol: slo.symbol,
+            ordType: 'Limit',
+            orderQty: slo.volume,
+            price: this._formatPrice(slo.side, slo.price),
+            side: slo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+            // contingencyType: 'OneCancelsTheOther',
+            // clOrdLinkID: slo.mainid + '-' + slo.indexid,
+            clOrdID: slo.mainid + '-' + slo.indexid,
+        });
+
+        // if (slo.side == ORDERSIDE.BUY) {
+        //     lstorders.push({
+        //         symbol: slo.symbol,
+        //         ordType: 'Stop',
+        //         orderQty: slo.volume,
+        //         // price: this._formatPrice(order.side, slo.price),
+        //         stopPx: this._formatPrice(order.side, slo.price),
+        //         side: 'Buy',
+        //         contingencyType: 'OneCancelsTheOther',
+        //         clOrdLinkID: spo.mainid + '-' + spo.indexid,
+        //         clOrdID: slo.mainid + '-' + slo.indexid,
+        //     });
+        // }
+        // else {
+        //     lstorders.push({
+        //         symbol: slo.symbol,
+        //         ordType: 'Stop',
+        //         orderQty: slo.volume,
+        //         // price: this._formatPrice(order.side, slo.price),
+        //         stopPx: this._formatPrice(order.side, slo.price),
+        //         side: 'Sell',
+        //         contingencyType: 'OneCancelsTheOther',
+        //         clOrdLinkID: spo.mainid + '-' + spo.indexid,
+        //         clOrdID: slo.mainid + '-' + slo.indexid,
+        //     });
+        // }
+
+        this.request('POST', 'order/bulk', {
+            orders: lstorders,
+        }, (err, res, body) => {
+            if (callback) {
+                callback(order);
+            }
+        });
+    }
+
     newOCOOrder(order, callback) {
         this.log('debug', order);
 

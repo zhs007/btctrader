@@ -55,7 +55,7 @@ class Strategy_AnchoredPrice extends Strategy {
                     this.destPrice = this.marketPrice[1] - (off / 2 * this.marketPrice[1]);
 
                     let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
-                    this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+                    this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 50, () => {});
                     this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
                 }
             }
