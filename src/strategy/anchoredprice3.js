@@ -132,7 +132,7 @@ class Strategy_AnchoredPrice3 extends Strategy {
 
         this.fee = 0.000625;
         this.minwin = 0.0001;
-        this.curvolume = 10;
+        this.curvolume = 25;
         // this.minoff = 0.0003;
 
         this.orderstate = 0;
@@ -146,6 +146,8 @@ class Strategy_AnchoredPrice3 extends Strategy {
         this.tprice = [new TimePrice(this.timepriceNums, this.timepriceTimeOff), new TimePrice(this.timepriceNums, this.timepriceTimeOff)];
 
         this.lastOff = 0;
+
+        this.lstOrder = undefined;
     }
 
     newOrder(side) {
@@ -235,32 +237,34 @@ class Strategy_AnchoredPrice3 extends Strategy {
                 let withbxbtoff = this.tprice[1].trendex(this.tprice[0]);
                 let bxbtoff = this.tprice[0].trend();
 
-                console.log('off ' + curoff + ' ' + (curoff - this.lastOff));
+                // console.log('off ' + curoff + ' ' + (curoff - this.lastOff));
                 // console.log('bxbtoff ' + bxbtoff + ' ' + withbxbtoff);
 
                 // if (withbxbtoff > 0 && bxbtoff > 0) {
-                    if (Math.abs(curoff) > Math.abs(this.lastOff) + 0.00013) {
-                        if (curoff > 0) {
-                            let lstorder = OrderMgr.singleton.newMakeMarketOrder(
-                                ORDERSIDE.SELL,
-                                this.lstMarketInfo[1].market.ds.cfg.symbol,
-                                this.marketPrice[1] * (this.fee + this.minwin + 1),
-                                this.marketPrice[1] * (1 - this.fee - this.minwin),
-                                this.curvolume, () => {});
+            if (this.lstOrder == undefined) {
+                if (Math.abs(curoff) > Math.abs(this.lastOff) + 0.00013) {
+                    if (curoff > 0) {
+                        this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
+                            ORDERSIDE.SELL,
+                            this.lstMarketInfo[1].market.ds.cfg.symbol,
+                            this.marketPrice[1] * (this.fee + this.minwin + 1),
+                            this.marketPrice[1] * (1 - this.fee - this.minwin),
+                            this.curvolume, () => {});
 
-                            this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(lstorder);
-                        }
-                        else {
-                            let lstorder = OrderMgr.singleton.newMakeMarketOrder(
-                                ORDERSIDE.BUY,
-                                this.lstMarketInfo[1].market.ds.cfg.symbol,
-                                this.marketPrice[1] * (1 - this.fee - this.minwin),
-                                this.marketPrice[1] * (1 + this.fee + this.minwin),
-                                this.curvolume, () => {});
-
-                            this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(lstorder);
-                        }
+                        this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
                     }
+                    else {
+                        this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
+                            ORDERSIDE.BUY,
+                            this.lstMarketInfo[1].market.ds.cfg.symbol,
+                            this.marketPrice[1] * (1 - this.fee - this.minwin),
+                            this.marketPrice[1] * (1 + this.fee + this.minwin),
+                            this.curvolume, () => {});
+
+                        this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
+                    }
+                }
+            }
                 // }
                 // else if (withbxbtoff < 0 && bxbtoff < 0) {
                 //     if (Math.abs(curoff) < Math.abs(this.lastOff) - this.fee - this.minwin) {
@@ -283,6 +287,23 @@ class Strategy_AnchoredPrice3 extends Strategy {
     }
 
     onOrder(market, order) {
+        if (this.lstOrder != undefined) {
+            let oknums = 0;
+            for (let i = 0; i < 2; ++i) {
+                if (order.lastvolume == 0 && this.lstOrder[i].mainid == order.mainid && this.lstOrder[i].indexid == order.indexid) {
+                    this.lstOrder[i].isfinished = true;
+                }
+
+                if (this.lstOrder[i].isfinished) {
+                    ++oknums;
+                }
+            }
+
+            if (oknums == 2) {
+                this.lstOrder = undefined;
+            }
+        }
+
         // if (this.curOrder != undefined) {
         //     if (order.lastvolume == 0 && this.curOrder.mainid == order.mainid && this.curOrder.indexid == order.indexid) {
         //         if (order.ordstate == ORDERSTATE.CANCELED) {
