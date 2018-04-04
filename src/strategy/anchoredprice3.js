@@ -130,7 +130,7 @@ class Strategy_AnchoredPrice3 extends Strategy {
         this.side = 0;
         this.failPrice = 0;
 
-        this.fee = 0.000625;
+        this.fee = 0.0005;
         this.minwin = 0.0001;
         this.curvolume = 25;
         // this.minoff = 0.0003;
