@@ -257,8 +257,8 @@ class Strategy_AnchoredPrice3 extends Strategy {
                         this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
                             ORDERSIDE.BUY,
                             this.lstMarketInfo[1].market.ds.cfg.symbol,
-                            this.marketPrice[1] - 1.5,//* (1 - (this.fee + this.minwin) / 2),
-                            this.marketPrice[1] + 1.5,//* (1 + (this.fee + this.minwin) / 2),
+                            this.marketPrice[1] - 1,//* (1 - (this.fee + this.minwin) / 2),
+                            this.marketPrice[1] + 1,//* (1 + (this.fee + this.minwin) / 2),
                             this.curvolume, () => {});
 
                         this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
