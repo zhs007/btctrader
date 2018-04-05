@@ -130,7 +130,7 @@ class Strategy_AnchoredPrice3 extends Strategy {
         this.side = 0;
         this.failPrice = 0;
 
-        this.fee = 0.0005;
+        this.fee = 0.000675 - 0.000225;
         this.minwin = 0.0001;
         this.curvolume = 25;
         // this.minoff = 0.0003;
@@ -247,8 +247,8 @@ class Strategy_AnchoredPrice3 extends Strategy {
                         this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
                             ORDERSIDE.SELL,
                             this.lstMarketInfo[1].market.ds.cfg.symbol,
-                            this.marketPrice[1] * (this.fee + this.minwin + 1),
-                            this.marketPrice[1] * (1 - this.fee - this.minwin),
+                            this.marketPrice[1] * ((this.fee + this.minwin) / 2 + 1),
+                            this.marketPrice[1] * (1 - (this.fee + this.minwin) / 2),
                             this.curvolume, () => {});
 
                         this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
@@ -257,8 +257,8 @@ class Strategy_AnchoredPrice3 extends Strategy {
                         this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
                             ORDERSIDE.BUY,
                             this.lstMarketInfo[1].market.ds.cfg.symbol,
-                            this.marketPrice[1] * (1 - this.fee - this.minwin),
-                            this.marketPrice[1] * (1 + this.fee + this.minwin),
+                            this.marketPrice[1] * (1 - (this.fee + this.minwin) / 2),
+                            this.marketPrice[1] * (1 + (this.fee + this.minwin) / 2),
                             this.curvolume, () => {});
 
                         this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
