@@ -349,6 +349,9 @@ class BitmexDataStream extends WSDataStream {
     _onOpen() {
         super._onOpen();
 
+        this.asks = [];
+        this.bids = [];
+
         console.log('bitmex open ');
 
         if (this.cfg.apikey && this.cfg.apisecret) {

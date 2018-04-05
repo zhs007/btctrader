@@ -13,8 +13,8 @@ bitmex.DataMgr.singleton.init(cfg).then(() => {
     var ds = new BXBTDataStream({
         output_message: false,
         simtrade: SIMTRADE,
-        tickdatatname: 'bitmex_bxbt',
-        candledatatname: 'bitmex_kl_bxbt',
+        tickdatatname: 'bitmex_bxbt_2',
+        candledatatname: 'bitmex_kl_bxbt_2',
         tickdataex: true,
         onlycandleinfo: true
         // symbol: 'btcusdt'
