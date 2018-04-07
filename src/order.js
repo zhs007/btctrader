@@ -3,6 +3,7 @@
 const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 
 // order
+// order.market
 // order.symbol
 // order.side           - ORDERSIDE
 // order.openms
@@ -21,6 +22,7 @@ const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 // order.indexid        - index id
 // order.ordid          - serv id
 // order.parentindexid  - parent indexid
+// order.simid
 
 function countOrderList(lst) {
     let v = 0;

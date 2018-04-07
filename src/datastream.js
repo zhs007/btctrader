@@ -7,27 +7,6 @@ const OrderMgr = require('./ordermgr');
 // asks sort asc
 // bids sort desc
 
-// const DEPTHINDEX = {
-//     PRICE:      0,
-//     VOLUME:     1,
-//     ID:         2,  // only simtrade use
-//     LASTVOLUME: 3   // only simtrade use
-// };
-//
-// const DEALSINDEX = {
-//     ID:         0,
-//     PRICE:      1,
-//     VOLUME:     2,
-//     TMS:        3,
-//     TYPE:       4
-// };
-//
-// const DEALTYPE = {
-//     NULL:       0,
-//     BUY:        1,
-//     SELL:       2
-// };
-
 class DataStream {
     // cfg.output_message
     // cfg.maxdeals
@@ -38,6 +17,10 @@ class DataStream {
     // cfg.buildcandle
     // cfg.tickdataex
     constructor(cfg) {
+        this.marketname = '';
+        this.symbol = '';
+        this.dsindex = 0;
+
         this.cfg = cfg;
 
         this.asks = [];
@@ -47,16 +30,17 @@ class DataStream {
 
         this.lastPrice = 0;
 
-        this.strategy = undefined;
-        this.market = undefined;
+        this.trader2 = undefined;
+        // this.strategy = undefined;
+        // this.market = undefined;
 
         this.currencyExchg = 1;
 
         this.mgrData = undefined;
         this.dataCandles = undefined;
 
-        this.funcOnDepth = undefined;
-        this.funcOnDeals = undefined;
+        // this.funcOnDepth = undefined;
+        // this.funcOnDeals = undefined;
         this.funcOnAuth = undefined;
 
         this.orders = [];
@@ -129,18 +113,21 @@ class DataStream {
     // 需要重载的接口
 
     _onDepth() {
-        if (this.funcOnDepth) {
-            this.funcOnDepth();
+        if (this.trader2) {
+            this.trader2.onDepth(this);
         }
+        // if (this.funcOnDepth) {
+        //     this.funcOnDepth();
+        // }
 
-        if (this.strategy != undefined) {
-            if (this.cfg.simtrade) {
-                this.strategy.onSimDepth(this.market);
-            }
-            else {
-                this.strategy.onDepth(this.market);
-            }
-        }
+        // if (this.strategy != undefined) {
+        //     if (this.cfg.simtrade) {
+        //         this.strategy.onSimDepth(this.market);
+        //     }
+        //     else {
+        //         this.strategy.onDepth(this.market);
+        //     }
+        // }
     }
 
     _onOrder(order) {
@@ -148,14 +135,18 @@ class DataStream {
             OrderMgr.singleton.updOrder(order);
         }
 
-        if (this.strategy != undefined) {
-            if (this.cfg.simtrade) {
-                this.strategy.onSimOrder(this.market, order);
-            }
-            else {
-                this.strategy.onOrder(this.market, order);
-            }
+        if (this.trader2) {
+            this.trader2.onOrder(this, order);
         }
+
+        // if (this.strategy != undefined) {
+        //     if (this.cfg.simtrade) {
+        //         this.strategy.onSimOrder(this.market, order);
+        //     }
+        //     else {
+        //         this.strategy.onOrder(this.market, order);
+        //     }
+        // }
     }
 
     _onDeals(newnums) {
@@ -167,20 +158,24 @@ class DataStream {
             this.lastPrice = this.deals[this.deals.length - 1][DEALSINDEX.PRICE];
         }
 
-        if (this.funcOnDeals) {
-            this.funcOnDeals(newnums);
+        if (this.trader2) {
+            this.trader2.onDeals(this, newnums);
         }
 
-        if (this.strategy != undefined) {
-            if (this.cfg.simtrade) {
-                this.market.onMarketSimDeals(newnums, this.strategy.cfg.sim_newdealdelayms);
+        // if (this.funcOnDeals) {
+        //     this.funcOnDeals(newnums);
+        // }
 
-                this.strategy.onSimDeals(this.market, newnums);
-            }
-            else {
-                this.strategy.onDeals(this.market, newnums);
-            }
-        }
+        // if (this.strategy != undefined) {
+        //     if (this.cfg.simtrade) {
+        //         this.market.onMarketSimDeals(newnums, this.strategy.cfg.sim_newdealdelayms);
+        //
+        //         this.strategy.onSimDeals(this.market, newnums);
+        //     }
+        //     else {
+        //         this.strategy.onDeals(this.market, newnums);
+        //     }
+        // }
 
         if (this.cfg.tickdatatname && this.mgrData) {
             if (this.cfg.tickdataex) {
@@ -236,7 +231,3 @@ class DataStream {
 };
 
 exports.DataStream = DataStream;
-
-// exports.DEPTHINDEX      = DEPTHINDEX;
-// exports.DEALSINDEX      = DEALSINDEX;
-// exports.DEALTYPE        = DEALTYPE;

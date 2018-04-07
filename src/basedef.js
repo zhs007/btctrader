@@ -54,6 +54,15 @@ const ORDERSTATE = {
     FULLCANCELED:   5,
 };
 
+const TRADESIDE = {
+    BUY:        1,
+    SELL:       -1,
+};
+
+const TRADEEXECTYPE = {
+    TRADE:      1,
+};
+
 exports.DEPTHINDEX      = DEPTHINDEX;
 exports.DEALSINDEX      = DEALSINDEX;
 exports.DEALTYPE        = DEALTYPE;
@@ -63,3 +72,6 @@ exports.STRATEGYSTATE   = STRATEGYSTATE;
 exports.ORDERSIDE       = ORDERSIDE;
 exports.ORDERTYPE       = ORDERTYPE;
 exports.ORDERSTATE      = ORDERSTATE;
+
+exports.TRADESIDE       = TRADESIDE;
+exports.TRADEEXECTYPE   = TRADEEXECTYPE;
