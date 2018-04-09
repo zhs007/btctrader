@@ -1,6 +1,7 @@
 "use strict";
 
 const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
+const OrderMgr = require('./ordermgr');
 
 class Market2 {
     constructor(marketname, symbol, ds, traderctrl) {
@@ -23,15 +24,32 @@ class Market2 {
         this.startmoney = 0;
     }
 
-    newLimitOrder() {
-
+    newLimitOrder(side, price, volume, callback) {
+        let order = OrderMgr.singleton.newLimitOrder(side, this.symbol, price, volume);
+        if (this.traderctrl) {
+            this.traderctrl.newLimitOrder(order, callback);
+        }
     }
 
-    newMarketOrder() {
-
+    newMarketOrder(side, volume) {
+        let order = OrderMgr.singleton.newLimitOrder(side, this.symbol, price, volume);
+        if (this.traderctrl) {
+            this.traderctrl.newLimitOrder(order, callback);
+        }
     }
 
+    newMakeMarketOrder(price0, price1, volume, callback) {
+        if (price0 > price1) {
+            let tp = price0;
+            price0 = price1;
+            price1 = tp;
+        }
 
+        let lst = OrderMgr.singleton.newMakeMarketOrder(ORDERSIDE.BUY, this.symbol, price0, price1, volume);
+        if (this.traderctrl) {
+            this.traderctrl.newMakeMarketOrder(lst, callback);
+        }
+    }
 };
 
 exports.Market2 = Market2;

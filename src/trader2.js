@@ -1,7 +1,7 @@
 "use strict";
 
-const { Market2 } = require('market2');
-const OrderMgr = require('ordermgr');
+const { Market2 } = require('./market2');
+const OrderMgr = require('./ordermgr');
 
 class Trader2 {
     constructor(typename, ver, instanceid) {
@@ -14,10 +14,12 @@ class Trader2 {
     }
 
     addDataStream(marketname, symbol, ds, traderctrl) {
-        ds.traders = this;
+        ds.trader2 = this;
 
         ds.marketname = marketname;
         ds.symbol = symbol;
+
+        ds.dsindex = this.lstDataStream.length;
 
         this.lstDataStream.push(ds);
 
@@ -46,6 +48,13 @@ class Trader2 {
     onOrder(ds, order) {
         if (this.strategy2) {
             this.strategy2.onOrder(ds.dsindex, order);
+        }
+    }
+
+    start() {
+        for (let i = 0; i < this.lstDataStream.length; ++i) {
+            let ds = this.lstDataStream[i];
+            ds.init();
         }
     }
 };

@@ -192,6 +192,29 @@ class OrderMgr {
         }
     }
 
+    newMarketOrder(side, symbol, volume, funcIns) {
+        let co = {
+            mainid: this.mainid,
+            indexid: this.curindexid++,
+            symbol: symbol,
+            side: side,
+            ordtype: ORDERTYPE.MARKET,
+            ordstate: ORDERSTATE.OPEN,
+            volume: volume,
+            openms: new Date().getTime()
+        };
+
+        this.mapOrder[co.mainid + '-' + co.indexid] = co;
+
+        this.insOrder(co).then((id) => {
+            if (funcIns) {
+                funcIns(id);
+            }
+        });
+
+        return co;
+    }
+
     newLimitOrder(side, symbol, price, volume, funcIns) {
         let co = {
             mainid: this.mainid,

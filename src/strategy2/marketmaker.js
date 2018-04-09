@@ -1,7 +1,7 @@
 "use strict";
 
 const util = require('util');
-const { Strategy } = require('../strategy');
+const { Strategy2 } = require('../strategy2');
 // const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../datastream');
 const { DEPTHINDEX, DEALSINDEX, DEALTYPE, STRATEGYSTATE, ORDERSTATE } = require('../basedef');
 const { countPriceWithDepth_asks_depth2, countPriceWithDepth_bids_depth2 } = require('../util');
@@ -117,7 +117,7 @@ class TimePrice {
     }
 };
 
-class Strategy_AnchoredPrice3 extends Strategy {
+class Strategy2_MarketMaker extends Strategy2 {
     constructor() {
         super();
 
@@ -159,11 +159,11 @@ class Strategy_AnchoredPrice3 extends Strategy {
         this.lstMarketInfo[1].market.ctrl.newMarketOrder(side == 1, 1);
     }
 
-    onDeals(market) {
-        let curdeal = market.ds.deals[market.ds.deals.length - 1];
-        // console.log(market.marketindex + ' ' + JSON.stringify(curdeal));
+    onDeals(dsindex, newnums) {
+        let curds = this.lstMarket2[dsindex].ds;
+        let curdeal = curds.deals[curds.deals.length - 1];
 
-        this.marketPrice[market.marketindex] = curdeal[DEALSINDEX.PRICE];
+        this.marketPrice[dsindex] = curdeal[DEALSINDEX.PRICE];
 
         if (this.marketPrice[0] > 0 && this.marketPrice[1] > 0) {
             this.tprice[0].setPrice(curdeal[DEALSINDEX.TMS], this.marketPrice[0]);
@@ -172,114 +172,118 @@ class Strategy_AnchoredPrice3 extends Strategy {
             let curoff = (this.marketPrice[1] - this.marketPrice[0]) / this.marketPrice[1];
 
             // if (this.tprice[0].isDataInited() && this.tprice[1].isDataInited()) {
-                // let off = (this.marketPrice[1] - this.marketPrice[0]) / this.marketPrice[1];
-                // console.log(curoff + ' ' + (this.minwin + this.fee) * 2);
+            // let off = (this.marketPrice[1] - this.marketPrice[0]) / this.marketPrice[1];
+            // console.log(curoff + ' ' + (this.minwin + this.fee) * 2);
 
-                // if (this.curOrder == undefined) {
-                //     if (Math.abs(off) > (this.minwin + this.fee) * 2) {
-                //         let withbxbtoff = this.tprice[1].trendex(this.tprice[0]);
-                //         let bxbtoff = this.tprice[0].trend();
-                //
-                //         console.log('off ' + off + ' ' + (this.minwin + this.fee) * 2);
-                //         console.log('bxbtoff ' + withbxbtoff + ' ' + bxbtoff);
-                //
-                //         // if (withbxbtoff > 0 && bxbtoff < 0) {
-                //         //     return ;
-                //         // }
-                //         //
-                //         // if (withbxbtoff < 0 && bxbtoff > 0) {
-                //         //     return ;
-                //         // }
-                //
-                //         if (withbxbtoff > 0) {
-                //             if (bxbtoff >= 0) {
-                //                 this.destPrice = this.marketPrice[1] + ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
-                //
-                //                 let side = ORDERSIDE.BUY;
-                //                 this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
-                //                 this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
-                //             }
-                //             else {
-                //                 this.destPrice = this.marketPrice[1] - ((off / 2 + this.minoff) * this.marketPrice[1]);
-                //
-                //                 let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
-                //                 this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
-                //                 this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
-                //             }
-                //
-                //             return ;
-                //         }
-                //
-                //         if (withbxbtoff < 0) {
-                //             if (bxbtoff <= 0) {
-                //                 this.destPrice = this.marketPrice[1] - ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
-                //
-                //                 let side = ORDERSIDE.SELL;
-                //                 this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
-                //                 this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
-                //             }
-                //             else {
-                //                 this.destPrice = this.marketPrice[1] - ((off / 2 + this.minoff) * this.marketPrice[1]);
-                //
-                //                 let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
-                //                 this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
-                //                 this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
-                //             }
-                //
-                //             return ;
-                //         }
-                //     }
-                // }
-                // else {
-                //
-                // }
+            // if (this.curOrder == undefined) {
+            //     if (Math.abs(off) > (this.minwin + this.fee) * 2) {
+            //         let withbxbtoff = this.tprice[1].trendex(this.tprice[0]);
+            //         let bxbtoff = this.tprice[0].trend();
+            //
+            //         console.log('off ' + off + ' ' + (this.minwin + this.fee) * 2);
+            //         console.log('bxbtoff ' + withbxbtoff + ' ' + bxbtoff);
+            //
+            //         // if (withbxbtoff > 0 && bxbtoff < 0) {
+            //         //     return ;
+            //         // }
+            //         //
+            //         // if (withbxbtoff < 0 && bxbtoff > 0) {
+            //         //     return ;
+            //         // }
+            //
+            //         if (withbxbtoff > 0) {
+            //             if (bxbtoff >= 0) {
+            //                 this.destPrice = this.marketPrice[1] + ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
+            //
+            //                 let side = ORDERSIDE.BUY;
+            //                 this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+            //                 this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+            //             }
+            //             else {
+            //                 this.destPrice = this.marketPrice[1] - ((off / 2 + this.minoff) * this.marketPrice[1]);
+            //
+            //                 let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
+            //                 this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+            //                 this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+            //             }
+            //
+            //             return ;
+            //         }
+            //
+            //         if (withbxbtoff < 0) {
+            //             if (bxbtoff <= 0) {
+            //                 this.destPrice = this.marketPrice[1] - ((Math.abs(off) / 2 + this.minoff) * this.marketPrice[1]);
+            //
+            //                 let side = ORDERSIDE.SELL;
+            //                 this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+            //                 this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+            //             }
+            //             else {
+            //                 this.destPrice = this.marketPrice[1] - ((off / 2 + this.minoff) * this.marketPrice[1]);
+            //
+            //                 let side = off > 0 ? ORDERSIDE.SELL : ORDERSIDE.BUY;
+            //                 this.curOrder = OrderMgr.singleton.newLimitOrder(side, this.lstMarketInfo[1].market.ds.cfg.symbol, this.marketPrice[1], 10, () => {});
+            //                 this.lstMarketInfo[1].market.ctrl.newLimitOrder(this.curOrder);
+            //             }
+            //
+            //             return ;
+            //         }
+            //     }
+            // }
+            // else {
+            //
+            // }
 
-                let withbxbtoff = this.tprice[1].trendex(this.tprice[0]);
-                let bxbtoff = this.tprice[0].trend();
+            let withbxbtoff = this.tprice[1].trendex(this.tprice[0]);
+            let bxbtoff = this.tprice[0].trend();
 
-                // console.log('off ' + curoff + ' ' + (curoff - this.lastOff));
-                // console.log('bxbtoff ' + bxbtoff + ' ' + withbxbtoff);
+            // console.log('off ' + curoff + ' ' + (curoff - this.lastOff));
+            // console.log('bxbtoff ' + bxbtoff + ' ' + withbxbtoff);
 
-                // if (withbxbtoff > 0 && bxbtoff > 0) {
+            // if (withbxbtoff > 0 && bxbtoff > 0) {
             if (this.lstOrder == undefined) {
                 if (Math.abs(curoff) < Math.abs(this.lastOff) + 0.00013) {
                     if (curoff > 0) {
-                        this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
-                            ORDERSIDE.SELL,
-                            this.lstMarketInfo[1].market.ds.cfg.symbol,
-                            this.marketPrice[1] + 1.5,//* ((this.fee + this.minwin) / 2 + 1),
-                            this.marketPrice[1] - 1.5,//* (1 - (this.fee + this.minwin) / 2),
-                            this.curvolume, () => {});
+                        this.lstMarket2[dsindex].newMakeMarketOrder(this.marketPrice[1] - 1, this.marketPrice[1] + 1, this.curvolume);
 
-                        this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
+                        // this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
+                        //     ORDERSIDE.SELL,
+                        //     this.lstMarketInfo[1].market.ds.cfg.symbol,
+                        //     this.marketPrice[1] + 1.5,//* ((this.fee + this.minwin) / 2 + 1),
+                        //     this.marketPrice[1] - 1.5,//* (1 - (this.fee + this.minwin) / 2),
+                        //     this.curvolume, () => {});
+                        //
+                        // this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
                     }
                     else {
-                        this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
-                            ORDERSIDE.BUY,
-                            this.lstMarketInfo[1].market.ds.cfg.symbol,
-                            this.marketPrice[1] - 1,//* (1 - (this.fee + this.minwin) / 2),
-                            this.marketPrice[1] + 1,//* (1 + (this.fee + this.minwin) / 2),
-                            this.curvolume, () => {});
+                        this.lstMarket2[dsindex].newMakeMarketOrder(this.marketPrice[1] - 1, this.marketPrice[1] + 1, this.curvolume);
 
-                        this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
+                        // this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
+                        //     ORDERSIDE.BUY,
+                        //     this.lstMarketInfo[1].market.ds.cfg.symbol,
+                        //     this.marketPrice[1] - 1,//* (1 - (this.fee + this.minwin) / 2),
+                        //     this.marketPrice[1] + 1,//* (1 + (this.fee + this.minwin) / 2),
+                        //     this.curvolume, () => {});
+                        //
+                        // this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
                     }
                 }
             }
-                // }
-                // else if (withbxbtoff < 0 && bxbtoff < 0) {
-                //     if (Math.abs(curoff) < Math.abs(this.lastOff) - this.fee - this.minwin) {
-                //         let lstorder = OrderMgr.singleton.newMakeMarketOrder(
-                //             ORDERSIDE.BUY,
-                //             this.lstMarketInfo[1].market.ds.cfg.symbol,
-                //             this.marketPrice[1] * (1 - this.fee - this.minwin),
-                //             this.marketPrice[1] * (1 + this.fee + this.minwin),
-                //             this.curvolume, () => {});
-                //
-                //         this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(lstorder);
-                //     }
-                // }
+            // }
+            // else if (withbxbtoff < 0 && bxbtoff < 0) {
+            //     if (Math.abs(curoff) < Math.abs(this.lastOff) - this.fee - this.minwin) {
+            //         let lstorder = OrderMgr.singleton.newMakeMarketOrder(
+            //             ORDERSIDE.BUY,
+            //             this.lstMarketInfo[1].market.ds.cfg.symbol,
+            //             this.marketPrice[1] * (1 - this.fee - this.minwin),
+            //             this.marketPrice[1] * (1 + this.fee + this.minwin),
+            //             this.curvolume, () => {});
+            //
+            //         this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(lstorder);
+            //     }
+            // }
 
-                // if (this.tprice[1].trendex())
+            // if (this.tprice[1].trendex())
             // }
 
             this.lastOff = curoff;
@@ -355,4 +359,4 @@ class Strategy_AnchoredPrice3 extends Strategy {
     }
 };
 
-exports.Strategy_AnchoredPrice3 = Strategy_AnchoredPrice3;
+exports.Strategy2_MarketMaker = Strategy2_MarketMaker;

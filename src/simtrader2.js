@@ -16,7 +16,6 @@ class SimTrader2 extends Trader2 {
     }
 
     onDeals(ds, newnums) {
-
         super.onDeals(ds, newnums);
     }
 };
