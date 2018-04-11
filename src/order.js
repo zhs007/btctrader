@@ -70,4 +70,44 @@ function countOrderList(lst) {
     };
 }
 
+// sort asc
+function insertOrder2SortList_Buy(lst, order) {
+    if (lst.length == 0) {
+        lst.push(order);
+
+        return ;
+    }
+
+    for (let i = 0; i < lst.length; ++i) {
+        if (order.price < lst[i].price) {
+            lst.splice(i, 0, order);
+
+            return ;
+        }
+    }
+
+    lst.push(order);
+}
+
+// sort desc
+function insertOrder2SortList_Sell(lst, order) {
+    if (lst.length == 0) {
+        lst.push(order);
+
+        return ;
+    }
+
+    for (let i = 0; i < lst.length; ++i) {
+        if (order.price > lst[i].price) {
+            lst.splice(i, 0, order);
+
+            return ;
+        }
+    }
+
+    lst.push(order);
+}
+
 exports.countOrderList = countOrderList;
+exports.insertOrder2SortList_Buy = insertOrder2SortList_Buy;
+exports.insertOrder2SortList_Sell = insertOrder2SortList_Sell;

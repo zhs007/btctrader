@@ -6,7 +6,7 @@ const { runDNDLink } = require('../src/sim/run');
 const { Trader2 } = require('../src/trader2');
 const { Strategy2_MarketMaker } = require('../src/strategy2/marketmaker');
 // const { Strategy_MarketMaker2 } = require('../src/strategy/marketmaker2');
-// const BTCTraderMgr = require('../src/btctradermgr');
+const OrderMgr = require('../src/ordermgr');
 const fs = require('fs');
 const process = require('process');
 
@@ -18,7 +18,9 @@ let bt = '2018-04-01 13:29:00 UTC';
 let et = '2018-04-02 04:12:00 UTC';
 // let et = '2018-04-05 04:12:00 UTC';
 
-process.nextTick(async () => {
+OrderMgr.singleton.init(cfg, 'btctrader_order2').then(async () => {
+    OrderMgr.singleton.isSimMode = SIMTRADE;
+
     let ds0 = new SIMDBDataStream_DND({
         mysqlcfg: cfg,
         tablename: 'bitmex_bxbt',

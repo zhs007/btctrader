@@ -438,7 +438,7 @@ class BitmexTraderCtrl extends TraderCtrl {
         });
     }
 
-    newOCOOrder(order, callback) {
+    newStopProfitAndLossOrder(order, callback) {
         this.log('debug', order);
 
         let spo = order.lstchild[0];

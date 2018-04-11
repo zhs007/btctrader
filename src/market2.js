@@ -25,16 +25,26 @@ class Market2 {
     }
 
     newLimitOrder(side, price, volume, callback) {
-        let order = OrderMgr.singleton.newLimitOrder(side, this.symbol, price, volume);
+        let order = OrderMgr.singleton.newLimitOrder(this.marketname, side, this.symbol, price, volume);
         if (this.traderctrl) {
             this.traderctrl.newLimitOrder(order, callback);
         }
+        else {
+            if (callback) {
+                callback();
+            }
+        }
     }
 
-    newMarketOrder(side, volume) {
-        let order = OrderMgr.singleton.newLimitOrder(side, this.symbol, price, volume);
+    newMarketOrder(side, volume, callback) {
+        let order = OrderMgr.singleton.newLimitOrder(this.marketname, side, this.symbol, price, volume);
         if (this.traderctrl) {
             this.traderctrl.newLimitOrder(order, callback);
+        }
+        else {
+            if (callback) {
+                callback();
+            }
         }
     }
 
@@ -45,9 +55,28 @@ class Market2 {
             price1 = tp;
         }
 
-        let lst = OrderMgr.singleton.newMakeMarketOrder(ORDERSIDE.BUY, this.symbol, price0, price1, volume);
+        let lst = OrderMgr.singleton.newMakeMarketOrder(this.marketname, ORDERSIDE.BUY, this.symbol, price0, price1, volume);
         if (this.traderctrl) {
             this.traderctrl.newMakeMarketOrder(lst, callback);
+        }
+        else {
+            if (callback) {
+                callback();
+            }
+        }
+
+        return lst;
+    }
+
+    newStopProfitAndLossOrder(side, stopProfit, stopLoss, volume, callback) {
+        let po = OrderMgr.singleton.newStopProfitAndLossOrder(this.marketname, side, this.symbol, stopProfit, stopLoss, volume);
+        if (this.traderctrl) {
+            this.traderctrl.newStopProfitAndLossOrder(po, callback);
+        }
+        else {
+            if (callback) {
+                callback();
+            }
         }
     }
 };

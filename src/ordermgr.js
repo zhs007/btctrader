@@ -2,7 +2,9 @@
 
 const { Mysql } = require('./mysql');
 const { randomInt, randomString, makeInsertSql, makeUpdateSql } = require('./util');
-const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
+const { ORDERSIDE, ORDERTYPE, ORDERSTATE, DEALSINDEX, DEALTYPE } = require('./basedef');
+const { insertOrder2SortList_Buy, insertOrder2SortList_Sell } = require('./order');
+const TradeMgr = require('./trademgr');
 const util = require('util');
 
 const LST_INSORDER_KEY = [
@@ -30,6 +32,156 @@ const LST_UPDORDER_KEY = [
     'ordstate',
 ];
 
+class MarketOrder {
+    constructor() {
+        this.mapOrder = {};
+        this.mapServOrder = {};
+
+        this.lstLimitBuy = [];
+        this.lstLimitSell = [];
+
+        this.lstMarketBuy = [];
+        this.lstMarketSell = [];
+    }
+
+    addOrder(order) {
+        this.mapOrder[order.mainid + '-' + order.indexid] = order;
+
+        if (order.parentindexid) {
+            let cp = this.mapOrder[order.mainid + '-' + order.parentindexid];
+            if (!cp.lstchild) {
+                cp.lstchild = [];
+            }
+
+            cp.lstchild.push(order);
+            order.parent = cp;
+        }
+
+        if (!order.ordid) {
+            this.mapServOrder[order.ordid] = order;
+        }
+
+        if (order.ordtype == ORDERTYPE.LIMIT) {
+            if (order.side == ORDERSIDE.BUY) {
+                insertOrder2SortList_Buy(this.lstLimitBuy, order);
+            }
+            else {
+                insertOrder2SortList_Sell(this.lstLimitSell, order);
+            }
+        }
+        else if (order.ordtype == ORDERTYPE.MARKET) {
+            if (order.side == ORDERSIDE.BUY) {
+                this.lstMarketBuy.push(order);
+            }
+            else {
+                this.lstMarketSell.push(order);
+            }
+        }
+    }
+
+    _onSimDeals_MarketOrder(strategy2, market2, newnums) {
+        for (let i = 0; i < newnums; ++i) {
+            let curdeal = market2.ds.deals[market2.ds.deals.length - newnums + i];
+            if (curdeal[DEALSINDEX.TYPE] == DEALTYPE.BUY) {
+                let cp = curdeal[DEALSINDEX.PRICE];
+                let cv = curdeal[DEALSINDEX.VOLUME];
+                let curtms = curdeal[DEALSINDEX.TMS];
+
+                for (let j = 0; j < this.lstLimitSell.length; ) {
+                    let co = this.lstLimitSell[j];
+                    if (cp >= co.price) {
+                        let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
+                        cv -= ct.volume;
+
+                        strategy2.onOrder(market2.ds.dsindex, co);
+
+                        if (co.lastvolume <= 0) {
+                            this.lstLimitSell.splice(j, 1);
+                        }
+                        else {
+                            ++j;
+                        }
+
+                        if (cv <= 0) {
+                            break;
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                for (let j = 0; j < this.lstMarketSell.length; ) {
+                    let co = this.lstMarketSell[i];
+                    let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
+                    cv -= ct.volume;
+
+                    strategy2.onOrder(market2.ds.dsindex, co);
+
+                    if (co.lastvolume <= 0) {
+                        this.lstMarketSell.splice(j, 1);
+                    }
+                    else {
+                        ++j;
+                    }
+
+                    if (cv <= 0) {
+                        break;
+                    }
+                }
+            }
+            else if (curdeal[DEALSINDEX.TYPE] == DEALTYPE.SELL) {
+                let cp = curdeal[DEALSINDEX.PRICE];
+                let cv = curdeal[DEALSINDEX.VOLUME];
+                let curtms = curdeal[DEALSINDEX.TMS];
+
+                for (let j = 0; j < this.lstLimitBuy.length; ) {
+                    let co = this.lstLimitBuy[j];
+                    if (cp <= co.price) {
+                        let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
+                        cv -= ct.volume;
+
+                        strategy2.onOrder(market2.ds.dsindex, co);
+
+                        if (co.lastvolume <= 0) {
+                            this.lstLimitBuy.splice(j, 1);
+                        }
+                        else {
+                            ++j;
+                        }
+
+                        if (cv <= 0) {
+                            break;
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                for (let j = 0; j < this.lstMarketBuy.length; ) {
+                    let co = this.lstMarketBuy[i];
+                    let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
+                    cv -= ct.volume;
+
+                    strategy2.onOrder(market2.ds.dsindex, co);
+
+                    if (co.lastvolume <= 0) {
+                        this.lstMarketBuy.splice(j, 1);
+                    }
+                    else {
+                        ++j;
+                    }
+
+                    if (cv <= 0) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+};
+
 class OrderMgr {
     constructor() {
         this.cfg = undefined;
@@ -39,9 +191,21 @@ class OrderMgr {
         this.mainid = randomString(8);
         this.curindexid = randomInt(9999) + 10000;
 
-        // this.lstOrder = [];
-        this.mapOrder = {};
-        this.mapServOrder = {};
+        this.mapMarketOrder = {};
+
+        this.isSimMode = false;
+    }
+
+    __addOrder(order) {
+        if (!order.market) {
+            return ;
+        }
+
+        if (!this.mapMarketOrder.hasOwnProperty(order.market)) {
+            this.mapMarketOrder[order.market] = new MarketOrder();
+        }
+
+        this.mapMarketOrder[order.market].addOrder(order);
     }
 
     async init(cfg, tablename) {
@@ -49,6 +213,14 @@ class OrderMgr {
         this.cfg = cfg;
         this.mysql = new Mysql(cfg);
         await this.getOpenOrder();
+    }
+
+    _onDeals_OrderMgr(strategy2, market2, newnums) {
+        if (this.isSimMode) {
+            if (this.mapMarketOrder.hasOwnProperty(market2.marketname)) {
+                this.mapMarketOrder[market2.marketname]._onSimDeals_MarketOrder(strategy2, market2, newnums);
+            }
+        }
     }
 
     async insOrder(order) {
@@ -169,22 +341,7 @@ class OrderMgr {
                     co.closems = cd.closems;
                 }
 
-                if (!co.parentindexid) {
-                    this.mapOrder[co.mainid + '-' + co.indexid] = co;
-                }
-                else {
-                    let cp = this.mapOrder[co.mainid + '-' + co.parentindexid];
-                    if (!cp.lstchild) {
-                        cp.lstchild = [];
-                    }
-
-                    cp.lstchild.push(co);
-                    co.parent = cp;
-                }
-
-                if (!co.ordid) {
-                    this.mapServOrder[co.ordid] = co;
-                }
+                this.__addOrder(co);
             }
         }
         catch (err) {
@@ -192,8 +349,9 @@ class OrderMgr {
         }
     }
 
-    newMarketOrder(side, symbol, volume, funcIns) {
+    newMarketOrder(marketname, side, symbol, volume, funcIns) {
         let co = {
+            market: marketname,
             mainid: this.mainid,
             indexid: this.curindexid++,
             symbol: symbol,
@@ -204,7 +362,7 @@ class OrderMgr {
             openms: new Date().getTime()
         };
 
-        this.mapOrder[co.mainid + '-' + co.indexid] = co;
+        this.__addOrder(co);
 
         this.insOrder(co).then((id) => {
             if (funcIns) {
@@ -215,8 +373,9 @@ class OrderMgr {
         return co;
     }
 
-    newLimitOrder(side, symbol, price, volume, funcIns) {
+    newLimitOrder(marketname, side, symbol, price, volume, funcIns) {
         let co = {
+            market: marketname,
             mainid: this.mainid,
             indexid: this.curindexid++,
             symbol: symbol,
@@ -228,7 +387,7 @@ class OrderMgr {
             openms: new Date().getTime()
         };
 
-        this.mapOrder[co.mainid + '-' + co.indexid] = co;
+        this.__addOrder(co);
 
         this.insOrder(co).then((id) => {
             if (funcIns) {
@@ -239,8 +398,14 @@ class OrderMgr {
         return co;
     }
 
-    newMakeMarketOrder(side, symbol, price0, price1, volume, funcIns) {
+    // make market
+    // buy price0
+    // sell price1
+    newMakeMarketOrder(marketname, side, symbol, price0, price1, volume, funcIns) {
+        console.log('order - makemarket ' + price0 + ' ' + price1);
+
         let po = {
+            market: marketname,
             mainid: this.mainid,
             indexid: this.curindexid++,
             symbol: symbol,
@@ -252,9 +417,10 @@ class OrderMgr {
             openms: new Date().getTime()
         };
 
-        this.mapOrder[po.mainid + '-' + po.indexid] = po;
+        this.__addOrder(po);
 
         let lo = {
+            market: marketname,
             mainid: this.mainid,
             indexid: this.curindexid++,
             symbol: symbol,
@@ -266,7 +432,7 @@ class OrderMgr {
             openms: new Date().getTime()
         };
 
-        this.mapOrder[lo.mainid + '-' + lo.indexid] = lo;
+        this.__addOrder(lo);
 
         let lst = [po, lo];
 
@@ -279,8 +445,12 @@ class OrderMgr {
         return lst;
     }
 
-    newOCOOrder(side, symbol, stopProfit, stopLoss, volume, funcIns) {
+    // stop profit & stop loss
+    // stop loss is market
+    // stop profit is limit
+    newStopProfitAndLossOrder(marketname, side, symbol, stopProfit, stopLoss, volume, funcIns) {
         let mo = {
+            market: marketname,
             mainid: this.mainid,
             indexid: this.curindexid++,
             symbol: symbol,
@@ -291,9 +461,10 @@ class OrderMgr {
             lstchild: []
         };
 
-        this.mapOrder[mo.mainid + '-' + mo.indexid] = mo;
+        this.__addOrder(mo);
 
         let spo = {
+            market: marketname,
             mainid: this.mainid,
             indexid: this.curindexid++,
             symbol: symbol,
@@ -307,9 +478,10 @@ class OrderMgr {
             parent: mo,
         };
 
-        this.mapOrder[spo.mainid + '-' + spo.indexid] = spo;
+        this.__addOrder(spo);
 
         let slo = {
+            market: marketname,
             mainid: this.mainid,
             indexid: this.curindexid++,
             symbol: symbol,
@@ -323,7 +495,7 @@ class OrderMgr {
             parent: mo,
         };
 
-        this.mapOrder[slo.mainid + '-' + slo.indexid] = slo;
+        this.__addOrder(slo);
 
         mo.lstchild.push(spo);
         mo.lstchild.push(slo);

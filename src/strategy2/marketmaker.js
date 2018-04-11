@@ -160,6 +160,8 @@ class Strategy2_MarketMaker extends Strategy2 {
     }
 
     onDeals(dsindex, newnums) {
+        super.onDeals(dsindex, newnums);
+
         let curds = this.lstMarket2[dsindex].ds;
         let curdeal = curds.deals[curds.deals.length - 1];
 
@@ -244,7 +246,7 @@ class Strategy2_MarketMaker extends Strategy2 {
             if (this.lstOrder == undefined) {
                 if (Math.abs(curoff) < Math.abs(this.lastOff) + 0.00013) {
                     if (curoff > 0) {
-                        this.lstMarket2[dsindex].newMakeMarketOrder(this.marketPrice[1] - 1, this.marketPrice[1] + 1, this.curvolume);
+                        this.lstOrder = this.lstMarket2[dsindex].newMakeMarketOrder(this.marketPrice[1] - 1, this.marketPrice[1] + 1, this.curvolume);
 
                         // this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
                         //     ORDERSIDE.SELL,
@@ -256,7 +258,7 @@ class Strategy2_MarketMaker extends Strategy2 {
                         // this.lstMarketInfo[1].market.ctrl.newMakeMarketOrder(this.lstOrder);
                     }
                     else {
-                        this.lstMarket2[dsindex].newMakeMarketOrder(this.marketPrice[1] - 1, this.marketPrice[1] + 1, this.curvolume);
+                        this.lstOrder = this.lstMarket2[dsindex].newMakeMarketOrder(this.marketPrice[1] - 1, this.marketPrice[1] + 1, this.curvolume);
 
                         // this.lstOrder = OrderMgr.singleton.newMakeMarketOrder(
                         //     ORDERSIDE.BUY,
