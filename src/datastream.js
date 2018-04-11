@@ -39,8 +39,8 @@ class DataStream {
         this.mgrData = undefined;
         this.dataCandles = undefined;
 
-        // this.funcOnDepth = undefined;
-        // this.funcOnDeals = undefined;
+        this.funcOnDepth = undefined;
+        this.funcOnDeals = undefined;
         this.funcOnAuth = undefined;
 
         this.orders = [];
@@ -116,9 +116,10 @@ class DataStream {
         if (this.trader2) {
             this.trader2.onDepth(this);
         }
-        // if (this.funcOnDepth) {
-        //     this.funcOnDepth();
-        // }
+
+        if (this.funcOnDepth) {
+            this.funcOnDepth();
+        }
 
         // if (this.strategy != undefined) {
         //     if (this.cfg.simtrade) {
@@ -162,9 +163,9 @@ class DataStream {
             this.trader2.onDeals(this, newnums);
         }
 
-        // if (this.funcOnDeals) {
-        //     this.funcOnDeals(newnums);
-        // }
+        if (this.funcOnDeals) {
+            this.funcOnDeals(newnums);
+        }
 
         // if (this.strategy != undefined) {
         //     if (this.cfg.simtrade) {

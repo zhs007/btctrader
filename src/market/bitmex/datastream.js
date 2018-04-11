@@ -228,7 +228,7 @@ class BitmexDataStream extends WSDataStream {
                 continue;
             }
 
-            let curlocalorder = OrderMgr.singleton.mapOrder[co.clOrdID];
+            let curlocalorder = OrderMgr.singleton.getOrder(this.marketname, co.clOrdID);
             if (curlocalorder == undefined) {
                 continue;
             }
@@ -270,6 +270,7 @@ class BitmexDataStream extends WSDataStream {
                 curlocalorder.ordstate = ORDERSTATE.CANCELED;
             }
 
+            curlocalorder.isupd = true;
             this._onOrder(curlocalorder);
         }
 

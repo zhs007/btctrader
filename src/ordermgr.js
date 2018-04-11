@@ -217,6 +217,14 @@ class OrderMgr {
         await this.getOpenOrder();
     }
 
+    getOrder(marketname, mainindexid) {
+        if (this.mapMarketOrder[marketname]) {
+            return this.mapMarketOrder[marketname].mapOrder[mainindexid];
+        }
+
+        return undefined;
+    }
+
     _onDeals_OrderMgr(market2, newnums) {
         if (Trader2Mgr.singleton.isSimMode) {
             if (this.mapMarketOrder.hasOwnProperty(market2.marketname)) {
