@@ -18,7 +18,7 @@ class Strategy2 {
     }
 
     onDeals(dsindex, newnums) {
-        OrderMgr.singleton._onDeals_OrderMgr(this, this.lstMarket2[dsindex], newnums);
+        OrderMgr.singleton._onDeals_OrderMgr(this.lstMarket2[dsindex], newnums);
     }
 
     onOrder(dsindex, order) {

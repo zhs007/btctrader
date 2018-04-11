@@ -5,6 +5,7 @@ const { randomInt, randomString, makeInsertSql, makeUpdateSql } = require('./uti
 const { ORDERSIDE, ORDERTYPE, ORDERSTATE, DEALSINDEX, DEALTYPE } = require('./basedef');
 const { insertOrder2SortList_Buy, insertOrder2SortList_Sell } = require('./order');
 const TradeMgr = require('./trademgr');
+const Trader2Mgr = require('./trader2mgr');
 const util = require('util');
 
 const LST_INSORDER_KEY = [
@@ -21,7 +22,8 @@ const LST_INSORDER_KEY = [
     'lastvolume',
     'parentindexid',
     'ordstate',
-    'side'
+    'side',
+    'market'
 ];
 
 const LST_UPDORDER_KEY = [
@@ -79,7 +81,7 @@ class MarketOrder {
         }
     }
 
-    _onSimDeals_MarketOrder(strategy2, market2, newnums) {
+    _onSimDeals_MarketOrder(market2, newnums) {
         for (let i = 0; i < newnums; ++i) {
             let curdeal = market2.ds.deals[market2.ds.deals.length - newnums + i];
             if (curdeal[DEALSINDEX.TYPE] == DEALTYPE.BUY) {
@@ -93,7 +95,7 @@ class MarketOrder {
                         let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
                         cv -= ct.volume;
 
-                        strategy2.onOrder(market2.ds.dsindex, co);
+                        market2.ds._onOrder(co);
 
                         if (co.lastvolume <= 0) {
                             this.lstLimitSell.splice(j, 1);
@@ -116,7 +118,7 @@ class MarketOrder {
                     let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
                     cv -= ct.volume;
 
-                    strategy2.onOrder(market2.ds.dsindex, co);
+                    market2.ds._onOrder(co);
 
                     if (co.lastvolume <= 0) {
                         this.lstMarketSell.splice(j, 1);
@@ -141,7 +143,7 @@ class MarketOrder {
                         let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
                         cv -= ct.volume;
 
-                        strategy2.onOrder(market2.ds.dsindex, co);
+                        market2.ds._onOrder(co);
 
                         if (co.lastvolume <= 0) {
                             this.lstLimitBuy.splice(j, 1);
@@ -164,7 +166,7 @@ class MarketOrder {
                     let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
                     cv -= ct.volume;
 
-                    strategy2.onOrder(market2.ds.dsindex, co);
+                    market2.ds._onOrder(co);
 
                     if (co.lastvolume <= 0) {
                         this.lstMarketBuy.splice(j, 1);
@@ -193,7 +195,7 @@ class OrderMgr {
 
         this.mapMarketOrder = {};
 
-        this.isSimMode = false;
+        // this.isSimMode = false;
     }
 
     __addOrder(order) {
@@ -215,10 +217,10 @@ class OrderMgr {
         await this.getOpenOrder();
     }
 
-    _onDeals_OrderMgr(strategy2, market2, newnums) {
-        if (this.isSimMode) {
+    _onDeals_OrderMgr(market2, newnums) {
+        if (Trader2Mgr.singleton.isSimMode) {
             if (this.mapMarketOrder.hasOwnProperty(market2.marketname)) {
-                this.mapMarketOrder[market2.marketname]._onSimDeals_MarketOrder(strategy2, market2, newnums);
+                this.mapMarketOrder[market2.marketname]._onSimDeals_MarketOrder(market2, newnums);
             }
         }
     }
@@ -280,6 +282,8 @@ class OrderMgr {
 
                 return ;
             }
+
+            order.isupd = false;
         }
         catch (err) {
             console.log('OrderMgr.updOrder(' + sql + ') err ' + err);

@@ -2,8 +2,41 @@
 
 const { Mysql } = require('./mysql');
 const { randomInt, randomString, makeInsertSql, makeUpdateSql } = require('./util');
-const { TRADESIDE, TRADEEXECTYPE, ORDERTYPE, ORDERSIDE } = require('./basedef');
+const { TRADESIDE, TRADEEXECTYPE, ORDERTYPE, ORDERSIDE, ORDERSTATE } = require('./basedef');
 const util = require('util');
+
+// trade.market
+// trade.symbol
+// trade.side           - TRADESIDE
+// trade.timems
+// trade.ordervolume
+// trade.orderprice
+// trade.price
+// trade.volume
+// trade.feerate
+// trade.feepaid
+// trade.exectype       - TRADEEXECTYPE
+// trade.ordertype      - ORDERTYPE
+// trade.ordermainid
+// trade.orderindex
+// trade.simid
+
+const LST_INSORDER_KEY = [
+    'market',
+    'symbol',
+    'side',
+    'timems',
+    'ordervolume',
+    'orderprice',
+    'price',
+    'volume',
+    'feerate',
+    'feepaid',
+    'exectype',
+    'ordertype',
+    'ordermainid',
+    'orderindex',
+];
 
 class MarketTrade {
     constructor() {
@@ -36,12 +69,41 @@ class TradeMgr {
         this.tablename = tablename;
         this.cfg = cfg;
         this.mysql = new Mysql(cfg);
+        await this.mysql.connect();
+    }
+
+    async insTrade(trade) {
+        if (this.mysql == undefined) {
+            return -1;
+        }
+
+        let sql = makeInsertSql(this.tablename, trade, (key) => {
+            return LST_INSORDER_KEY.indexOf(key) >= 0;
+        });
+
+        try {
+            let [err, rows, fields] = await this.mysql.run(sql);
+            if (err) {
+                console.log('TradeMgr.insTrade(' + sql + ') err ' + err);
+
+                return -1;
+            }
+
+            return rows.insertId;
+        }
+        catch (err) {
+            console.log('TradeMgr.insTrade(' + sql + ') err ' + err);
+        }
+
+        return -1;
     }
 
     _addTrade(trade) {
         if (!this.mapMarket.hasOwnProperty(trade.market)) {
             this.mapMarket[trade.market] = new MarketTrade();
         }
+
+        this.insTrade(trade);
 
         this.mapMarket[trade.market].addTrade(trade);
     }
@@ -65,6 +127,14 @@ class TradeMgr {
         }
 
         order.lastvolume -= cv;
+        if (order.lastvolume <= 0) {
+            order.closems = timems;
+            order.ordstate = ORDERSTATE.CLOSE;
+        }
+        else {
+            order.ordstate = ORDERSTATE.RUNNING;
+        }
+        order.isupd = true;
 
         let ct = {
             market: order.market,
@@ -74,11 +144,11 @@ class TradeMgr {
             ordervolume: order.volume,
             // orderprice: order.price,
             price: price,
-            volume: volume,
+            volume: cv,
             exectype: TRADEEXECTYPE.TRADE,
             ordertype: order.ordtype,
             ordermainid: order.mainid,
-            orderindex: order.orderindex
+            orderindex: order.indexid
         };
 
         if (ct.hasOwnProperty('price')) {
