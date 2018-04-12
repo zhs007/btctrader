@@ -268,9 +268,15 @@ class BitmexDataStream extends WSDataStream {
 
             if (co.ordStatus == 'Canceled') {
                 curlocalorder.ordstate = ORDERSTATE.CANCELED;
+                curlocalorder.closems = new Date(co.timestamp).getTime();
+                curlocalorder.isupd = true;
+            }
+            else if (co.ordStatus == 'Filled') {
+                curlocalorder.ordstate = ORDERSTATE.CLOSE;
+                curlocalorder.closems = new Date(co.timestamp).getTime();
+                curlocalorder.isupd = true;
             }
 
-            curlocalorder.isupd = true;
             this._onOrder(curlocalorder);
         }
 

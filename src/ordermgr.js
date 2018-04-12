@@ -27,7 +27,7 @@ const LST_INSORDER_KEY = [
 ];
 
 const LST_UPDORDER_KEY = [
-    'orderid',
+    'ordid',
     'closems',
     'avgprice',
     'lastvolume',
