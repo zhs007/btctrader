@@ -15,7 +15,7 @@ const INDICATORCACHEINDEX_RSI = {
 
 //!! https://en.wikipedia.org/wiki/Relative_strength_index
 
-function onDeals_indicator_rsi(ftms, curdeal, lstcache, avgtimes, valtype) {
+function onDeal_indicator_rsi(ftms, curdeal, lstcache, avgtimes, valtype) {
     let cci = lstcache.length - 1;
     let curcache = lstcache[cci];
 
@@ -90,11 +90,11 @@ function onDeals_indicator_rsi(ftms, curdeal, lstcache, avgtimes, valtype) {
 //     return new Indicator_avg(offtms, avgtimes, onDeals_indicator_rsi);
 // }
 
-exports.onDeals_indicator_rsi = onDeals_indicator_rsi;
+exports.onDeal_indicator_rsi = onDeal_indicator_rsi;
 exports.INDICATORCACHEINDEX_RSI = INDICATORCACHEINDEX_RSI;
 
 // exports.newIndicator_rsi = newIndicator_rsi;
 
 IndicatyorMgr.singleton.regIndicator(INDICATOR_RSI, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, onDeals_indicator_rsi);
+    return new Indicator_avg(offtms, avgtimes, onDeal_indicator_rsi);
 });

@@ -12,7 +12,7 @@ const INDICATORCACHEINDEX_EMA = {
 
 //!! https://en.wikipedia.org/wiki/Moving_average
 
-function onDeals_indicator_ema(ftms, curdeal, lstcache, avgtimes, valtype) {
+function onDeal_indicator_ema(ftms, curdeal, lstcache, avgtimes, valtype) {
     let cci = lstcache.length - 1;
     let curcache = lstcache[cci];
 
@@ -64,11 +64,11 @@ function onDeals_indicator_ema(ftms, curdeal, lstcache, avgtimes, valtype) {
 //     return new Indicator_avg(offtms, avgtimes, onDeals_indicator_ema);
 // }
 
-exports.onDeals_indicator_ema = onDeals_indicator_ema;
+exports.onDeal_indicator_ema = onDeal_indicator_ema;
 exports.INDICATORCACHEINDEX_EMA = INDICATORCACHEINDEX_EMA;
 
 // exports.newIndicator_ema = newIndicator_ema;
 
 IndicatyorMgr.singleton.regIndicator(INDICATOR_RSI, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, onDeals_indicator_ema);
+    return new Indicator_avg(offtms, avgtimes, onDeal_indicator_ema);
 });
