@@ -33,17 +33,24 @@ function onDeals_indicator_ema(ftms, curdeal, lstcache, avgtimes, valtype) {
 
     let lastcache = lstcache[lstcache.length - 2];
     if (lastcache[INDICATORCACHEINDEX_EMA.EMA] == null) {
-        let a1 = 1 - 2 / (avgtimes + 1);
         let tp = 0;
-        let tn = 0;
         for (let i = 0; i < avgtimes; ++i) {
-            tp += lstcache[lstcache.length - 1 - i][INDICATORCACHEINDEX_EMA.PRICE] * Math.pow(a1, i);
-            tn += Math.pow(a1, i);
+            tp += lstcache[lstcache.length - 1 - i][INDICATORCACHEINDEX_EMA.PRICE];
         }
 
-        curcache[INDICATORCACHEINDEX_EMA.EMA] = tp / tn;
-
+        curcache[INDICATORCACHEINDEX_EMA.EMA] = tp / avgtimes;
         return curcache[INDICATORCACHEINDEX_EMA.EMA];
+        // let a1 = 1 - 2 / (avgtimes + 1);
+        // let tp = 0;
+        // let tn = 0;
+        // for (let i = 0; i < avgtimes; ++i) {
+        //     tp += lstcache[lstcache.length - 1 - i][INDICATORCACHEINDEX_EMA.PRICE] * Math.pow(a1, i);
+        //     tn += Math.pow(a1, i);
+        // }
+        //
+        // curcache[INDICATORCACHEINDEX_EMA.EMA] = tp / tn;
+        //
+        // return curcache[INDICATORCACHEINDEX_EMA.EMA];
     }
 
     curcache[INDICATORCACHEINDEX_EMA.EMA] = lastcache[INDICATORCACHEINDEX_EMA.EMA] + (curcache[INDICATORCACHEINDEX_EMA.PRICE] - lastcache[INDICATORCACHEINDEX_EMA.EMA]) * 2 / (avgtimes + 1);
