@@ -2,17 +2,15 @@
 
 const { DEALSINDEX } = require('../basedef');
 const { Indicator_avg, INDICATORAVGCACHEINDEX, INDICATORDEALVALTYPE } = require('./indicator');
-const { INDICATOR_SMA } = require('./indicatordef');
+const { INDICATOR_COUPLING } = require('./indicatordef');
 const IndicatyorMgr = require('./indicatormgr');
 
-const INDICATORCACHEINDEX_SMA = {
+const INDICATORCACHEINDEX_COUPLING = {
     PRICE:  1,
     SMA:    2
 };
 
-//!! https://en.wikipedia.org/wiki/Moving_average
-
-function onDeals_indicator_sma(ftms, curdeal, lstcache, avgtimes, valtype) {
+function onDeals_indicator_coupling(ftms, curdeal, lstcache, avgtimes, valtype) {
     let cci = lstcache.length - 1;
     let curcache = lstcache[cci];
 
@@ -47,15 +45,15 @@ function onDeals_indicator_sma(ftms, curdeal, lstcache, avgtimes, valtype) {
     return curcache[INDICATORCACHEINDEX_SMA.SMA];
 }
 
-// function newIndicator_sma(offtms, avgtimes) {
-//     return new Indicator_avg(offtms, avgtimes, onDeals_indicator_sma);
+// function newIndicator_coupling(offtms, avgtimes) {
+//     return new Indicator_avg(offtms, avgtimes, onDeals_indicator_coupling);
 // }
 
-exports.onDeals_indicator_sma = onDeals_indicator_sma;
-exports.INDICATORCACHEINDEX_SMA = INDICATORCACHEINDEX_SMA;
+exports.onDeals_indicator_coupling = onDeals_indicator_coupling;
+exports.INDICATORCACHEINDEX_COUPLING = INDICATORCACHEINDEX_COUPLING;
 
-// exports.newIndicator_sma = newIndicator_sma;
+// exports.newIndicator_coupling = newIndicator_coupling;
 
-IndicatyorMgr.singleton.regIndicator(INDICATOR_SMA, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, onDeals_indicator_sma);
+IndicatyorMgr.singleton.regIndicator(INDICATOR_COUPLING, (offtms, avgtimes) => {
+    return new Indicator_avg(offtms, avgtimes, onDeals_indicator_coupling);
 });

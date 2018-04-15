@@ -2,6 +2,8 @@
 
 const { DEALSINDEX } = require('../basedef');
 const { Indicator_avg, INDICATORAVGCACHEINDEX, INDICATORDEALVALTYPE } = require('./indicator');
+const { INDICATOR_EMA } = require('./indicatordef');
+const IndicatyorMgr = require('./indicatormgr');
 
 const INDICATORCACHEINDEX_EMA = {
     PRICE:          1,
@@ -58,11 +60,15 @@ function onDeals_indicator_ema(ftms, curdeal, lstcache, avgtimes, valtype) {
     return curcache[INDICATORCACHEINDEX_EMA.EMA];
 }
 
-function newIndicator_ema(offtms, avgtimes) {
-    return new Indicator_avg(offtms, avgtimes, onDeals_indicator_ema);
-}
+// function newIndicator_ema(offtms, avgtimes) {
+//     return new Indicator_avg(offtms, avgtimes, onDeals_indicator_ema);
+// }
 
 exports.onDeals_indicator_ema = onDeals_indicator_ema;
 exports.INDICATORCACHEINDEX_EMA = INDICATORCACHEINDEX_EMA;
 
-exports.newIndicator_ema = newIndicator_ema;
+// exports.newIndicator_ema = newIndicator_ema;
+
+IndicatyorMgr.singleton.regIndicator(INDICATOR_RSI, (offtms, avgtimes) => {
+    return new Indicator_avg(offtms, avgtimes, onDeals_indicator_ema);
+});

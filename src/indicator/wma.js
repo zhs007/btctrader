@@ -2,6 +2,8 @@
 
 const { DEALSINDEX } = require('../basedef');
 const { Indicator_avg, INDICATORAVGCACHEINDEX, INDICATORDEALVALTYPE } = require('./indicator');
+const { INDICATOR_WMA } = require('./indicatordef');
+const IndicatyorMgr = require('./indicatormgr');
 
 const INDICATORCACHEINDEX_WMA = {
     PRICE:          1,
@@ -57,11 +59,15 @@ function onDeals_indicator_wma(ftms, curdeal, lstcache, avgtimes, valtype) {
     return curcache[INDICATORCACHEINDEX_WMA.NUMERATOR] / curcache[INDICATORCACHEINDEX_WMA.DENOMINATOR];
 }
 
-function newIndicator_wma(offtms, avgtimes) {
-    return new Indicator_avg(offtms, avgtimes, onDeals_indicator_wma);
-}
+// function newIndicator_wma(offtms, avgtimes) {
+//     return new Indicator_avg(offtms, avgtimes, onDeals_indicator_wma);
+// }
 
 exports.onDeals_indicator_wma = onDeals_indicator_wma;
 exports.INDICATORCACHEINDEX_WMA = INDICATORCACHEINDEX_WMA;
 
-exports.newIndicator_wma = newIndicator_wma;
+// exports.newIndicator_wma = newIndicator_wma;
+
+IndicatyorMgr.singleton.regIndicator(INDICATOR_WMA, (offtms, avgtimes) => {
+    return new Indicator_avg(offtms, avgtimes, onDeals_indicator_wma);
+});
