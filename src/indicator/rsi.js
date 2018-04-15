@@ -57,7 +57,7 @@ function onDeals_indicator_rsi(ftms, curdeal, lstcache, avgtimes, valtype) {
         return 100 - 100 / (1 + curcache[INDICATORCACHEINDEX_RSI.SMMA_U] / curcache[INDICATORCACHEINDEX_RSI.SMMA_D]);
     }
 
-    if (lastcache[INDICATORCACHEINDEX_RSI.SMMA_U] == null || lastcache[INDICATORCACHEINDEX_RSI.SMMA_D] == null) {
+    if (lastcache[INDICATORCACHEINDEX_RSI.SMMA_U] == null) {
         let tu = 0, td = 0;
         for (let i = 0; i < avgtimes; ++i) {
             tu += lstcache[lstcache.length - 1 - i][INDICATORCACHEINDEX_RSI.CUR_U];
