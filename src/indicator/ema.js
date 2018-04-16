@@ -70,5 +70,5 @@ exports.INDICATORCACHEINDEX_EMA = INDICATORCACHEINDEX_EMA;
 // exports.newIndicator_ema = newIndicator_ema;
 
 IndicatyorMgr.singleton.regIndicator(INDICATOR_RSI, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, onDeal_indicator_ema);
+    return new Indicator_avg(offtms, 1, avgtimes, onDeal_indicator_ema);
 });

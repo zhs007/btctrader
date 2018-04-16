@@ -96,5 +96,5 @@ exports.INDICATORCACHEINDEX_RSI = INDICATORCACHEINDEX_RSI;
 // exports.newIndicator_rsi = newIndicator_rsi;
 
 IndicatyorMgr.singleton.regIndicator(INDICATOR_RSI, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, onDeal_indicator_rsi);
+    return new Indicator_avg(offtms, 1, avgtimes, onDeal_indicator_rsi);
 });

@@ -6,56 +6,129 @@ const { INDICATOR_COUNTBACKLINE } = require('./indicatordef');
 const IndicatyorMgr = require('./indicatormgr');
 
 const INDICATORCACHEINDEX_COUNTBACKLINE = {
-    PRICE:  1,
-    SMA:    2
+    PRICE_H:    1,
+    PRICE_L:    2,
+    POFF_H:     3,
+    POFF_L:     4,
+    CBL_D:      5,
+    CBL_U:      6,
 };
 
-//!! https://en.wikipedia.org/wiki/Moving_average
-
-function onDeal_indicator_sma(ftms, curdeal, lstcache, avgtimes, valtype) {
+function onDeal_indicator_countbackline(ftms, curdeal, lstcache, avgtimes, valtype) {
     let cci = lstcache.length - 1;
     let curcache = lstcache[cci];
 
     if (curcache.length == 1) {
         curcache.push(curdeal[DEALSINDEX.PRICE]);
+        curcache.push(curdeal[DEALSINDEX.PRICE]);
+        curcache.push(0);
+        curcache.push(0);
+        curcache.push(null);
         curcache.push(null);
     }
     else {
-        curcache[INDICATORCACHEINDEX_SMA.PRICE] = curdeal[DEALSINDEX.PRICE];
+        if (curdeal[DEALSINDEX.PRICE] > curcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H]) {
+            curcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H] = curdeal[DEALSINDEX.PRICE];
+        }
+
+        if (curdeal[DEALSINDEX.PRICE] < curcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L]) {
+            curcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L] = curdeal[DEALSINDEX.PRICE];
+        }
     }
+
+    if (lstcache.length <= 1) {
+        return undefined;
+    }
+
+    let lastcache = lstcache[lstcache.length - 2];
+
+    curcache[INDICATORCACHEINDEX_COUNTBACKLINE.POFF_H] = curcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H] - lastcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H];
+    curcache[INDICATORCACHEINDEX_COUNTBACKLINE.POFF_L] = curcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L] - lastcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L];
 
     if (lstcache.length < avgtimes) {
         return undefined;
     }
 
     if (avgtimes == 1) {
-        return curcache[INDICATORCACHEINDEX_SMA.PRICE];
+        return undefined;
     }
 
-    let lastcache = lstcache[lstcache.length - 2];
-    if (lastcache[INDICATORCACHEINDEX_SMA.SMA] == null) {
-        let tp = 0;
-        for (let i = 0; i < avgtimes; ++i) {
-            tp += lstcache[lstcache.length - 1 - i][INDICATORCACHEINDEX_SMA.PRICE];
+    if (curcache[INDICATORCACHEINDEX_COUNTBACKLINE.POFF_H] > 0 && lastcache[INDICATORCACHEINDEX_COUNTBACKLINE.POFF_H] < 0) {
+        let ccn = undefined;
+        let ci = 1;
+        for (let i = 0; i < lstcache.length - 2; ++i) {
+            let cc = lstcache[lstcache.length - 3 - i];
+            if (cc[INDICATORCACHEINDEX_COUNTBACKLINE.POFF_H] >= 0) {
+                break;
+            }
+
+            if (ccn == undefined) {
+                if (cc[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H] > curcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H]) {
+                    ccn = cc;
+                    ++ci;
+                }
+            }
+            else {
+                if (cc[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H] > ccn[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H]) {
+                    ccn = cc;
+                    ++ci;
+                }
+            }
+
+            if (ci >= avgtimes) {
+                break;
+            }
         }
 
-        curcache[INDICATORCACHEINDEX_SMA.SMA] = tp / avgtimes;
-        return curcache[INDICATORCACHEINDEX_SMA.SMA];
+        if (ccn != undefined && ci >= avgtimes) {
+            curcache[INDICATORCACHEINDEX_COUNTBACKLINE.CBL_U] = ccn[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_H];
+        }
     }
 
-    curcache[INDICATORCACHEINDEX_SMA.SMA] = lastcache[INDICATORCACHEINDEX_SMA.SMA] + curdeal[DEALSINDEX.PRICE] / avgtimes - lstcache[lstcache.length - 1 - avgtimes][INDICATORCACHEINDEX_SMA.PRICE] / avgtimes;
-    return curcache[INDICATORCACHEINDEX_SMA.SMA];
+    if (curcache[INDICATORCACHEINDEX_COUNTBACKLINE.POFF_L] < 0 && lastcache[INDICATORCACHEINDEX_COUNTBACKLINE.POFF_L] > 0) {
+        let ccn = undefined;
+        let ci = 1;
+        for (let i = 0; i < lstcache.length - 2; ++i) {
+            let cc = lstcache[lstcache.length - 3 - i];
+            if (cc[INDICATORCACHEINDEX_COUNTBACKLINE.POFF_L] <= 0) {
+                break;
+            }
+
+            if (ccn == undefined) {
+                if (cc[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L] < curcache[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L]) {
+                    ccn = cc;
+                    ++ci;
+                }
+            }
+            else {
+                if (cc[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L] < ccn[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L]) {
+                    ccn = cc;
+                    ++ci;
+                }
+            }
+
+            if (ci >= avgtimes) {
+                break;
+            }
+        }
+
+        if (ccn != undefined && ci >= avgtimes) {
+            curcache[INDICATORCACHEINDEX_COUNTBACKLINE.CBL_D] = ccn[INDICATORCACHEINDEX_COUNTBACKLINE.PRICE_L];
+        }
+    }
+
+    return [curcache[INDICATORCACHEINDEX_COUNTBACKLINE.CBL_U], curcache[INDICATORCACHEINDEX_COUNTBACKLINE.CBL_D]];
 }
 
 // function newIndicator_sma(offtms, avgtimes) {
 //     return new Indicator_avg(offtms, avgtimes, onDeals_indicator_sma);
 // }
 
-exports.onDeal_indicator_sma = onDeal_indicator_sma;
-exports.INDICATORCACHEINDEX_SMA = INDICATORCACHEINDEX_SMA;
+exports.onDeal_indicator_countbackline = onDeal_indicator_countbackline;
+exports.INDICATORCACHEINDEX_COUNTBACKLINE = INDICATORCACHEINDEX_COUNTBACKLINE;
 
 // exports.newIndicator_sma = newIndicator_sma;
 
 IndicatyorMgr.singleton.regIndicator(INDICATOR_COUNTBACKLINE, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, onDeal_indicator_sma);
+    return new Indicator_avg(offtms, 2, avgtimes, onDeal_indicator_countbackline);
 });

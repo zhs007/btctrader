@@ -72,5 +72,5 @@ exports.INDICATORCACHEINDEX_COUPLING = INDICATORCACHEINDEX_COUPLING;
 // exports.newIndicator_coupling = newIndicator_coupling;
 
 IndicatyorMgr.singleton.regIndicator(INDICATOR_COUPLING, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, undefined, onDeal2_indicator_coupling);
+    return new Indicator_avg(offtms, 1, avgtimes, undefined, onDeal2_indicator_coupling);
 });

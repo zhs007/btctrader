@@ -57,5 +57,5 @@ exports.INDICATORCACHEINDEX_SMMA = INDICATORCACHEINDEX_SMMA;
 // exports.newIndicator_smma = newIndicator_smma;
 
 IndicatyorMgr.singleton.regIndicator(INDICATOR_SMMA, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, onDeal_indicator_smma);
+    return new Indicator_avg(offtms, 1, avgtimes, onDeal_indicator_smma);
 });

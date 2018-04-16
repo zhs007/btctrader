@@ -69,5 +69,5 @@ exports.INDICATORCACHEINDEX_WMA = INDICATORCACHEINDEX_WMA;
 // exports.newIndicator_wma = newIndicator_wma;
 
 IndicatyorMgr.singleton.regIndicator(INDICATOR_WMA, (offtms, avgtimes) => {
-    return new Indicator_avg(offtms, avgtimes, onDeal_indicator_wma);
+    return new Indicator_avg(offtms, 1, avgtimes, onDeal_indicator_wma);
 });

@@ -7,5 +7,6 @@ exports.INDICATOR_SSMA              = 'ssma';
 exports.INDICATOR_RSI               = 'rsi';
 
 exports.INDICATOR_COUNTBACKLINE     = 'countbackline';
+exports.INDICATOR_AROON             = 'aroon';
 
 exports.INDICATOR_COUPLING          = 'coupling';
