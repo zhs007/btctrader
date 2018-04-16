@@ -40,7 +40,7 @@ function onDeal_indicator_rsi(ftms, curdeal, lstcache, avgtimes, valtype) {
         curcache[INDICATORCACHEINDEX_RSI.CUR_D] = 0;
     }
     else {
-        curcache[INDICATORCACHEINDEX_RSI.CUR_D] = curcache[INDICATORCACHEINDEX_RSI.PRICE] - lastcache[INDICATORCACHEINDEX_RSI.PRICE];
+        curcache[INDICATORCACHEINDEX_RSI.CUR_D] = lastcache[INDICATORCACHEINDEX_RSI.PRICE] - curcache[INDICATORCACHEINDEX_RSI.PRICE];
         curcache[INDICATORCACHEINDEX_RSI.CUR_U] = 0;
     }
 

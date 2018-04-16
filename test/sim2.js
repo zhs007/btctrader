@@ -1,10 +1,13 @@
 "use strict";
 
+require('../src/indicator/allindicator');
+
 const { SIMDBDataStream_DND } = require('../src/sim/simds_dnd');
 const { runDNDLink } = require('../src/sim/run');
 
 const { Trader2 } = require('../src/trader2');
-const { Strategy2_MarketMaker } = require('../src/strategy2/marketmaker');
+const { Strategy2_MarketMaker3 } = require('../src/strategy2/marketmaker3');
+const { Strategy2_CountBackLine } = require('../src/strategy2/countbackline');
 // const { Strategy_MarketMaker2 } = require('../src/strategy/marketmaker2');
 const Trader2Mgr = require('../src/trader2mgr');
 const fs = require('fs');
@@ -40,7 +43,7 @@ Trader2Mgr.singleton.init(cfg, 'btctrader_order2', 'btctrader_trade2', SIMTRADE)
     });
 
     let trader = new Trader2();
-    trader.setStrategy2(new Strategy2_MarketMaker());
+    trader.setStrategy2(new Strategy2_CountBackLine());
     trader.addDataStream('bg', 'bxbt', ds0, undefined);
     trader.addDataStream('bitmex', 'xbtusd', ds1, undefined);
     trader.start();

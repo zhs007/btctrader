@@ -159,6 +159,14 @@ class Indicator {
 
         return this.lstData[ci];
     }
+
+    getLastVal() {
+        if (this.lstData.length > 0) {
+            return this.lstData[this.lstData.length - 1];
+        }
+
+        return undefined;
+    }
 };
 
 const INDICATORAVGCACHEINDEX = {
