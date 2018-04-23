@@ -116,6 +116,9 @@ class TradeMgr {
             order.lastvolume = order.volume;
         }
 
+        order.lastturnvolume = order.volume - order.lastvolume;
+        order.lastturnprice = order.avgprice;
+
         if (order.lastvolume <= volume) {
             cv = order.lastvolume;
         }

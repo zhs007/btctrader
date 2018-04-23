@@ -27,6 +27,8 @@ const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 // order.alreadyvolume  - sim mode
 // order.thisturnvolume - sim mode
 // order.thisturnprice  - sim mode
+// order.lastturnvolume - sim mode
+// order.lastturnprice  - sim mode
 
 function countOrderList(lst) {
     let v = 0;

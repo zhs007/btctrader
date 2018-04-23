@@ -62,19 +62,23 @@ class MarketOrder {
     }
 
     removeOrder(market2, order) {
-        order.orderstate = ORDERSTATE.CANCEL;
+        order.ordstate = ORDERSTATE.CANCEL;
 
+        //!! proc order with sim mode
         if (Trader2Mgr.singleton.isSimMode) {
 
             if (!order.hasOwnProperty('lastvolume')) {
                 order.lastvolume = order.volume;
             }
 
+            order.lastturnvolume = order.volume - order.lastvolume;
+            order.lastturnprice = order.avgprice;
+
             if (order.lastvolume == order.volume) {
-                order.orderstate = ORDERSTATE.FULLCANCELED;
+                order.ordstate = ORDERSTATE.FULLCANCELED;
             }
             else {
-                order.orderstate = ORDERSTATE.CANCELED;
+                order.ordstate = ORDERSTATE.CANCELED;
             }
 
             order.lastvolume = 0;

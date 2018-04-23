@@ -6,6 +6,7 @@ const { Strategy2 } = require('../strategy2');
 const { DEPTHINDEX, DEALSINDEX, DEALTYPE, STRATEGYSTATE, ORDERSTATE, ORDERSIDE } = require('../basedef');
 const { countPriceWithDepth_asks_depth2, countPriceWithDepth_bids_depth2 } = require('../util');
 const { countOrderList } = require('../order');
+const { initPosition, onOrder_position } = require('../position');
 const OrderMgr = require('../ordermgr');
 const { INDICATOR_RSI, INDICATOR_COUPLING } = require('../indicator/indicatordef');
 const IndicatyorMgr = require('../indicator/indicatormgr');
@@ -37,9 +38,10 @@ class Strategy2_MarketMaker5 extends Strategy2 {
 
         this.marketPrice = [0, 0];
 
-        this.volume = 0;
-        this.avgprice = 0;
-        this.money = 0;
+        this.position = initPosition(0, 0, 0);
+        // this.volume = 0;
+        // this.avgprice = 0;
+        // this.money = 0;
 
         this.stoplossprice = 0;
 
@@ -83,12 +85,12 @@ class Strategy2_MarketMaker5 extends Strategy2 {
             this.lstMarket2[1].cancelOrder(this.orderSell);
         }
 
-        if (this.volume > 0) {
-            this.orderStopLoss = this.lstMarket2[1].newMarketOrder(ORDERSIDE.SELL, this.volume);
+        if (this.position.volume > 0) {
+            this.orderStopLoss = this.lstMarket2[1].newMarketOrder(ORDERSIDE.SELL, this.position.volume);
         }
 
-        if (this.volume < 0) {
-            this.orderStopLoss = this.lstMarket2[1].newMarketOrder(ORDERSIDE.BUY, -this.volume);
+        if (this.position.volume < 0) {
+            this.orderStopLoss = this.lstMarket2[1].newMarketOrder(ORDERSIDE.BUY, -this.position.volume);
         }
     }
 
@@ -141,10 +143,10 @@ class Strategy2_MarketMaker5 extends Strategy2 {
         }
 
         if (dsindex == 1) {
-            if (this.volume > 0 && curdeal[1][DEALSINDEX.PRICE] < this.stoplossprice) {
+            if (this.position.volume > 0 && curdeal[1][DEALSINDEX.PRICE] < this.stoplossprice) {
                 this.stoploss();
             }
-            else if (this.volume < 0 && curdeal[1][DEALSINDEX.PRICE] > this.stoplossprice) {
+            else if (this.position.volume < 0 && curdeal[1][DEALSINDEX.PRICE] > this.stoplossprice) {
                 this.stoploss();
             }
 
@@ -159,17 +161,17 @@ class Strategy2_MarketMaker5 extends Strategy2 {
                     let curask = curds[1].asks[0];
                     let curbid = curds[1].bids[0];
 
-                    if (this.volume == 0) {
+                    if (this.position.volume == 0) {
                         if (curask[DEPTHINDEX.VOLUME] >= 100000 && curbid[DEPTHINDEX.VOLUME] >= 100000) {
                             if (this.orderBuy == undefined && this.orderSell == undefined) {
                                 this.newOrder(curbid[DEPTHINDEX.PRICE], this.unitvolume, curask[DEPTHINDEX.PRICE], this.unitvolume);
                             }
                         }
                     }
-                    else if (this.volume > 0) {
+                    else if (this.position.volume > 0) {
                         if (curbid[DEPTHINDEX.VOLUME] >= 100000 && curbid[DEPTHINDEX.VOLUME] > curask[DEPTHINDEX.VOLUME] * 2) {
-                            let np = curbid[DEPTHINDEX.PRICE] - Math.floor(this.volume / this.unitvolume) * 2;
-                            let ap = (this.avgprice * this.volume + np * this.unitvolume) / (this.volume + this.unitvolume);
+                            let np = curbid[DEPTHINDEX.PRICE] - Math.floor(this.position.volume / this.unitvolume) * 2;
+                            let ap = (this.position.avgprice * this.position.volume + np * this.unitvolume) / (this.position.volume + this.unitvolume);
                             let sp = ap + 1;
 
                             if (sp <= curask[DEPTHINDEX.PRICE]) {
@@ -181,8 +183,8 @@ class Strategy2_MarketMaker5 extends Strategy2 {
                     }
                     else {
                         if (curask[DEPTHINDEX.VOLUME] >= 100000 && curask[DEPTHINDEX.VOLUME] > curbid[DEPTHINDEX.VOLUME] * 2) {
-                            let np = curask[DEPTHINDEX.PRICE] + Math.floor(-this.volume / this.unitvolume) * 2;
-                            let ap = (this.avgprice * -this.volume + np * this.unitvolume) / (-this.volume + this.unitvolume);
+                            let np = curask[DEPTHINDEX.PRICE] + Math.floor(-this.position.volume / this.unitvolume) * 2;
+                            let ap = (this.position.avgprice * -this.position.volume + np * this.unitvolume) / (-this.position.volume + this.unitvolume);
                             let bp = ap - 1;
 
                             if (bp >= curbid[DEPTHINDEX.PRICE]) {
@@ -207,88 +209,115 @@ class Strategy2_MarketMaker5 extends Strategy2 {
 
     onOrder(market, order) {
         if (this.orderBuy != undefined) {
-            if (order.lastvolume == 0 && this.orderBuy.mainid == order.mainid && this.orderBuy.indexid == order.indexid) {
+            if (this.orderBuy.mainid == order.mainid && this.orderBuy.indexid == order.indexid) {
+                onOrder_position(this.position, order);
 
-                if (order.ordstate == ORDERSTATE.CLOSE) {
-                    let avgprice = order.avgprice;
+                this.stoplossprice = this.position.avgprice * 0.99;
+                console.log('buy money ' + this.position.money + ' ' + this.position.volume);
 
-                    if (this.volume > 0) {
-                        avgprice = (order.avgprice * order.volume + this.volume * this.avgprice) / (this.volume + order.volume);
-                    }
-                    else if (this.volume < 0 && order.volume < -this.volume) {
-                        avgprice = this.avgprice;
-                    }
-
-                    this.avgprice = avgprice;
-                    this.volume += order.volume;
-
-                    this.money -= order.volume * order.avgprice;
-
-                    this.stoplossprice = this.avgprice * 0.99;
-
-                    console.log('money ' + this.money + ' ' + this.volume);
+                if (order.lastvolume == 0) {
+                    this.orderBuy = undefined;
                 }
 
-                this.orderBuy = undefined;
+                // if (order.ordstate == ORDERSTATE.CLOSE) {
+                //     let avgprice = order.avgprice;
+                //
+                //     if (this.volume > 0) {
+                //         avgprice = (order.avgprice * order.volume + this.volume * this.avgprice) / (this.volume + order.volume);
+                //     }
+                //     else if (this.volume < 0 && order.volume < -this.volume) {
+                //         avgprice = this.avgprice;
+                //     }
+                //
+                //     this.avgprice = avgprice;
+                //     this.volume += order.volume;
+                //
+                //     this.money -= order.volume * order.avgprice;
+                //
+                //     this.stoplossprice = this.avgprice * 0.99;
+                //
+                //     console.log('buy money ' + this.money + ' ' + this.volume);
+                // }
+                //
+                // this.orderBuy = undefined;
             }
         }
 
         if (this.orderSell != undefined) {
-            if (order.lastvolume == 0 && this.orderSell.mainid == order.mainid && this.orderSell.indexid == order.indexid) {
+            if (this.orderSell.mainid == order.mainid && this.orderSell.indexid == order.indexid) {
+                onOrder_position(this.position, order);
 
-                if (order.ordstate == ORDERSTATE.CLOSE) {
-                    let avgprice = order.avgprice;
+                this.stoplossprice = this.position.avgprice * 1.01;
+                console.log('sell money ' + this.position.money + ' ' + this.position.volume);
 
-                    if (this.volume < 0) {
-                        avgprice = (order.avgprice * order.volume + -this.volume * this.avgprice) / (-this.volume + order.volume);
-                    }
-                    else if (this.volume > 0 && order.volume < this.volume) {
-                        avgprice = this.avgprice;
-                    }
-
-                    this.avgprice = avgprice;
-                    this.volume -= order.volume;
-
-                    this.money += order.volume * order.avgprice;
-
-                    console.log('money ' + this.money + ' ' + this.volume);
-
-                    this.stoplossprice = this.avgprice * 1.01;
+                if (order.lastvolume == 0) {
+                    this.orderSell = undefined;
                 }
 
-                this.orderSell = undefined;
+                // if (order.ordstate == ORDERSTATE.CLOSE) {
+                //     let avgprice = order.avgprice;
+                //
+                //     if (this.volume < 0) {
+                //         avgprice = (order.avgprice * order.volume + -this.volume * this.avgprice) / (-this.volume + order.volume);
+                //     }
+                //     else if (this.volume > 0 && order.volume < this.volume) {
+                //         avgprice = this.avgprice;
+                //     }
+                //
+                //     this.avgprice = avgprice;
+                //     this.volume -= order.volume;
+                //
+                //     this.money += order.volume * order.avgprice;
+                //
+                //     console.log('sell money ' + this.money + ' ' + this.volume);
+                //
+                //     this.stoplossprice = this.avgprice * 1.01;
+                // }
+                //
+                // this.orderSell = undefined;
             }
         }
 
         if (this.orderStopLoss != undefined) {
-            if (order.lastvolume == 0 && this.orderStopLoss.mainid == order.mainid && this.orderStopLoss.indexid == order.indexid) {
+            if (this.orderStopLoss.mainid == order.mainid && this.orderStopLoss.indexid == order.indexid) {
 
-                let avgprice = order.avgprice;
+                onOrder_position(this.position, order);
 
-                if (this.volume < 0) {
-                    avgprice = (order.avgprice * order.volume + -this.volume * this.avgprice) / (-this.volume + order.volume);
-                }
-                else if (this.volume > 0 && order.volume < this.volume) {
-                    avgprice = this.avgprice;
-                }
+                // this.stoplossprice = this.position.avgprice * 1.01;
+                console.log('stoploss money ' + this.position.money + ' ' + this.position.volume);
 
-                this.avgprice = avgprice;
-
-                if (this.volume > 0) {
-                    this.volume -= order.volume;
-                }
-                else if (this.volume < 0) {
-                    this.volume += order.volume;
+                if (order.lastvolume == 0) {
+                    this.orderStopLoss = undefined;
                 }
 
-                if (this.orderStopLoss.side == ORDERSIDE.BUY) {
-                    this.money -= order.volume * order.avgprice;
-                }
-                else {
-                    this.money += order.volume * order.avgprice;
-                }
-
-                this.orderStopLoss = undefined;
+                // let avgprice = order.avgprice;
+                //
+                // if (this.volume < 0) {
+                //     avgprice = (order.avgprice * order.volume + -this.volume * this.avgprice) / (-this.volume + order.volume);
+                // }
+                // else if (this.volume > 0 && order.volume < this.volume) {
+                //     avgprice = this.avgprice;
+                // }
+                //
+                // this.avgprice = avgprice;
+                //
+                // if (this.volume > 0) {
+                //     this.volume -= order.volume;
+                // }
+                // else if (this.volume < 0) {
+                //     this.volume += order.volume;
+                // }
+                //
+                // if (this.orderStopLoss.side == ORDERSIDE.BUY) {
+                //     this.money -= order.volume * order.avgprice;
+                // }
+                // else {
+                //     this.money += order.volume * order.avgprice;
+                // }
+                //
+                // console.log('stoploss money ' + this.money + ' ' + this.volume);
+                //
+                // this.orderStopLoss = undefined;
             }
         }
     }
