@@ -150,14 +150,14 @@ class Strategy2_MarketMaker2 extends Strategy2 {
         this.lstOrder = undefined;
     }
 
-    newOrder(side) {
-        if (this.orderstate != 0) {
-            return ;
-        }
-
-        this.orderstate++;
-        this.lstMarketInfo[1].market.ctrl.newMarketOrder(side == 1, 1);
-    }
+    // newOrder(side) {
+    //     if (this.orderstate != 0) {
+    //         return ;
+    //     }
+    //
+    //     this.orderstate++;
+    //     this.lstMarketInfo[1].market.ctrl.newMarketOrder(side == 1, 1);
+    // }
 
     onDeals(dsindex, newnums) {
         super.onDeals(dsindex, newnums);

@@ -3,6 +3,7 @@
 const { Mysql } = require('./mysql');
 const { randomInt, randomString, makeInsertSql, makeUpdateSql } = require('./util');
 const { TRADESIDE, TRADEEXECTYPE, ORDERTYPE, ORDERSIDE, ORDERSTATE } = require('./basedef');
+const { addTrade2Order } = require('./order');
 const util = require('util');
 
 // trade.market
@@ -134,6 +135,7 @@ class TradeMgr {
         else {
             order.ordstate = ORDERSTATE.RUNNING;
         }
+
         order.isupd = true;
 
         let ct = {
@@ -163,6 +165,8 @@ class TradeMgr {
         }
 
         this._addTrade(ct);
+
+        addTrade2Order(order, ct);
 
         return ct;
     }

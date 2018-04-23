@@ -9,7 +9,7 @@ const { countOrderList } = require('../order');
 const OrderMgr = require('../ordermgr');
 const { ORDERSIDE } = require('../basedef');
 const IndicatyorMgr = require('../indicator/indicatormgr');
-const { INDICATOR_RSI, INDICATOR_COUPLING } = require('../indicator/indicatordef')
+const { INDICATOR_RSI, INDICATOR_COUPLING } = require('../indicator/indicatordef');
 
 class TimePrice {
     constructor(nums, timeoff) {

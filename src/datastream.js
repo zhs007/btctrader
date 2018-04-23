@@ -4,8 +4,8 @@ const { Candles } = require('./data/candles');
 const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('./basedef');
 const OrderMgr = require('./ordermgr');
 
-// asks sort asc
-// bids sort desc
+// asks sort asc, sell
+// bids sort desc, buy
 
 class DataStream {
     // cfg.output_message
@@ -107,6 +107,34 @@ class DataStream {
                 return ;
             }
         }
+    }
+
+    getDepthVolume_ask(price) {
+        for (let i = 0; i < this.asks.length; ++i) {
+            if (price == this.asks[i][DEPTHINDEX.PRICE]) {
+                return this.asks[i][DEPTHINDEX.VOLUME];
+            }
+
+            if (price > this.asks[i][DEPTHINDEX.PRICE]) {
+                return 0;
+            }
+        }
+
+        return 0;
+    }
+
+    getDepthVolume_bid(price) {
+        for (let i = 0; i < this.bids.length; ++i) {
+            if (price == this.bids[i][DEPTHINDEX.PRICE]) {
+                return this.bids[i][DEPTHINDEX.VOLUME];
+            }
+
+            if (price < this.bids[i][DEPTHINDEX.PRICE]) {
+                return 0;
+            }
+        }
+
+        return 0;
     }
 
     //------------------------------------------------------------------------------

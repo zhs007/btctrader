@@ -25,7 +25,7 @@ class Market2 {
     }
 
     newLimitOrder(side, price, volume, callback) {
-        let order = OrderMgr.singleton.newLimitOrder(this.marketname, side, this.symbol, price, volume);
+        let order = OrderMgr.singleton.newLimitOrder(this, side, this.symbol, price, volume);
         if (this.traderctrl) {
             this.traderctrl.newLimitOrder(order, callback);
         }
@@ -37,7 +37,7 @@ class Market2 {
     }
 
     newMarketOrder(side, volume, callback) {
-        let order = OrderMgr.singleton.newLimitOrder(this.marketname, side, this.symbol, price, volume);
+        let order = OrderMgr.singleton.newMarketOrder(this, side, this.symbol, volume);
         if (this.traderctrl) {
             this.traderctrl.newLimitOrder(order, callback);
         }
@@ -46,16 +46,18 @@ class Market2 {
                 callback();
             }
         }
+
+        return order;
     }
 
-    newMakeMarketOrder(price0, price1, volume, callback) {
+    newMakeMarketOrder(price0, volume0, price1, volume1, callback) {
         if (price0 > price1) {
             let tp = price0;
             price0 = price1;
             price1 = tp;
         }
 
-        let lst = OrderMgr.singleton.newMakeMarketOrder(this.marketname, ORDERSIDE.BUY, this.symbol, price0, price1, volume);
+        let lst = OrderMgr.singleton.newMakeMarketOrder(this, ORDERSIDE.BUY, this.symbol, price0, volume0, price1, volume1);
         if (this.traderctrl) {
             this.traderctrl.newMakeMarketOrder(lst, callback);
         }
@@ -69,9 +71,21 @@ class Market2 {
     }
 
     newStopProfitAndLossOrder(side, stopProfit, stopLoss, volume, callback) {
-        let po = OrderMgr.singleton.newStopProfitAndLossOrder(this.marketname, side, this.symbol, stopProfit, stopLoss, volume);
+        let po = OrderMgr.singleton.newStopProfitAndLossOrder(this, side, this.symbol, stopProfit, stopLoss, volume);
         if (this.traderctrl) {
             this.traderctrl.newStopProfitAndLossOrder(po, callback);
+        }
+        else {
+            if (callback) {
+                callback();
+            }
+        }
+    }
+
+    cancelOrder(order, callback) {
+        OrderMgr.singleton.cancelOrder(this, order);
+        if (this.traderctrl) {
+            // this.traderctrl.newStopProfitAndLossOrder(po, callback);
         }
         else {
             if (callback) {

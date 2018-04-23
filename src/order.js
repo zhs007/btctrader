@@ -23,6 +23,10 @@ const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 // order.ordid          - serv id
 // order.parentindexid  - parent indexid
 // order.simid
+// order.lsttrade       - [trade0, trade1, ...]
+// order.alreadyvolume  - sim mode
+// order.thisturnvolume - sim mode
+// order.thisturnprice  - sim mode
 
 function countOrderList(lst) {
     let v = 0;
@@ -108,6 +112,28 @@ function insertOrder2SortList_Sell(lst, order) {
     lst.push(order);
 }
 
+function removeOrder(lst, order) {
+    for (let i = 0; i < lst.length; ++i) {
+        if (lst[i].mainid == order.mainid && lst[i].indexid == order.indexid) {
+            lst.splice(i, 1);
+            break;
+        }
+    }
+}
+
+function addTrade2Order(order, trade) {
+    if (!order.hasOwnProperty('lsttrade')) {
+        order.lsttrade = [];
+    }
+
+    order.lsttrade.push(trade);
+
+    order.thisturnvolume = trade.volume;
+    order.thisturnprice = trade.price;
+}
+
 exports.countOrderList = countOrderList;
 exports.insertOrder2SortList_Buy = insertOrder2SortList_Buy;
 exports.insertOrder2SortList_Sell = insertOrder2SortList_Sell;
+exports.removeOrder = removeOrder;
+exports.addTrade2Order = addTrade2Order;
