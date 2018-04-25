@@ -20,6 +20,19 @@ class TraderCtrl {
         let str = util.format('[%s] %s', level, msg);
         console.log(str);
     }
+
+    createOrders(lstorder, callback) {
+    }
+
+    deleteOrders(lstorder, callback) {
+    }
+
+    updateOrders(lstorder, callback) {
+    }
+
+    formatPrice(side, price) {
+        return price;
+    }
 };
 
 exports.TraderCtrl = TraderCtrl;

@@ -29,6 +29,7 @@ const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 // order.thisturnprice  - sim mode
 // order.lastturnvolume - sim mode
 // order.lastturnprice  - sim mode
+// order.stopprice      - stop price
 
 function countOrderList(lst) {
     let v = 0;
@@ -114,6 +115,44 @@ function insertOrder2SortList_Sell(lst, order) {
     lst.push(order);
 }
 
+// sort asc
+function insertOrder2SortList_StopBuy(lst, order) {
+    if (lst.length == 0) {
+        lst.push(order);
+
+        return ;
+    }
+
+    for (let i = 0; i < lst.length; ++i) {
+        if (order.stopprice < lst[i].stopprice) {
+            lst.splice(i, 0, order);
+
+            return ;
+        }
+    }
+
+    lst.push(order);
+}
+
+// sort desc
+function insertOrder2SortList_StopSell(lst, order) {
+    if (lst.length == 0) {
+        lst.push(order);
+
+        return ;
+    }
+
+    for (let i = 0; i < lst.length; ++i) {
+        if (order.stopprice > lst[i].stopprice) {
+            lst.splice(i, 0, order);
+
+            return ;
+        }
+    }
+
+    lst.push(order);
+}
+
 function removeOrder(lst, order) {
     for (let i = 0; i < lst.length; ++i) {
         if (lst[i].mainid == order.mainid && lst[i].indexid == order.indexid) {
@@ -137,5 +176,7 @@ function addTrade2Order(order, trade) {
 exports.countOrderList = countOrderList;
 exports.insertOrder2SortList_Buy = insertOrder2SortList_Buy;
 exports.insertOrder2SortList_Sell = insertOrder2SortList_Sell;
+exports.insertOrder2SortList_StopBuy = insertOrder2SortList_StopBuy;
+exports.insertOrder2SortList_StopSell = insertOrder2SortList_StopSell;
 exports.removeOrder = removeOrder;
 exports.addTrade2Order = addTrade2Order;

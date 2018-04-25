@@ -1,8 +1,11 @@
 "use strict";
 
+require('../src/indicator/allindicator');
+
 const bitmex = require('../src/market/bitmex/index');
 const { BXBTDataStream } = require('../src/index/bxbt');
 const { Strategy2_MarketMaker } = require('../src/strategy2/marketmaker');
+const { Strategy2_MarketMaker5 } = require('../src/strategy2/marketmaker5');
 const { Trader2 } = require('../src/trader2');
 const Trader2Mgr = require('../src/trader2mgr');
 
@@ -33,7 +36,7 @@ Trader2Mgr.singleton.init(cfg, 'btctrader_order2', 'btctrader_trade2', SIMTRADE)
         apisecret: 'wz380WdzyRxJct6Dx8hzoJ22STrIy6b2woGLZhdB5FMlI2mH',
     });
 
-    let strategy2 = new Strategy2_MarketMaker();
+    let strategy2 = new Strategy2_MarketMaker5([60 * 1000, 14, 25, 10000, 10, 20, 5000]);
     let trader2 = new Trader2();
 
     trader2.setStrategy2(strategy2);

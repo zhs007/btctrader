@@ -3,7 +3,7 @@
 const { Mysql } = require('./mysql');
 const { randomInt, randomString, makeInsertSql, makeUpdateSql } = require('./util');
 const { ORDERSIDE, ORDERTYPE, ORDERSTATE, DEALSINDEX, DEALTYPE } = require('./basedef');
-const { insertOrder2SortList_Buy, insertOrder2SortList_Sell, removeOrder, addTrade2Order } = require('./order');
+const { insertOrder2SortList_Buy, insertOrder2SortList_Sell, insertOrder2SortList_StopBuy, insertOrder2SortList_StopSell, removeOrder, addTrade2Order } = require('./order');
 const TradeMgr = require('./trademgr');
 const Trader2Mgr = require('./trader2mgr');
 const util = require('util');
@@ -44,6 +44,9 @@ class MarketOrder {
 
         this.lstMarketBuy = [];
         this.lstMarketSell = [];
+
+        this.lstStopBuy = [];
+        this.lstStopSell = [];
 
         this.lstFinished = [];
     }
@@ -100,6 +103,16 @@ class MarketOrder {
                     removeOrder(this.lstMarketSell, order);
                 }
             }
+            else if (order.ordtype == ORDERTYPE.STOP) {
+                if (order.side == ORDERSIDE.BUY) {
+                    removeOrder(this.lstStopBuy, order);
+                    removeOrder(this.lstMarketBuy, order);
+                }
+                else {
+                    removeOrder(this.lstStopSell, order);
+                    removeOrder(this.lstMarketSell, order);
+                }
+            }
 
             market2.ds._onOrder(order);
 
@@ -145,6 +158,14 @@ class MarketOrder {
                     this.lstMarketSell.push(order);
                 }
             }
+            else if (order.ordtype == ORDERTYPE.STOP) {
+                if (order.side == ORDERSIDE.BUY) {
+                    insertOrder2SortList_StopBuy(this.lstStopBuy, order);
+                }
+                else {
+                    insertOrder2SortList_StopSell(this.lstStopSell, order);
+                }
+            }
         }
     }
 
@@ -155,6 +176,17 @@ class MarketOrder {
                 let cp = curdeal[DEALSINDEX.PRICE];
                 let cv = curdeal[DEALSINDEX.VOLUME];
                 let curtms = curdeal[DEALSINDEX.TMS];
+
+                for (let j = 0; j < this.lstStopSell.length; ) {
+                    let co = this.lstStopSell[j];
+                    if (cp <= co.stopprice) {
+                        this.lstStopSell.splice(j, 1);
+                        this.lstMarketSell.push(co);
+                    }
+                    else {
+                        break;
+                    }
+                }
 
                 for (let j = 0; j < this.lstLimitSell.length; ) {
                     let co = this.lstLimitSell[j];
@@ -224,6 +256,17 @@ class MarketOrder {
                 let cp = curdeal[DEALSINDEX.PRICE];
                 let cv = curdeal[DEALSINDEX.VOLUME];
                 let curtms = curdeal[DEALSINDEX.TMS];
+
+                for (let j = 0; j < this.lstStopBuy.length; ) {
+                    let co = this.lstStopBuy[j];
+                    if (cp >= co.stopprice) {
+                        this.lstStopBuy.splice(j, 1);
+                        this.lstMarketBuy.push(co);
+                    }
+                    else {
+                        break;
+                    }
+                }
 
                 for (let j = 0; j < this.lstLimitBuy.length; ) {
                     let co = this.lstLimitBuy[j];
@@ -589,6 +632,32 @@ class OrderMgr {
         });
 
         return lst;
+    }
+
+    // stop loss market
+    newStopLossOrder(market2, side, symbol, stopLoss, volume, funcIns) {
+        let spo = {
+            market: market2.marketname,
+            mainid: this.mainid,
+            indexid: this.curindexid++,
+            symbol: symbol,
+            side: side,
+            ordtype: ORDERTYPE.STOP,
+            ordstate: ORDERSTATE.OPEN,
+            stopprice: stopLoss,
+            volume: volume,
+            openms: new Date().getTime(),
+        };
+
+        this.__addOrder(market2, spo);
+
+        this.insOrder(spo).then((id) => {
+            if (funcIns) {
+                funcIns(id);
+            }
+        });
+
+        return mo;
     }
 
     // stop profit & stop loss

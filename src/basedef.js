@@ -43,6 +43,8 @@ const ORDERTYPE = {
     MARKET:         1,
     OCO:            2,  // one cancel the other
     OTO:            3,  // one trigger the other
+    STOP:           4,  // stop market
+    STOPLIMIT:      5,  // stop limit
 };
 
 const ORDERSTATE = {

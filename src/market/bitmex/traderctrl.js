@@ -265,8 +265,8 @@ class BitmexTraderCtrl extends TraderCtrl {
         return lst;
     }
 
-    _formatPrice(side, p) {
-        let fp = p.toFixed(1);
+    formatPrice(side, price) {
+        let fp = price.toFixed(1);
         let arr = fp.split('.');
         if (arr.length == 2) {
             if (arr[1] == '0' || arr[1] == '5') {
@@ -292,49 +292,323 @@ class BitmexTraderCtrl extends TraderCtrl {
         return parseFloat(fp);
     }
 
-    deleteOrder(order, callback) {
-        this.log('debug', order);
+    // _formatPrice(side, p) {
+    //     let fp = p.toFixed(1);
+    //     let arr = fp.split('.');
+    //     if (arr.length == 2) {
+    //         if (arr[1] == '0' || arr[1] == '5') {
+    //             return parseFloat(fp);
+    //         }
+    //
+    //         if (side == ORDERSIDE.BUY) {
+    //             if (arr[1] > 5) {
+    //                 return parseFloat(arr[0] + '.5');
+    //             }
+    //
+    //             return parseFloat(arr[0] + '.0');
+    //         }
+    //         else {
+    //             if (arr[1] > 5) {
+    //                 return parseFloat((parseInt(arr[0]) + 1).toString() + '.0');
+    //             }
+    //
+    //             return parseFloat(arr[0] + '.5');
+    //         }
+    //     }
+    //
+    //     return parseFloat(fp);
+    // }
 
-        if (!(order.ordstate == ORDERSTATE.OPEN || order.ordstate == ORDERSTATE.RUNNING)) {
-            this.log('error', 'order state fail!');
+    // deleteOrder(order, callback) {
+    //     this.log('debug', order);
+    //
+    //     if (!(order.ordstate == ORDERSTATE.OPEN || order.ordstate == ORDERSTATE.RUNNING)) {
+    //         this.log('error', 'order state fail!');
+    //
+    //         return ;
+    //     }
+    //
+    //     order.ordstate = ORDERSTATE.CANCEL;
+    //
+    //     this.request('DELETE', 'order', {
+    //         clOrdID: order.mainid + '-' + order.indexid
+    //     }, (err, res, body) => {
+    //         if (callback) {
+    //             callback(order);
+    //         }
+    //     });
+    // }
+    //
+    // deleteOrderList(lstorder, callback) {
+    //     this.log('debug', lstorder);
+    //
+    //     let arr = [];
+    //     for (let i = 0; i < lstorder.length; ++i) {
+    //         let co = lstorder[i];
+    //
+    //         if (!(co.ordstate == ORDERSTATE.OPEN || co.ordstate == ORDERSTATE.RUNNING)) {
+    //             this.log('error', 'order state fail!');
+    //         }
+    //         else {
+    //             order.ordstate = ORDERSTATE.CANCEL;
+    //
+    //             arr.push(co[i].mainid + '-' + co[i].indexid);
+    //         }
+    //     }
+    //
+    //     if (arr.length <= 0) {
+    //         return ;
+    //     }
+    //
+    //     this.request('DELETE', 'order', {
+    //         clOrdID: arr
+    //     }, (err, res, body) => {
+    //         if (callback) {
+    //             callback(order);
+    //         }
+    //     });
+    // }
 
-            return ;
-        }
+    // newLimitOrder(order, callback) {
+    //     this.log('debug', order);
+    //
+    //     this.request('POST', 'order', {
+    //         symbol: order.symbol,
+    //         ordType: 'Limit',
+    //         orderQty: order.volume,
+    //         price: this._formatPrice(order.side, order.price),
+    //         side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+    //         clOrdID: order.mainid + '-' + order.indexid,
+    //     }, (err, res, body) => {
+    //         if (callback) {
+    //             callback(order);
+    //         }
+    //     });
+    // }
+    //
+    // newMarketOrder(order, callback) {
+    //     this.log('debug', order);
+    //
+    //     this.request('POST', 'order', {
+    //         symbol: order.symbol,
+    //         ordType: 'Market',
+    //         orderQty: order.volume,
+    //         side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+    //         clOrdID: order.mainid + '-' + order.indexid,
+    //     }, (err, res, body) => {
+    //         if (callback) {
+    //             callback(order);
+    //         }
+    //     });
+    // }
+    //
+    // newMakeMarketOrder(lstorder, callback) {
+    //     let spo = lstorder[0];
+    //     let slo = lstorder[1];
+    //     let lstorders = [];
+    //
+    //     lstorders.push({
+    //         symbol: spo.symbol,
+    //         ordType: 'Limit',
+    //         orderQty: spo.volume,
+    //         price: this._formatPrice(spo.side, spo.price),
+    //         side: spo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+    //         // contingencyType: 'OneCancelsTheOther',
+    //         // clOrdLinkID: slo.mainid + '-' + slo.indexid,
+    //         clOrdID: spo.mainid + '-' + spo.indexid,
+    //     });
+    //
+    //     lstorders.push({
+    //         symbol: slo.symbol,
+    //         ordType: 'Limit',
+    //         orderQty: slo.volume,
+    //         price: this._formatPrice(slo.side, slo.price),
+    //         side: slo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+    //         // contingencyType: 'OneCancelsTheOther',
+    //         // clOrdLinkID: slo.mainid + '-' + slo.indexid,
+    //         clOrdID: slo.mainid + '-' + slo.indexid,
+    //     });
+    //
+    //     // if (slo.side == ORDERSIDE.BUY) {
+    //     //     lstorders.push({
+    //     //         symbol: slo.symbol,
+    //     //         ordType: 'Stop',
+    //     //         orderQty: slo.volume,
+    //     //         // price: this._formatPrice(order.side, slo.price),
+    //     //         stopPx: this._formatPrice(order.side, slo.price),
+    //     //         side: 'Buy',
+    //     //         contingencyType: 'OneCancelsTheOther',
+    //     //         clOrdLinkID: spo.mainid + '-' + spo.indexid,
+    //     //         clOrdID: slo.mainid + '-' + slo.indexid,
+    //     //     });
+    //     // }
+    //     // else {
+    //     //     lstorders.push({
+    //     //         symbol: slo.symbol,
+    //     //         ordType: 'Stop',
+    //     //         orderQty: slo.volume,
+    //     //         // price: this._formatPrice(order.side, slo.price),
+    //     //         stopPx: this._formatPrice(order.side, slo.price),
+    //     //         side: 'Sell',
+    //     //         contingencyType: 'OneCancelsTheOther',
+    //     //         clOrdLinkID: spo.mainid + '-' + spo.indexid,
+    //     //         clOrdID: slo.mainid + '-' + slo.indexid,
+    //     //     });
+    //     // }
+    //
+    //     this.request('POST', 'order/bulk', {
+    //         orders: lstorders,
+    //     }, (err, res, body) => {
+    //         if (callback) {
+    //             callback(order);
+    //         }
+    //     });
+    // }
+    //
+    // newStopProfitAndLossOrder(order, callback) {
+    //     this.log('debug', order);
+    //
+    //     let spo = order.lstchild[0];
+    //     let slo = order.lstchild[1];
+    //     let lstorders = [];
+    //
+    //     lstorders.push({
+    //         symbol: spo.symbol,
+    //         ordType: 'Limit',
+    //         orderQty: spo.volume,
+    //         price: this._formatPrice(order.side, spo.price),
+    //         side: spo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+    //         contingencyType: 'OneCancelsTheOther',
+    //         clOrdLinkID: slo.mainid + '-' + slo.indexid,
+    //         clOrdID: spo.mainid + '-' + spo.indexid,
+    //     });
+    //
+    //     if (slo.side == ORDERSIDE.BUY) {
+    //         lstorders.push({
+    //             symbol: slo.symbol,
+    //             ordType: 'Stop',
+    //             orderQty: slo.volume,
+    //             // price: this._formatPrice(order.side, slo.price),
+    //             stopPx: this._formatPrice(order.side, slo.price),
+    //             side: 'Buy',
+    //             contingencyType: 'OneCancelsTheOther',
+    //             clOrdLinkID: spo.mainid + '-' + spo.indexid,
+    //             clOrdID: slo.mainid + '-' + slo.indexid,
+    //         });
+    //     }
+    //     else {
+    //         lstorders.push({
+    //             symbol: slo.symbol,
+    //             ordType: 'Stop',
+    //             orderQty: slo.volume,
+    //             // price: this._formatPrice(order.side, slo.price),
+    //             stopPx: this._formatPrice(order.side, slo.price),
+    //             side: 'Sell',
+    //             contingencyType: 'OneCancelsTheOther',
+    //             clOrdLinkID: spo.mainid + '-' + spo.indexid,
+    //             clOrdID: slo.mainid + '-' + slo.indexid,
+    //         });
+    //     }
+    //
+    //     this.request('POST', 'order/bulk', {
+    //         orders: lstorders,
+    //     }, (err, res, body) => {
+    //         if (callback) {
+    //             callback(order);
+    //         }
+    //     });
+    // }
+    //
+    // newStopLossOrder(order, callback) {
+    //     this.log('debug', order);
+    //
+    //     this.request('POST', 'order', {
+    //         symbol: order.symbol,
+    //         ordType: 'Stop',
+    //         orderQty: order.volume,
+    //         stopPx: this._formatPrice(order.side, order.stopprice),
+    //         side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+    //         clOrdID: order.mainid + '-' + order.indexid,
+    //     }, (err, res, body) => {
+    //         if (callback) {
+    //             callback(order);
+    //         }
+    //     });
+    // }
 
-        order.ordstate = ORDERSTATE.CANCEL;
+    createOrders(lstorder, callback) {
+        let lst = [];
 
-        this.request('DELETE', 'order', {
-            clOrdID: order.mainid + '-' + order.indexid
-        }, (err, res, body) => {
-            if (callback) {
-                callback(order);
-            }
-        });
-    }
-
-    deleteOrderList(lstorder, callback) {
-        this.log('debug', lstorder);
-
-        let arr = [];
         for (let i = 0; i < lstorder.length; ++i) {
             let co = lstorder[i];
 
-            if (!(co.ordstate == ORDERSTATE.OPEN || co.ordstate == ORDERSTATE.RUNNING)) {
-                this.log('error', 'order state fail!');
+            if (co.ordtype == ORDERTYPE.LIMIT) {
+                lst.push({
+                    symbol: co.symbol,
+                    ordType: 'Limit',
+                    orderQty: co.volume,
+                    price: this.formatPrice(co.side, co.price),
+                    side: co.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+                    clOrdID: co.mainid + '-' + co.indexid,
+                });
             }
-            else {
-                order.ordstate = ORDERSTATE.CANCEL;
-
-                arr.push(co[i].mainid + '-' + co[i].indexid);
+            else if (co.ordtype == ORDERTYPE.MARKET) {
+                lst.push({
+                    symbol: co.symbol,
+                    ordType: 'Market',
+                    orderQty: co.volume,
+                    side: co.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+                    clOrdID: co.mainid + '-' + co.indexid,
+                });
+            }
+            else if (co.ordtype == ORDERTYPE.STOP) {
+                lst.push({
+                    symbol: co.symbol,
+                    ordType: 'Stop',
+                    orderQty: co.volume,
+                    stopPx: this.formatPrice(order.side, order.stopprice),
+                    side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+                    clOrdID: co.mainid + '-' + co.indexid,
+                });
             }
         }
 
-        if (arr.length <= 0) {
+        if (lst.length <= 0) {
+            return ;
+        }
+
+        this.request('POST', 'order/bulk', {
+            orders: lst,
+        }, (err, res, body) => {
+            if (callback) {
+                callback(order);
+            }
+        });
+    }
+
+    deleteOrders(lstorder, callback) {
+        this.log('debug', lstorder);
+
+        let lst = [];
+        for (let i = 0; i < lstorder.length; ++i) {
+            let co = lstorder[i];
+
+            // if (!(co.ordstate == ORDERSTATE.OPEN || co.ordstate == ORDERSTATE.RUNNING)) {
+            //     this.log('error', 'order state fail!');
+            // }
+            // else {
+                // order.ordstate = ORDERSTATE.CANCEL;
+
+                lst.push(co.mainid + '-' + co.indexid);
+            // }
+        }
+
+        if (lst.length <= 0) {
             return ;
         }
 
         this.request('DELETE', 'order', {
-            clOrdID: arr
+            clOrdID: lst
         }, (err, res, body) => {
             if (callback) {
                 callback(order);
@@ -342,154 +616,7 @@ class BitmexTraderCtrl extends TraderCtrl {
         });
     }
 
-    newLimitOrder(order, callback) {
-        this.log('debug', order);
-
-        this.request('POST', 'order', {
-            symbol: order.symbol,
-            ordType: 'Limit',
-            orderQty: order.volume,
-            price: this._formatPrice(order.side, order.price),
-            side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
-            clOrdID: order.mainid + '-' + order.indexid,
-        }, (err, res, body) => {
-            if (callback) {
-                callback(order);
-            }
-        });
-    }
-
-    newMarketOrder(order, callback) {
-        this.log('debug', order);
-
-        this.request('POST', 'order', {
-            symbol: order.symbol,
-            ordType: 'Market',
-            orderQty: order.volume,
-            side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
-            clOrdID: order.mainid + '-' + order.indexid,
-        }, (err, res, body) => {
-            if (callback) {
-                callback(order);
-            }
-        });
-    }
-
-    newMakeMarketOrder(lstorder, callback) {
-        let spo = lstorder[0];
-        let slo = lstorder[1];
-        let lstorders = [];
-
-        lstorders.push({
-            symbol: spo.symbol,
-            ordType: 'Limit',
-            orderQty: spo.volume,
-            price: this._formatPrice(spo.side, spo.price),
-            side: spo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
-            // contingencyType: 'OneCancelsTheOther',
-            // clOrdLinkID: slo.mainid + '-' + slo.indexid,
-            clOrdID: spo.mainid + '-' + spo.indexid,
-        });
-
-        lstorders.push({
-            symbol: slo.symbol,
-            ordType: 'Limit',
-            orderQty: slo.volume,
-            price: this._formatPrice(slo.side, slo.price),
-            side: slo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
-            // contingencyType: 'OneCancelsTheOther',
-            // clOrdLinkID: slo.mainid + '-' + slo.indexid,
-            clOrdID: slo.mainid + '-' + slo.indexid,
-        });
-
-        // if (slo.side == ORDERSIDE.BUY) {
-        //     lstorders.push({
-        //         symbol: slo.symbol,
-        //         ordType: 'Stop',
-        //         orderQty: slo.volume,
-        //         // price: this._formatPrice(order.side, slo.price),
-        //         stopPx: this._formatPrice(order.side, slo.price),
-        //         side: 'Buy',
-        //         contingencyType: 'OneCancelsTheOther',
-        //         clOrdLinkID: spo.mainid + '-' + spo.indexid,
-        //         clOrdID: slo.mainid + '-' + slo.indexid,
-        //     });
-        // }
-        // else {
-        //     lstorders.push({
-        //         symbol: slo.symbol,
-        //         ordType: 'Stop',
-        //         orderQty: slo.volume,
-        //         // price: this._formatPrice(order.side, slo.price),
-        //         stopPx: this._formatPrice(order.side, slo.price),
-        //         side: 'Sell',
-        //         contingencyType: 'OneCancelsTheOther',
-        //         clOrdLinkID: spo.mainid + '-' + spo.indexid,
-        //         clOrdID: slo.mainid + '-' + slo.indexid,
-        //     });
-        // }
-
-        this.request('POST', 'order/bulk', {
-            orders: lstorders,
-        }, (err, res, body) => {
-            if (callback) {
-                callback(order);
-            }
-        });
-    }
-
-    newStopProfitAndLossOrder(order, callback) {
-        this.log('debug', order);
-
-        let spo = order.lstchild[0];
-        let slo = order.lstchild[1];
-        let lstorders = [];
-
-        lstorders.push({
-            symbol: spo.symbol,
-            ordType: 'Limit',
-            orderQty: spo.volume,
-            price: this._formatPrice(order.side, spo.price),
-            side: spo.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
-            contingencyType: 'OneCancelsTheOther',
-            clOrdLinkID: slo.mainid + '-' + slo.indexid,
-            clOrdID: spo.mainid + '-' + spo.indexid,
-        });
-
-        if (slo.side == ORDERSIDE.BUY) {
-            lstorders.push({
-                symbol: slo.symbol,
-                ordType: 'Stop',
-                orderQty: slo.volume,
-                // price: this._formatPrice(order.side, slo.price),
-                stopPx: this._formatPrice(order.side, slo.price),
-                side: 'Buy',
-                contingencyType: 'OneCancelsTheOther',
-                clOrdLinkID: spo.mainid + '-' + spo.indexid,
-                clOrdID: slo.mainid + '-' + slo.indexid,
-            });
-        }
-        else {
-            lstorders.push({
-                symbol: slo.symbol,
-                ordType: 'Stop',
-                orderQty: slo.volume,
-                // price: this._formatPrice(order.side, slo.price),
-                stopPx: this._formatPrice(order.side, slo.price),
-                side: 'Sell',
-                contingencyType: 'OneCancelsTheOther',
-                clOrdLinkID: spo.mainid + '-' + spo.indexid,
-                clOrdID: slo.mainid + '-' + slo.indexid,
-            });
-        }
-
-        this.request('POST', 'order/bulk', {
-            orders: lstorders,
-        }, (err, res, body) => {
-            if (callback) {
-                callback(order);
-            }
-        });
+    updOrders(lstorder, callback) {
     }
 
 };
