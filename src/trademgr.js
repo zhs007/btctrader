@@ -153,7 +153,8 @@ class TradeMgr {
             exectype: TRADEEXECTYPE.TRADE,
             ordertype: order.ordtype,
             ordermainid: order.mainid,
-            orderindex: order.indexid
+            orderindex: order.indexid,
+            order: order
         };
 
         if (ct.hasOwnProperty('price')) {

@@ -5,7 +5,7 @@ const { Strategy2 } = require('../strategy2');
 // const { DEPTHINDEX, DEALSINDEX, DEALTYPE } = require('../datastream');
 const { DEPTHINDEX, DEALSINDEX, DEALTYPE, STRATEGYSTATE, ORDERSTATE, ORDERSIDE } = require('../basedef');
 const { countPriceWithDepth_asks_depth2, countPriceWithDepth_bids_depth2 } = require('../util');
-const { countOrderList } = require('../order');
+const { countOrderList, isCancelOrder } = require('../order');
 const { initPosition, onOrder_position } = require('../position');
 const OrderMgr = require('../ordermgr');
 const { INDICATOR_RSI, INDICATOR_COUPLING } = require('../indicator/indicatordef');
@@ -38,7 +38,7 @@ class Strategy2_MarketMaker5 extends Strategy2 {
 
         this.marketPrice = [0, 0];
 
-        this.position = initPosition(0, 0, 0);
+        this.position = initPosition(0, 0, 0, 0);
         // this.volume = 0;
         // this.avgprice = 0;
         // this.money = 0;
@@ -111,6 +111,8 @@ class Strategy2_MarketMaker5 extends Strategy2 {
     }
 
     newOrder(price0, volume0, price1, volume1, stopprice) {
+        console.log(`neworder ${price0} ${price1}`);
+
         let lstcancel = [];
 
         if (this.orderBuy != undefined) {
@@ -235,7 +237,7 @@ class Strategy2_MarketMaker5 extends Strategy2 {
                             }
                         }
                         else if (this.position.volume > 0) {
-                            if (curbid[DEPTHINDEX.VOLUME] >= this.params[MARKETMAKER5_PARAM.START_VOLUME] && curbid[DEPTHINDEX.VOLUME] > curask[DEPTHINDEX.VOLUME] * 2) {
+                            if (curask[DEPTHINDEX.VOLUME] >= this.params[MARKETMAKER5_PARAM.START_VOLUME] && curbid[DEPTHINDEX.VOLUME] > curask[DEPTHINDEX.VOLUME] * 2) {
                                 let np = curbid[DEPTHINDEX.PRICE] - Math.floor(this.position.volume / this.unitvolume) * 2;
                                 let ap = (this.position.avgprice * this.position.volume + np * this.unitvolume) / (this.position.volume + this.unitvolume);
                                 let sp = ap + 1;
@@ -244,11 +246,11 @@ class Strategy2_MarketMaker5 extends Strategy2 {
                                     sp = curask[DEPTHINDEX.PRICE];
                                 }
 
-                                this.newOrder(np, this.unitvolume, sp, this.unitvolume * 2);
+                                this.newOrder(np, this.unitvolume, sp, this.unitvolume + this.position.volume);
                             }
                         }
                         else {
-                            if (curask[DEPTHINDEX.VOLUME] >= this.params[MARKETMAKER5_PARAM.START_VOLUME] && curask[DEPTHINDEX.VOLUME] > curbid[DEPTHINDEX.VOLUME] * 2) {
+                            if (curbid[DEPTHINDEX.VOLUME] >= this.params[MARKETMAKER5_PARAM.START_VOLUME] && curask[DEPTHINDEX.VOLUME] > curbid[DEPTHINDEX.VOLUME] * 2) {
                                 let np = curask[DEPTHINDEX.PRICE] + Math.floor(-this.position.volume / this.unitvolume) * 2;
                                 let ap = (this.position.avgprice * -this.position.volume + np * this.unitvolume) / (-this.position.volume + this.unitvolume);
                                 let bp = ap - 1;
@@ -257,20 +259,117 @@ class Strategy2_MarketMaker5 extends Strategy2 {
                                     bp = curbid[DEPTHINDEX.PRICE];
                                 }
 
-                                this.newOrder(bp, this.unitvolume, np, this.unitvolume * 2);
+                                this.newOrder(bp, this.unitvolume  - this.position.volume, np, this.unitvolume);
                             }
                         }
                     }
 
                 }
 
-                if (rsi0[INDICATORINDEX.VAL] >= 50 + this.params[MARKETMAKER5_PARAM.CLOSE_RSI] ||
-                    rsi0[INDICATORINDEX.VAL] <= 50 - this.params[MARKETMAKER5_PARAM.CLOSE_RSI] ||
-                    rsi1[INDICATORINDEX.VAL] >= 50 + this.params[MARKETMAKER5_PARAM.CLOSE_RSI] ||
-                    rsi1[INDICATORINDEX.VAL] <= 50 - this.params[MARKETMAKER5_PARAM.CLOSE_RSI]) {
+                // if (rsi0[INDICATORINDEX.VAL] >= 50 + this.params[MARKETMAKER5_PARAM.CLOSE_RSI] ||
+                //     rsi0[INDICATORINDEX.VAL] <= 50 - this.params[MARKETMAKER5_PARAM.CLOSE_RSI] ||
+                //     rsi1[INDICATORINDEX.VAL] >= 50 + this.params[MARKETMAKER5_PARAM.CLOSE_RSI] ||
+                //     rsi1[INDICATORINDEX.VAL] <= 50 - this.params[MARKETMAKER5_PARAM.CLOSE_RSI]) {
+                //
+                //     this.stoploss();
+                // }
+            }
+        }
+    }
 
-                    this.stoploss();
-                }
+    onTrade(dsindex, trade) {
+        let order = trade.order;
+
+        if (this.orderBuy != undefined) {
+            if (this.orderBuy.mainid == order.mainid && this.orderBuy.indexid == order.indexid) {
+                // let avgprice = this.position.avgprice;
+                this.lstMarket2[1].traderctrl.countPositionWithTrade(this.position, trade);
+                // onOrder_position(this.lstMarket2[1].traderctrl, this.position, order);
+
+                // this.stoplossprice = this.position.avgprice * 0.99;
+                // if (!isCancelOrder(order)) {
+                //     console.log(`buy money ${this.position.money} ${this.position.volume} ${avgprice} ${trade.price} ${trade.volume}`);
+                // }
+                //
+                // if (order.lastvolume == 0) {
+                //     this.orderBuy = undefined;
+                // }
+            }
+        }
+
+        if (this.orderSell != undefined) {
+            if (this.orderSell.mainid == order.mainid && this.orderSell.indexid == order.indexid) {
+                // let avgprice = this.position.avgprice;
+                this.lstMarket2[1].traderctrl.countPositionWithTrade(this.position, trade);
+                // let avgprice = this.position.avgprice;
+                // onOrder_position(this.lstMarket2[1].traderctrl, this.position, order);
+
+                // this.stoplossprice = this.position.avgprice * 1.01;
+                // if (!isCancelOrder(order)) {
+                //     console.log(`sell money ${this.position.money} ${this.position.volume} ${avgprice} ${order.avgprice} ${trade.volume}`);
+                // }
+                //
+                // if (order.lastvolume == 0) {
+                //     this.orderSell = undefined;
+                // }
+
+                // if (order.ordstate == ORDERSTATE.CLOSE) {
+                //     let avgprice = order.avgprice;
+                //
+                //     if (this.volume < 0) {
+                //         avgprice = (order.avgprice * order.volume + -this.volume * this.avgprice) / (-this.volume + order.volume);
+                //     }
+                //     else if (this.volume > 0 && order.volume < this.volume) {
+                //         avgprice = this.avgprice;
+                //     }
+                //
+                //     this.avgprice = avgprice;
+                //     this.volume -= order.volume;
+                //
+                //     this.money += order.volume * order.avgprice;
+                //
+                //     console.log('sell money ' + this.money + ' ' + this.volume);
+                //
+                //     this.stoplossprice = this.avgprice * 1.01;
+                // }
+                //
+                // this.orderSell = undefined;
+            }
+        }
+
+        if (this.orderStopLoss != undefined) {
+            if (this.orderStopLoss.mainid == order.mainid && this.orderStopLoss.indexid == order.indexid) {
+                // let avgprice = this.position.avgprice;
+                this.lstMarket2[1].traderctrl.countPositionWithTrade(this.position, trade);
+                // let avgprice = this.position.avgprice;
+                // onOrder_position(this.lstMarket2[1].traderctrl, this.position, order);
+
+                // if (!isCancelOrder(order)) {
+                //     console.log(`stoploss money ${this.position.money} ${this.position.volume} ${avgprice} ${order.avgprice} ${trade.volume}`);
+                // }
+                //
+                // if (order.lastvolume == 0) {
+                //     this.orderStopLoss = undefined;
+                // }
+            }
+        }
+
+        if (this.orderAutoStopLoss != undefined) {
+            if (this.orderAutoStopLoss.mainid == order.mainid && this.orderAutoStopLoss.indexid == order.indexid) {
+                // let avgprice = this.position.avgprice;
+                this.lstMarket2[1].traderctrl.countPositionWithTrade(this.position, trade);
+                // let avgprice = this.position.avgprice;
+                // onOrder_position(this.lstMarket2[1].traderctrl, this.position, order);
+
+                // if (!isCancelOrder(order)) {
+                //     console.log(`autostoploss money ${this.position.money} ${this.position.volume} ${avgprice} ${order.avgprice} ${trade.volume}`);
+                // }
+                //
+                // if (order.lastvolume == 0) {
+                //     this.orderAutoStopLoss = undefined;
+                //
+                //     this._onAutoStopLoss();
+                // }
             }
         }
     }
@@ -278,10 +377,13 @@ class Strategy2_MarketMaker5 extends Strategy2 {
     onOrder(market, order) {
         if (this.orderBuy != undefined) {
             if (this.orderBuy.mainid == order.mainid && this.orderBuy.indexid == order.indexid) {
-                onOrder_position(this.position, order);
+                let avgprice = this.position.avgprice;
+                // onOrder_position(this.lstMarket2[1].traderctrl, this.position, order);
 
                 this.stoplossprice = this.position.avgprice * 0.99;
-                console.log('buy money ' + this.position.money + ' ' + this.position.volume);
+                if (!isCancelOrder(order)) {
+                    console.log(`buy money ${this.position.money} ${this.position.volume} ${avgprice} ${order.avgprice}`);
+                }
 
                 if (order.lastvolume == 0) {
                     this.orderBuy = undefined;
@@ -313,10 +415,13 @@ class Strategy2_MarketMaker5 extends Strategy2 {
 
         if (this.orderSell != undefined) {
             if (this.orderSell.mainid == order.mainid && this.orderSell.indexid == order.indexid) {
-                onOrder_position(this.position, order);
+                let avgprice = this.position.avgprice;
+                // onOrder_position(this.lstMarket2[1].traderctrl, this.position, order);
 
                 this.stoplossprice = this.position.avgprice * 1.01;
-                console.log('sell money ' + this.position.money + ' ' + this.position.volume);
+                if (!isCancelOrder(order)) {
+                    console.log(`sell money ${this.position.money} ${this.position.volume} ${avgprice} ${order.avgprice}`);
+                }
 
                 if (order.lastvolume == 0) {
                     this.orderSell = undefined;
@@ -348,10 +453,12 @@ class Strategy2_MarketMaker5 extends Strategy2 {
 
         if (this.orderStopLoss != undefined) {
             if (this.orderStopLoss.mainid == order.mainid && this.orderStopLoss.indexid == order.indexid) {
+                let avgprice = this.position.avgprice;
+                // onOrder_position(this.lstMarket2[1].traderctrl, this.position, order);
 
-                onOrder_position(this.position, order);
-
-                console.log('stoploss money ' + this.position.money + ' ' + this.position.volume);
+                if (!isCancelOrder(order)) {
+                    console.log(`stoploss money ${this.position.money} ${this.position.volume} ${avgprice} ${order.avgprice}`);
+                }
 
                 if (order.lastvolume == 0) {
                     this.orderStopLoss = undefined;
@@ -361,10 +468,12 @@ class Strategy2_MarketMaker5 extends Strategy2 {
 
         if (this.orderAutoStopLoss != undefined) {
             if (this.orderAutoStopLoss.mainid == order.mainid && this.orderAutoStopLoss.indexid == order.indexid) {
+                let avgprice = this.position.avgprice;
+                // onOrder_position(this.lstMarket2[1].traderctrl, this.position, order);
 
-                onOrder_position(this.position, order);
-
-                console.log('autostoploss money ' + this.position.money + ' ' + this.position.volume);
+                if (!isCancelOrder(order)) {
+                    console.log(`autostoploss money ${this.position.money} ${this.position.volume} ${avgprice} ${order.avgprice}`);
+                }
 
                 if (order.lastvolume == 0) {
                     this.orderAutoStopLoss = undefined;

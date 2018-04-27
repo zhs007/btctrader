@@ -2,6 +2,7 @@
 
 const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 const OrderMgr = require('./ordermgr');
+const Trader2Mgr = require('./trader2mgr');
 
 class Market2 {
     constructor(marketname, symbol, ds, traderctrl) {
@@ -41,6 +42,10 @@ class Market2 {
             let tp = price0;
             price0 = price1;
             price1 = tp;
+
+            let tv = volume0;
+            volume0 = volume1;
+            volume1 = tv;
         }
 
         if (this.traderctrl) {
@@ -66,7 +71,7 @@ class Market2 {
     }
 
     newOrder2Market(lstorder, callback) {
-        if (this.traderctrl) {
+        if (Trader2Mgr.singleton.isSimMode && this.traderctrl) {
             this.traderctrl.createOrders(lstorder, callback);
         }
         else {
@@ -77,7 +82,7 @@ class Market2 {
     }
 
     cancelOrder2Market(lstorder, callback) {
-        if (this.traderctrl) {
+        if (!Trader2Mgr.singleton.isSimMode && this.traderctrl) {
             this.traderctrl.deleteOrders(lstorder, callback);
         }
         else {

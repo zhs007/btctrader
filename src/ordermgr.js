@@ -211,6 +211,7 @@ class MarketOrder {
                         let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
                         cv -= ct.volume;
 
+                        market2.ds._onTrade(ct);
                         market2.ds._onOrder(co);
 
                         if (co.lastvolume <= 0) {
@@ -236,6 +237,7 @@ class MarketOrder {
                     let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
                     cv -= ct.volume;
 
+                    market2.ds._onTrade(ct);
                     market2.ds._onOrder(co);
 
                     if (co.lastvolume <= 0) {
@@ -291,6 +293,7 @@ class MarketOrder {
                         let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
                         cv -= ct.volume;
 
+                        market2.ds._onTrade(ct);
                         market2.ds._onOrder(co);
 
                         if (co.lastvolume <= 0) {
@@ -316,6 +319,7 @@ class MarketOrder {
                     let ct = TradeMgr.singleton.newTrade(co, cp, cv, curtms);
                     cv -= ct.volume;
 
+                    market2.ds._onTrade(ct);
                     market2.ds._onOrder(co);
 
                     if (co.lastvolume <= 0) {
@@ -591,7 +595,7 @@ class OrderMgr {
     // buy price0
     // sell price1
     newMakeMarketOrder(market2, side, symbol, price0, volume0, price1, volume1, funcIns) {
-        console.log('order - makemarket ' + price0 + ' ' + price1);
+        // console.log('order - makemarket ' + price0 + ' ' + price1);
 
         let po = {
             market: market2.marketname,
@@ -657,7 +661,7 @@ class OrderMgr {
             }
         });
 
-        return mo;
+        return spo;
     }
 
     // stop profit & stop loss

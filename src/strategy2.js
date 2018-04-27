@@ -22,7 +22,9 @@ class Strategy2 {
     }
 
     onOrder(dsindex, order) {
+    }
 
+    onTrade(dsindex, trade) {
     }
 };
 

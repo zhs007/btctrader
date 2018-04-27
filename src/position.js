@@ -1,6 +1,6 @@
 "use strict";
 
-const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
+const { ORDERSIDE, ORDERTYPE, ORDERSTATE, TRADESIDE } = require('./basedef');
 
 // position.money
 // position.volume
@@ -42,18 +42,29 @@ function countAvgPrice(position, side, volume, price) {
     return price;
 }
 
-function onOrder_position(position, order) {
+function onTrade_position(traderctrl, position, trade) {
+    if (trade.side == TRADESIDE.BUY) {
+        if (position.volume > 0) {
+
+        }
+    }
+    else {
+
+    }
+}
+
+function onOrder_position(traderctrl, position, order) {
     if (order.ordstate == ORDERSTATE.CLOSE) {
         if (order.lastturnvolume > 0) {
             if (order.side == ORDERSIDE.BUY) {
                 let ap = countAvgPrice(position, ORDERSIDE.SELL, order.lastturnvolume, order.lastturnprice);
-                position.money += order.lastturnprice * order.lastturnvolume;
+                position.money += traderctrl.countMoney(order.lastturnprice, order.lastturnvolume);
                 position.avgprice = ap;
                 position.volume -= order.lastturnvolume;
             }
             else {
                 let ap = countAvgPrice(position, ORDERSIDE.BUY, order.lastturnvolume, order.lastturnprice);
-                position.money -= order.lastturnprice * order.lastturnvolume;
+                position.money -= traderctrl.countMoney(order.lastturnprice, order.lastturnvolume);
                 position.avgprice = ap;
                 position.volume += order.lastturnvolume;
             }
@@ -62,7 +73,8 @@ function onOrder_position(position, order) {
         let avgprice = countAvgPrice(position, order.side, order.volume, order.avgprice);
         position.avgprice = avgprice;
         position.volume += order.side == ORDERSIDE.BUY ? order.volume : -order.volume;
-        position.money += order.side == ORDERSIDE.BUY ? -order.volume * order.avgprice : order.volume * order.avgprice;
+        let cm = traderctrl.countMoney(order.avgprice, order.volume);
+        position.money += order.side == ORDERSIDE.BUY ? -cm : cm;
 
         return ;
     }
@@ -79,13 +91,13 @@ function onOrder_position(position, order) {
         if (order.lastturnvolume > 0) {
             if (order.side == ORDERSIDE.BUY) {
                 let ap = countAvgPrice(position, ORDERSIDE.SELL, order.lastturnvolume, order.lastturnprice);
-                position.money += order.lastturnprice * order.lastturnvolume;
+                position.money += traderctrl.countMoney(order.lastturnprice, order.lastturnvolume);
                 position.avgprice = ap;
                 position.volume -= order.lastturnvolume;
             }
             else {
                 let ap = countAvgPrice(position, ORDERSIDE.BUY, order.lastturnvolume, order.lastturnprice);
-                position.money -= order.lastturnprice * order.lastturnvolume;
+                position.money -= traderctrl.countMoney(order.lastturnprice, order.lastturnvolume);
                 position.avgprice = ap;
                 position.volume += order.lastturnvolume;
             }
@@ -95,17 +107,19 @@ function onOrder_position(position, order) {
         let avgprice = countAvgPrice(position, order.side, cv, order.avgprice);
         position.avgprice = avgprice;
         position.volume += order.side == ORDERSIDE.BUY ? cv : -cv;
-        position.money += order.side == ORDERSIDE.BUY ? -cv * order.avgprice : cv * order.avgprice;
+        let cm = traderctrl.countMoney(order.avgprice, cv);
+        position.money += order.side == ORDERSIDE.BUY ? -cm : cm;
 
         return ;
     }
 }
 
-function initPosition(money, volume, price) {
+function initPosition(money, volume, price, ordermoney) {
     return {
         money: money,
         volume: volume,
-        avgprice: price
+        avgprice: price,
+        ordermoney: ordermoney,
     };
 }
 

@@ -159,6 +159,12 @@ class DataStream {
         // }
     }
 
+    _onTrade(trade) {
+        if (this.trader2) {
+            this.trader2.onTrade(this, trade);
+        }
+    }
+
     _onOrder(order) {
         if (order.isupd) {
             OrderMgr.singleton.updOrder(order);

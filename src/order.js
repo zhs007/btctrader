@@ -30,6 +30,7 @@ const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('./basedef');
 // order.lastturnvolume - sim mode
 // order.lastturnprice  - sim mode
 // order.stopprice      - stop price
+// order.createms       - create ms
 
 function countOrderList(lst) {
     let v = 0;
@@ -173,6 +174,10 @@ function addTrade2Order(order, trade) {
     order.thisturnprice = trade.price;
 }
 
+function isCancelOrder(order) {
+    return order.ordstate == ORDERSTATE.CANCELED || order.ordstate == ORDERSTATE.FULLCANCELED || order.ordstate == ORDERSTATE.CANCEL;
+}
+
 exports.countOrderList = countOrderList;
 exports.insertOrder2SortList_Buy = insertOrder2SortList_Buy;
 exports.insertOrder2SortList_Sell = insertOrder2SortList_Sell;
@@ -180,3 +185,4 @@ exports.insertOrder2SortList_StopBuy = insertOrder2SortList_StopBuy;
 exports.insertOrder2SortList_StopSell = insertOrder2SortList_StopSell;
 exports.removeOrder = removeOrder;
 exports.addTrade2Order = addTrade2Order;
+exports.isCancelOrder = isCancelOrder;

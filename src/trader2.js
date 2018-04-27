@@ -51,6 +51,12 @@ class Trader2 {
         }
     }
 
+    onTrade(ds, trade) {
+        if (this.strategy2) {
+            this.strategy2.onTrade(ds.dsindex, trade);
+        }
+    }
+
     start() {
         for (let i = 0; i < this.lstDataStream.length; ++i) {
             let ds = this.lstDataStream[i];

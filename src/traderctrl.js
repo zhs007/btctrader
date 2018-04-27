@@ -33,6 +33,13 @@ class TraderCtrl {
     formatPrice(side, price) {
         return price;
     }
+
+    countMoney(price, volume) {
+        return volume * price;
+    }
+
+    countPositionWithTrade(position, trade) {
+    }
 };
 
 exports.TraderCtrl = TraderCtrl;

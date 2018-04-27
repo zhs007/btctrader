@@ -2,6 +2,7 @@
 
 require('../src/indicator/allindicator');
 
+const bitmex = require('../src/market/bitmex/index');
 const { SIMDBDataStream_DND } = require('../src/sim/simds_dnd');
 const { runDNDLink } = require('../src/sim/run');
 
@@ -24,6 +25,13 @@ let et = '2018-04-06 04:13:00 UTC';
 Trader2Mgr.singleton.init(cfg, 'btctrader_order2', 'btctrader_trade2', SIMTRADE).then(async () => {
     // OrderMgr.singleton.isSimMode = SIMTRADE;
 
+    let traderctrl = new bitmex.TraderCtrl({
+        symbol: 'XBTUSD',
+        // baseuri: 'https://testnet.bitmex.com',
+        apikey: '',
+        apisecret: '',
+    });
+
     let ds0 = new SIMDBDataStream_DND({
         mysqlcfg: cfg,
         tablename: 'bitmex_bxbt_2',
@@ -43,9 +51,9 @@ Trader2Mgr.singleton.init(cfg, 'btctrader_order2', 'btctrader_trade2', SIMTRADE)
     });
 
     let trader = new Trader2();
-    trader.setStrategy2(new Strategy2_MarketMaker5([60 * 1000, 14, 25, 10000, 10, 20]));
+    trader.setStrategy2(new Strategy2_MarketMaker5([60 * 1000, 14, 25, 10000, 10, 20, 100000]));
     trader.addDataStream('bg', 'bxbt', ds0, undefined);
-    trader.addDataStream('bitmex', 'xbtusd', ds1, undefined);
+    trader.addDataStream('bitmex', 'xbtusd', ds1, traderctrl);
     trader.start();
 
     await runDNDLink(ds0, ds1);

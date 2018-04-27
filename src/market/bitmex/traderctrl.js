@@ -1,7 +1,7 @@
 "use strict";
 
 const { TraderCtrl } = require('../../traderctrl');
-const { ORDERSIDE, ORDERTYPE, ORDERSTATE } = require('../../basedef');
+const { ORDERSIDE, ORDERTYPE, ORDERSTATE, TRADESIDE } = require('../../basedef');
 const OrderMgr = require('../../ordermgr');
 const { RunQueue, RUNQUEUE_RESULT } = require('../../runqueue');
 const request = require('request');
@@ -263,6 +263,53 @@ class BitmexTraderCtrl extends TraderCtrl {
         }
 
         return lst;
+    }
+
+    countPositionWithTrade(position, trade) {
+        if (trade.side == TRADESIDE.BUY) {
+            let cv = trade.volume;
+            if (position.volume < 0) {
+                let tv = cv;
+                if (cv > -position.volume) {
+                    tv = -position.volume;
+                }
+
+                let cm = this.countMoney(trade.price, tv);
+                position.money += cm;
+                position.volume += tv;
+
+                cv -= tv;
+            }
+
+            if (cv > 0) {
+                let cm = this.countMoney(trade.price, cv);
+                position.money -= cm;
+                position.volume += cv;
+            }
+        }
+        else {
+            let cv = trade.volume;
+            if (position.volume > 0) {
+                let tv = cv;
+                if (cv > position.volume) {
+                    tv = position.volume;
+                }
+
+                let cm = this.countMoney(trade.price, tv);
+                position.money += cm;
+
+                cv -= tv;
+            }
+
+            if (cv > 0) {
+                let cm = this.countMoney(trade.price, cv);
+                position.money -= cm;
+            }
+        }
+    }
+
+    countMoney(price, volume) {
+        return volume / price;
     }
 
     formatPrice(side, price) {
@@ -566,8 +613,8 @@ class BitmexTraderCtrl extends TraderCtrl {
                     symbol: co.symbol,
                     ordType: 'Stop',
                     orderQty: co.volume,
-                    stopPx: this.formatPrice(order.side, order.stopprice),
-                    side: order.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
+                    stopPx: this.formatPrice(co.side, co.stopprice),
+                    side: co.side == ORDERSIDE.BUY ? 'Buy' : 'Sell',
                     clOrdID: co.mainid + '-' + co.indexid,
                 });
             }

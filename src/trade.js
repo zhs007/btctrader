@@ -18,3 +18,4 @@ const { TRADESIDE, TRADEEXECTYPE, ORDERTYPE } = require('./basedef');
 // trade.ordermainid
 // trade.orderindex
 // trade.simid
+// trade.order
